@@ -1,44 +1,54 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Contacto · Kairu Tech</title><meta name="description" content="Escríbenos para explorar tu entrada o expansión en España y LATAM.">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = { theme: { extend: { colors: { kairu: {
-      50:'#eff6ff',100:'#dbeafe',200:'#bfdbfe',300:'#93c5fd',400:'#60a5fa',500:'#3b82f6',600:'#2563eb',700:'#1d4ed8',800:'#1e40af',900:'#1e3a8a'
-    }}}}};
-  </script>
-  <style>.card{border-radius:1rem;box-shadow:0 8px 24px rgba(2,6,23,.06);background:rgba(255,255,255,.9);backdrop-filter:blur(6px)}.container-narrow{max-width:1100px}</style>
-</head><body class="antialiased text-slate-800 bg-gradient-to-b from-white to-slate-50">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contacto | Kairu Tech</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 text-gray-900">
 
-<header class="sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-slate-200/50">
-  <div class="mx-auto px-4 sm:px-6 container-narrow">
-    <div class="flex items-center justify-between h-16">
-      <a href="/" class="flex items-center gap-3">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" class="text-kairu-600"><path d="M12 2l3.5 6.5L22 9l-5 4.9L18.5 21 12 17.8 5.5 21 7 13.9 2 9l6.5-.5L12 2z" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
-        <span class="font-semibold text-lg">Kairu <span class="text-kairu-600">Tech</span></span>
-      </a>
-      <nav class="hidden md:flex items-center gap-6 text-sm"><a href="/#servicios" class="hover:text-kairu-600">Servicios</a><a href="/servicios.html" class="hover:text-kairu-600">Paquetes</a><a href="/contacto.html" class="hover:text-kairu-600">Contacto</a><a href="/legal.html" class="hover:text-kairu-600">Legal</a><span class="text-slate-300">|</span><a href="/en/" class="hover:text-kairu-600">EN</a>
-        <a href="/contacto.html" class="px-4 py-2 rounded-xl bg-kairu-600 text-white">Hablemos</a>
+  <!-- Header simple -->
+  <header class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+      <a href="/index.html" class="text-xl font-bold text-kairu-600">Kairu Tech</a>
+      <nav>
+        <a href="/index.html" class="mx-2 text-gray-700 hover:text-kairu-600">Inicio</a>
+        <a href="/servicios.html" class="mx-2 text-gray-700 hover:text-kairu-600">Servicios</a>
+        <a href="/contacto.html" class="mx-2 text-gray-700 hover:text-kairu-600 font-semibold">Contacto</a>
       </nav>
-      <button id="menuBtn" class="md:hidden p-2" aria-label="menu"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
     </div>
-  </div>
-  <div id="mobileMenu" class="md:hidden hidden border-t border-slate-200 bg-white">
-    <div class="px-4 py-3 flex flex-col gap-3 text-sm"><a href="/#servicios" class="hover:text-kairu-600">Servicios</a><a href="/servicios.html" class="hover:text-kairu-600">Paquetes</a><a href="/contacto.html" class="hover:text-kairu-600">Contacto</a><a href="/legal.html" class="hover:text-kairu-600">Legal</a><div class="pt-2"><a href="/en/" class="hover:text-kairu-600">EN</a></div>
-      <a href="/contacto.html" class="px-4 py-2 rounded-xl bg-kairu-600 text-white w-max">Hablemos</a>
+  </header>
+
+  <!-- Contenido principal -->
+  <main class="max-w-3xl mx-auto px-4 py-12">
+    <h1 class="text-3xl font-bold mb-6 text-center">Contacto</h1>
+    <p class="text-center mb-8">
+      Puedes <strong>reservar una reunión directamente</strong> o escribirnos por <strong>email</strong>.
+    </p>
+
+    <!-- Botón email -->
+    <div class="text-center mb-12">
+      <a href="mailto:alex@kairu.tech"
+         class="px-6 py-3 rounded-xl bg-gray-200 text-gray-800 font-medium hover:bg-gray-300">
+        📧 Enviar email
+      </a>
     </div>
-  </div>
-</header>
 
-<section class="py-16"><div class="mx-auto px-4 sm:px-6 container-narrow grid md:grid-cols-2 gap-6">
-<div class="card p-6"><h2 class="text-2xl font-bold">Contacto</h2><p class="mt-2 text-slate-600">Cuéntanos en 3–4 líneas tu objetivo y el estado actual.</p><a class="mt-4 inline-block px-5 py-3 rounded-xl bg-kairu-600 text-white" href="mailto:alex@kairu.tech?subject=Kairu%20Tech%20-%20Consulta&body=Hola%20Kairu,%20queremos%20explorar%20el%20mercado%20de%20ES/LATAM%20para%20...">Enviar email</a><p class="text-xs text-slate-500 mt-3">Dirección: Madrid & London</p></div>
-<div class="card p-6"><h3 class="font-semibold">Agenda una llamada</h3><p class="text-sm text-slate-600 mt-2">Cuando tengas tu enlace de Calendly/Cal.com, pónlo aquí.</p><a class="mt-4 inline-block px-5 py-3 rounded-xl border border-slate-300" href="#" aria-disabled="true">Añadir enlace de calendario</a></div>
-</div></section>
+    <!-- Calendly embed -->
+    <div class="bg-white shadow rounded-xl p-6">
+      <h2 class="text-2xl font-semibold mb-4">Reserva una reunión</h2>
+      <div class="calendly-inline-widget"
+           data-url="https://calendly.com/alex-kairu/30min"
+           style="min-width:320px;height:700px;"></div>
+      <script type="text/javascript" src="https://assets.calendly.com/assets/external/widget.js" async></script>
+    </div>
+  </main>
 
-<footer class="py-10 border-t border-slate-200/60 text-sm text-slate-500">
-  <div class="mx-auto px-4 sm:px-6 container-narrow flex flex-col md:flex-row items-center justify-between gap-4">
-    <p>© <span id="year"></span> Kairu Tech · Madrid & London</p>
-    <div class="flex items-center gap-4"><a href="/legal.html" class="hover:text-kairu-600">Legal</a></div>
-  </div>
-</footer>
-<script>document.getElementById('year').textContent=new Date().getFullYear();document.getElementById('menuBtn').addEventListener('click',()=>{document.getElementById('mobileMenu').classList.toggle('hidden')});</script>
-</body></html>
+  <!-- Footer -->
+  <footer class="bg-gray-100 text-center py-6 mt-12">
+    <p>&copy; 2025 Kairu Tech. Todos los derechos reservados.</p>
+  </footer>
+
+</body>
+</html>
