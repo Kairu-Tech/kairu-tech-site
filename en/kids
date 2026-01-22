@@ -106,4 +106,120 @@
         </div>
 
         <div class="mt-6 text-xs text-slate-500">
-          Audi
+          Audio & storytelling · Language learning · Playful learning · Education 3–8
+        </div>
+      </div>
+
+      <div class="card p-6">
+        <h2 class="text-lg font-semibold">What we do</h2>
+        <ul class="mt-4 space-y-3 text-sm text-slate-700">
+          <li><strong>Market entry:</strong> fast validation, messaging and first agreements.</li>
+          <li><strong>Schools & education:</strong> pilots and partnerships with schools and projects.</li>
+          <li><strong>Partners & channels:</strong> local partners and education-focused distribution.</li>
+          <li><strong>NGOs & social impact:</strong> initiatives linked to children and education.</li>
+        </ul>
+        <p class="mt-4 text-xs text-slate-500">
+          Flexible model: low fixed cost + success-based variable.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- WHY -->
+<section class="py-16 bg-white/60 border-y border-slate-200/60">
+  <div class="mx-auto px-4 sm:px-6 container-narrow">
+    <h2 class="text-3xl font-bold">Why Spain and Spanish-speaking markets</h2>
+
+    <div class="mt-6 grid md:grid-cols-3 gap-6">
+      <div class="card p-6">
+        <h3 class="font-semibold">English as a priority</h3>
+        <p class="mt-2 text-sm text-slate-600">
+          Families actively invest in tools that help children learn English from an early age.
+        </p>
+      </div>
+
+      <div class="card p-6">
+        <h3 class="font-semibold">Schools as an entry channel</h3>
+        <p class="mt-2 text-sm text-slate-600">
+          Strong opportunity to enter through pilots, extracurricular activities and education programs.
+        </p>
+      </div>
+
+      <div class="card p-6">
+        <h3 class="font-semibold">Trust-driven growth</h3>
+        <p class="mt-2 text-sm text-slate-600">
+          High-quality products grow through recommendation, education and community trust.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW -->
+<section class="py-16">
+  <div class="mx-auto px-4 sm:px-6 container-narrow">
+    <h2 class="text-3xl font-bold">How we work</h2>
+
+    <div class="mt-8 grid md:grid-cols-3 gap-6">
+      <div class="card p-6">
+        <p class="text-xs uppercase tracking-wider text-slate-500">Step 1</p>
+        <h3 class="font-semibold mt-1">Kids-focused diagnosis</h3>
+        <p class="text-sm text-slate-600 mt-2">
+          Product, age range, educational value, pricing and ideal channel.
+        </p>
+      </div>
+
+      <div class="card p-6">
+        <p class="text-xs uppercase tracking-wider text-slate-500">Step 2</p>
+        <h3 class="font-semibold mt-1">Pilots & partnerships</h3>
+        <p class="text-sm text-slate-600 mt-2">
+          Schools, NGOs, institutions and partners to validate and accelerate adoption.
+        </p>
+      </div>
+
+      <div class="card p-6">
+        <p class="text-xs uppercase tracking-wider text-slate-500">Step 3</p>
+        <h3 class="font-semibold mt-1">Scale</h3>
+        <p class="text-sm text-slate-600 mt-2">
+          Commercial system, metrics and knowledge transfer to your internal team.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="py-16 bg-gradient-to-r from-kairu-600 to-kairu-800 text-white">
+  <div class="mx-auto px-4 sm:px-6 container-narrow grid md:grid-cols-3 gap-8 items-center">
+    <div class="md:col-span-2">
+      <h2 class="text-3xl font-bold">Explore Spain in 30 days</h2>
+      <p class="mt-2 text-white/80">
+        A clear objective, lightweight execution and a concrete plan for schools, partners and education channels.
+      </p>
+    </div>
+    <div class="md:justify-self-end">
+      <a href="/en/contact.html"
+         class="inline-block px-6 py-3 rounded-xl bg-white text-kairu-700 font-semibold">
+        Contact us
+      </a>
+    </div>
+  </div>
+</section>
+
+<footer class="py-10 border-t border-slate-200/60 text-sm text-slate-500">
+  <div class="mx-auto px-4 sm:px-6 container-narrow flex flex-col md:flex-row items-center justify-between gap-4">
+    <p>© <span id="year"></span> Kairu Tech · Madrid & London</p>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+  document.getElementById('menuBtn').addEventListener('click', ()=>{
+    document.getElementById('mobileMenu').classList.toggle('hidden');
+  });
+</script>
+
+</body>
+</html>
