@@ -21,7 +21,7 @@
     .container-narrow { max-width: 1100px; }
     :target { scroll-margin-top: 90px; }
 
-    /* BEFORE / AFTER SLIDER (multi-instance) */
+    /* BEFORE / AFTER SLIDER */
     .ba-wrap{
       position: relative;
       width: 100%;
@@ -38,8 +38,6 @@
       height: 100%;
       object-fit: cover;
       pointer-events: none;
-      user-select: none;
-      -webkit-user-drag: none;
     }
     .ba-after-clip{
       position: absolute;
@@ -53,7 +51,7 @@
       bottom: 0;
       left: 55%;
       width: 2px;
-      background: rgba(37,99,235,.95); /* kairu-600 */
+      background: rgba(37,99,235,.95);
       transform: translateX(-1px);
       pointer-events: none;
     }
@@ -72,9 +70,8 @@
       align-items: center;
       justify-content: center;
       gap: 10px;
-      color: #1d4ed8; /* kairu-700 */
+      color: #1d4ed8;
       font-weight: 800;
-      backdrop-filter: blur(6px);
     }
     .ba-range{
       position: absolute;
@@ -86,13 +83,9 @@
       cursor: ew-resize;
       z-index: 5;
     }
-    .ba-range::-webkit-slider-thumb{
-      appearance: none;
-      width: 28px; height: 28px;
-      background: transparent;
-      border: none;
-    }
+    .ba-range::-webkit-slider-thumb,
     .ba-range::-moz-range-thumb{
+      appearance: none;
       width: 28px; height: 28px;
       background: transparent;
       border: none;
@@ -102,390 +95,155 @@
 
 <body class="antialiased text-slate-800 bg-gradient-to-b from-white to-slate-50">
 
-  <!-- HEADER KairuTech -->
-  <header class="sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-slate-200/50">
-    <div class="mx-auto px-4 sm:px-6 container-narrow">
-      <div class="flex items-center justify-between h-16">
+<!-- HEADER -->
+<header class="sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-slate-200/50">
+  <div class="mx-auto px-4 sm:px-6 container-narrow flex items-center justify-between h-16">
+    <a href="/" class="flex items-center gap-3">
+      <span class="font-semibold text-lg">Kairu <span class="text-kairu-600">Tech</span></span>
+    </a>
+    <a href="/contacto.html" class="px-4 py-2 rounded-xl bg-kairu-600 text-white text-sm">Solicitar demo</a>
+  </div>
+</header>
 
-        <!-- LOGO -->
-        <a href="/" class="flex items-center gap-3">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" class="text-kairu-600">
-            <path d="M12 2l3.5 6.5L22 9l-5 4.9L18.5 21 12 17.8 5.5 21 7 13.9 2 9l6.5-.5L12 2z"
-              stroke="currentColor" stroke-width="1.2" fill="none"/>
-          </svg>
-          <span class="font-semibold text-lg">
-            Kairu <span class="text-kairu-600">Tech</span>
-          </span>
-        </a>
-
-        <!-- MENU DESKTOP -->
-        <nav class="hidden md:flex items-center gap-6 text-sm">
-          <a href="#como-funciona" class="hover:text-kairu-600">Cómo funciona</a>
-          <a href="#beneficios" class="hover:text-kairu-600">Beneficios</a>
-          <a href="#remoto" class="hover:text-kairu-600">Remoto</a>
-          <a href="#paquetes" class="hover:text-kairu-600">Opciones</a>
-          <a href="/contacto.html" class="px-4 py-2 rounded-xl bg-kairu-600 text-white font-medium">
-            Solicitar demo
-          </a>
-        </nav>
-
-        <!-- BOTÓN MÓVIL -->
-        <button id="menuBtn" class="md:hidden p-2" aria-label="Abrir menú">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path d="M3 6h18M3 12h18M3 18h18"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- MENU MÓVIL -->
-    <div id="mobileMenu" class="md:hidden hidden border-t border-slate-200 bg-white">
-      <div class="px-4 py-3 flex flex-col gap-3 text-sm">
-        <a href="#como-funciona" class="hover:text-kairu-600">Cómo funciona</a>
-        <a href="#beneficios" class="hover:text-kairu-600">Beneficios</a>
-        <a href="#remoto" class="hover:text-kairu-600">Remoto</a>
-        <a href="#paquetes" class="hover:text-kairu-600">Opciones</a>
-        <a href="/contacto.html" class="px-4 py-2 rounded-xl bg-kairu-600 text-white w-max">
-          Solicitar demo
-        </a>
-      </div>
-    </div>
-  </header>
-
-  <!-- HERO -->
-  <section class="relative">
-    <div class="mx-auto px-4 sm:px-6 pt-12 pb-10 container-narrow">
-      <div class="grid lg:grid-cols-2 gap-10 items-center">
-
-        <!-- TEXTO -->
-        <div>
-          <p class="text-xs uppercase tracking-wider text-slate-500">
-            Comercialización · Inversión · Preventa
-          </p>
-
-          <h1 class="mt-2 text-4xl sm:text-5xl font-extrabold leading-tight">
-            Enseñe la obra <span class="text-kairu-600">terminada</span>
-            <span class="block">antes de que empiece la construcción.</span>
-          </h1>
-
-          <p class="mt-4 text-lg text-slate-600">
-            Visualización del proyecto sobre la <strong>parcela real</strong> para ayudar a compradores e inversores a entender
-            el resultado final, reducir dudas y acelerar decisiones.
-          </p>
-
-          <p class="mt-3 text-sm font-medium text-slate-800">
-            No es “un render bonito”.
-            <span class="text-kairu-600">Es claridad en contexto real: volumen, encaje y entorno.</span>
-          </p>
-
-          <div class="mt-6 flex gap-3 flex-wrap">
-            <a href="/contacto.html" class="px-5 py-3 rounded-xl bg-kairu-600 text-white font-medium">
-              Solicitar demo
-            </a>
-            <a href="#como-funciona" class="px-5 py-3 rounded-xl border border-slate-300 font-medium">
-              Ver cómo funciona
-            </a>
-          </div>
-
-          <p class="mt-4 text-xs text-slate-500 max-w-md">
-            Orientado a comunicación comercial. Para validación interna y decisión técnica previa a obra,
-            se usa un enfoque distinto (piloto de decisión).
-          </p>
-        </div>
-
-        <!-- SLIDER 1 (PARCELA / PROYECTO) -->
-        <div class="card p-4">
-          <p class="text-sm font-semibold">Ejemplo · Antes / Después</p>
-          <p class="text-xs text-slate-500">Arrastra para comparar la parcela real con el proyecto terminado sobre el terreno.</p>
-
-          <div class="mt-4 ba-wrap" data-start="55">
-            <!-- IZQUIERDA (BASE): PARCELA REAL -->
-            <img src="/assets/ar-after.jpg" alt="Parcela real (antes)">
-            <!-- DERECHA (CLIP): PROYECTO SOBRE TERRENO -->
-            <div class="ba-after-clip">
-              <img src="/assets/ar-before.jpg" alt="Proyecto terminado sobre parcela real (después)">
-            </div>
-            <div class="ba-divider" aria-hidden="true">
-              <div class="ba-handle">◀ ▶</div>
-            </div>
-            <input class="ba-range" type="range" min="0" max="100" value="55" aria-label="Comparar antes y después">
-          </div>
-
-          <div class="mt-2 flex justify-between text-xs text-slate-500">
-            <span>Parcela real</span>
-            <span>Proyecto</span>
-          </div>
-
-          <p class="mt-2 text-[11px] text-slate-400">
-            Visualización conceptual con fines explicativos.
-          </p>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- PROBLEMA -->
-  <section class="py-12 bg-white/70 border-y border-slate-200/60">
-    <div class="mx-auto px-4 sm:px-6 container-narrow">
-      <h2 class="text-3xl font-bold">Por qué cuesta decidir con planos y renders</h2>
-      <p class="mt-3 text-slate-600 max-w-3xl">
-        Los compradores e inversores suelen tener dudas porque les falta el contexto real: el entorno, la escala y el encaje del proyecto.
-        Esto genera incertidumbre, retrasos y fricción en preventa.
+<!-- HERO -->
+<section class="pt-12 pb-10">
+  <div class="mx-auto px-4 sm:px-6 container-narrow grid lg:grid-cols-2 gap-10 items-center">
+    <div>
+      <p class="text-xs uppercase tracking-wider text-slate-500">Comercialización · Inversión · Preventa</p>
+      <h1 class="mt-2 text-4xl sm:text-5xl font-extrabold">
+        Enseñe la obra <span class="text-kairu-600">terminada</span><br>
+        antes de que empiece la construcción
+      </h1>
+      <p class="mt-4 text-lg text-slate-600">
+        Visualización del proyecto sobre la parcela real para que compradores e inversores
+        entiendan el resultado final y decidan con más confianza.
       </p>
+    </div>
 
-      <div class="mt-8 grid md:grid-cols-3 gap-6">
-        <div class="card p-6">
-          <h3 class="font-semibold">Escala difícil de imaginar</h3>
-          <p class="mt-2 text-sm text-slate-600">Alturas, volumen y distancias no se interpretan igual en un plano.</p>
+    <!-- SLIDER PRINCIPAL -->
+    <div class="card p-4">
+      <p class="text-sm font-semibold">Parcela / Proyecto</p>
+      <p class="text-xs text-slate-500">Arrastra para comparar antes y después.</p>
+
+      <div class="mt-4 ba-wrap" data-start="55">
+        <img src="/assets/ar-before.jpg" alt="Parcela real">
+        <div class="ba-after-clip">
+          <img src="/assets/ar-after.jpg" alt="Proyecto terminado">
         </div>
-        <div class="card p-6">
-          <h3 class="font-semibold">Entorno poco tangible</h3>
-          <p class="mt-2 text-sm text-slate-600">Vistas, accesos y relación con edificios cercanos se perciben mejor in situ.</p>
-        </div>
-        <div class="card p-6">
-          <h3 class="font-semibold">Decisiones más lentas</h3>
-          <p class="mt-2 text-sm text-slate-600">Cuantas más dudas, más rondas de preguntas y más tiempo hasta cerrar.</p>
-        </div>
+        <div class="ba-divider"><div class="ba-handle">◀ ▶</div></div>
+        <input class="ba-range" type="range" min="0" max="100" value="55">
+      </div>
+
+      <div class="mt-2 flex justify-between text-xs text-slate-500">
+        <span>Parcela real</span>
+        <span>Proyecto</span>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- CÓMO FUNCIONA -->
-  <section id="como-funciona" class="py-12">
-    <div class="mx-auto px-4 sm:px-6 container-narrow">
-      <h2 class="text-3xl font-bold">Cómo funciona</h2>
+<!-- PROBLEMA -->
+<section class="py-12 bg-white/70 border-y border-slate-200/60">
+  <div class="mx-auto px-4 sm:px-6 container-narrow">
+    <h2 class="text-3xl font-bold">Por qué cuesta decidir con planos y renders</h2>
+    <p class="mt-3 text-slate-600">
+      Los planos y renders no transmiten bien el contexto real: entorno, escala, vistas y relación
+      con lo existente. Esto genera dudas y retrasa decisiones de compra e inversión.
+    </p>
+  </div>
+</section>
 
-      <div class="mt-8 grid md:grid-cols-3 gap-6">
-        <div class="card p-6">
-          <p class="text-xs uppercase tracking-wider text-slate-500">Paso 1</p>
-          <h3 class="font-semibold mt-1">Parcela + proyecto</h3>
-          <p class="mt-2 text-sm text-slate-600">Partimos de la parcela real y del modelo/volumetría del proyecto.</p>
-        </div>
-        <div class="card p-6">
-          <p class="text-xs uppercase tracking-wider text-slate-500">Paso 2</p>
-          <h3 class="font-semibold mt-1">Visualización en contexto</h3>
-          <p class="mt-2 text-sm text-slate-600">Mostramos el proyecto sobre el terreno para que se entienda a escala.</p>
-        </div>
-        <div class="card p-6">
-          <p class="text-xs uppercase tracking-wider text-slate-500">Paso 3</p>
-          <h3 class="font-semibold mt-1">Material comercial</h3>
-          <p class="mt-2 text-sm text-slate-600">Entregables listos para presentaciones, preventa y reuniones con inversores.</p>
-        </div>
-      </div>
+<!-- ✅ REMOTO (SUBIDO) -->
+<section id="remoto" class="py-12">
+  <div class="mx-auto px-4 sm:px-6 container-narrow grid md:grid-cols-2 gap-8 items-center">
 
-      <div class="mt-8 card p-6 border border-kairu-200">
-        <p class="text-sm text-slate-700">
-          <span class="font-semibold text-kairu-700">Nota:</span>
-          esta landing está orientada a comunicación comercial.
-          Para validación interna y decisiones técnicas previas a obra, utilizamos un enfoque distinto.
-        </p>
-      </div>
-    </div>
-  </section>
-
-  <!-- BENEFICIOS -->
-  <section id="beneficios" class="py-12 bg-white/70 border-y border-slate-200/60">
-    <div class="mx-auto px-4 sm:px-6 container-narrow">
-      <h2 class="text-3xl font-bold">Beneficios para preventa e inversión</h2>
-      <p class="mt-3 text-slate-600 max-w-3xl">
-        El objetivo es simple: que el comprador entienda mejor el proyecto y gane confianza antes de comprometerse.
+    <div>
+      <p class="text-xs uppercase tracking-wider text-slate-500">Compradores remotos · Internacional</p>
+      <h2 class="mt-2 text-3xl font-bold">Entender la vivienda sin estar allí</h2>
+      <p class="mt-4 text-slate-600">
+        Un comprador puede comprender la vivienda terminada aunque esté en otro país.
+        Mientras capturamos la parcela real, visualiza el resultado final con foco en vistas,
+        luz y relación con el entorno.
       </p>
+    </div>
 
-      <div class="mt-8 grid md:grid-cols-2 gap-6">
-        <div class="card p-6">
-          <h3 class="font-semibold text-lg">Para compradores</h3>
-          <ul class="mt-3 text-sm text-slate-600 list-disc pl-5 space-y-2">
-            <li>Comprensión rápida del resultado final</li>
-            <li>Menos dudas sobre volumen, entorno y encaje</li>
-            <li>Mejor experiencia en visitas y presentaciones</li>
-          </ul>
+    <!-- SLIDER REMOTO -->
+    <div class="card p-4">
+      <p class="text-sm font-semibold">Parcela / Comprador remoto</p>
+      <p class="text-xs text-slate-500">Del terreno real a la experiencia del comprador.</p>
+
+      <div class="mt-4 ba-wrap" data-start="50">
+        <img src="/assets/investor-before.jpg" alt="Dron capturando parcela">
+        <div class="ba-after-clip">
+          <img src="/assets/investor-after.jpg" alt="Comprador remoto viendo vivienda">
         </div>
-        <div class="card p-6">
-          <h3 class="font-semibold text-lg">Para promotoras</h3>
-          <ul class="mt-3 text-sm text-slate-600 list-disc pl-5 space-y-2">
-            <li>Soporte a preventa y financiación</li>
-            <li>Presentaciones más sólidas a socios e inversores</li>
-            <li>Reducción de fricción comercial (menos rondas de dudas)</li>
-          </ul>
-        </div>
+        <div class="ba-divider"><div class="ba-handle">◀ ▶</div></div>
+        <input class="ba-range" type="range" min="0" max="100" value="50">
+      </div>
+
+      <div class="mt-2 flex justify-between text-xs text-slate-500">
+        <span>Parcela real</span>
+        <span>Comprador remoto</span>
       </div>
     </div>
-  </section>
 
-  <!-- REMOTO (NUEVO BLOQUE + SLIDER 2) -->
-  <section id="remoto" class="py-12">
-    <div class="mx-auto px-4 sm:px-6 container-narrow">
-      <div class="grid md:grid-cols-2 gap-8 items-center">
+  </div>
+</section>
 
-        <!-- TEXTO -->
-        <div>
-          <p class="text-xs uppercase tracking-wider text-slate-500">
-            Compradores remotos · Internacional
-          </p>
+<!-- CÓMO FUNCIONA -->
+<section class="py-12">
+  <div class="mx-auto px-4 sm:px-6 container-narrow">
+    <h2 class="text-3xl font-bold">Cómo funciona</h2>
+    <p class="mt-3 text-slate-600">
+      Partimos de la parcela real y del modelo del proyecto para generar material visual
+      claro y contextual, listo para comunicación comercial.
+    </p>
+  </div>
+</section>
 
-          <h2 class="mt-2 text-3xl font-bold">
-            Entender la vivienda sin estar allí
-          </h2>
+<!-- BENEFICIOS -->
+<section class="py-12 bg-white/70 border-y border-slate-200/60">
+  <div class="mx-auto px-4 sm:px-6 container-narrow">
+    <h2 class="text-3xl font-bold">Beneficios para preventa e inversión</h2>
+    <ul class="mt-6 list-disc pl-5 text-slate-600 space-y-2">
+      <li>Mayor comprensión del proyecto</li>
+      <li>Menos fricción en decisiones</li>
+      <li>Mejor experiencia para compradores e inversores</li>
+    </ul>
+  </div>
+</section>
 
-          <p class="mt-4 text-slate-600 max-w-xl">
-            Un comprador o inversor puede ver en directo el contexto de la parcela y comprender la vivienda terminada,
-            aunque se encuentre a miles de kilómetros del proyecto.
-          </p>
+<!-- CTA FINAL -->
+<section class="py-12 bg-gradient-to-r from-kairu-600 to-kairu-800 text-white">
+  <div class="mx-auto px-4 sm:px-6 container-narrow flex justify-between items-center">
+    <h2 class="text-3xl font-bold">Solicita una demo con tu proyecto</h2>
+    <a href="/contacto.html" class="px-6 py-3 bg-white text-kairu-700 rounded-xl font-semibold">
+      Solicitar demo
+    </a>
+  </div>
+</section>
 
-          <p class="mt-3 text-slate-600 max-w-xl">
-            Mientras capturamos la parcela, el cliente visualiza el resultado final con foco en
-            <strong>vistas, luz y encaje con el entorno</strong>, reduciendo dudas en reuniones clave.
-          </p>
+<!-- FOOTER -->
+<footer class="py-8 text-sm text-slate-500 text-center">
+  © <span id="year"></span> Kairu Tech · Madrid & London
+</footer>
 
-          <p class="mt-4 text-sm font-medium text-slate-800">
-            No sustituye el análisis técnico ni financiero:
-            <span class="text-kairu-600">acelera comprensión y decisiones.</span>
-          </p>
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
 
-          <div class="mt-6 flex gap-3 flex-wrap">
-            <a href="/contacto.html" class="px-5 py-3 rounded-xl bg-kairu-600 text-white font-medium">
-              Solicitar demo
-            </a>
-            <a href="#paquetes" class="px-5 py-3 rounded-xl border border-slate-300 font-medium">
-              Ver opciones
-            </a>
-          </div>
-        </div>
-
-        <!-- SLIDER 2 (DRON / COMPRADOR REMOTO) -->
-        <div class="card p-4">
-          <p class="text-sm font-semibold">Ejemplo · Parcela / Comprador remoto</p>
-          <p class="text-xs text-slate-500">
-            Arrastra para comparar la captura de parcela con la experiencia del comprador remoto.
-          </p>
-
-          <div class="mt-4 ba-wrap" data-start="50">
-            <!-- IZQUIERDA (BASE): DRON + PARCELA (ATARDERCER) -->
-            <img src="/assets/investor-before.jpg" alt="Dron capturando la parcela (antes)">
-            <!-- DERECHA (CLIP): COMPRADOR EN CASA (NORUEGA) VIENDO PLAYA/SOL EN PANTALLA -->
-            <div class="ba-after-clip">
-              <img src="/assets/investor-after.jpg" alt="Comprador remoto viendo la vivienda terminada (después)">
-            </div>
-
-            <div class="ba-divider" aria-hidden="true">
-              <div class="ba-handle">◀ ▶</div>
-            </div>
-
-            <input class="ba-range" type="range" min="0" max="100" value="50"
-                   aria-label="Comparar parcela y comprador remoto">
-          </div>
-
-          <div class="mt-2 flex justify-between text-xs text-slate-500">
-            <span>Parcela real</span>
-            <span>Comprador remoto</span>
-          </div>
-
-          <p class="mt-2 text-[11px] text-slate-400">
-            Ejemplo ilustrativo con fines comerciales.
-          </p>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- OPCIONES / PAQUETES -->
-  <section id="paquetes" class="py-12">
-    <div class="mx-auto px-4 sm:px-6 container-narrow">
-      <h2 class="text-3xl font-bold">Opciones</h2>
-      <p class="mt-3 text-slate-600 max-w-3xl">
-        Adaptamos el formato al momento comercial (preventa, inversores, presentación) con alcance claro y entregables útiles.
-      </p>
-
-      <div class="mt-8 grid md:grid-cols-3 gap-6">
-        <div class="card p-6">
-          <h3 class="font-semibold">Pack Presentación</h3>
-          <p class="mt-2 text-sm text-slate-600">Imágenes y material listo para deck y reuniones.</p>
-          <p class="mt-4 text-xs text-slate-500">Ideal para socios / inversores.</p>
-        </div>
-        <div class="card p-6 border border-kairu-200">
-          <h3 class="font-semibold text-kairu-700">Pack Preventa</h3>
-          <p class="mt-2 text-sm text-slate-600">Material visual para explicar el proyecto a compradores.</p>
-          <p class="mt-4 text-xs text-slate-500">Ideal para equipos comerciales.</p>
-        </div>
-        <div class="card p-6">
-          <h3 class="font-semibold">Pack Evento</h3>
-          <p class="mt-2 text-sm text-slate-600">Material para presentaciones públicas y acciones de marketing.</p>
-          <p class="mt-4 text-xs text-slate-500">Ideal para lanzamientos.</p>
-        </div>
-      </div>
-
-      <div class="mt-10 card p-6">
-        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div>
-            <h3 class="font-semibold text-lg">¿Quieres una demo con tu proyecto?</h3>
-            <p class="mt-1 text-sm text-slate-600">
-              Envíanos la ubicación de la parcela y una volumetría básica, y te diremos el formato recomendable.
-            </p>
-          </div>
-          <a href="/contacto.html" class="px-6 py-3 rounded-xl bg-kairu-600 text-white font-medium">
-            Solicitar demo
-          </a>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- CTA FINAL -->
-  <section class="py-12 bg-gradient-to-r from-kairu-600 to-kairu-800 text-white">
-    <div class="mx-auto px-4 sm:px-6 container-narrow grid md:grid-cols-3 gap-8 items-center">
-      <div class="md:col-span-2">
-        <h2 class="text-3xl font-bold">Mejora la comprensión del proyecto desde el primer día</h2>
-        <p class="mt-2 text-white/85">Una demo rápida para ver si encaja en tu proceso de preventa o inversión.</p>
-      </div>
-      <div class="md:justify-self-end">
-        <a href="/contacto.html" class="inline-block px-6 py-3 rounded-xl bg-white text-kairu-700 font-semibold">
-          Solicitar demo
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <!-- FOOTER -->
-  <footer class="py-10 border-t border-slate-200/60 text-sm text-slate-500">
-    <div class="mx-auto px-4 sm:px-6 container-narrow flex flex-col md:flex-row items-center justify-between gap-4">
-      <p>© <span id="year"></span> Kairu Tech · Madrid & London</p>
-      <div class="flex items-center gap-4">
-        <a href="/legal.html" class="hover:text-kairu-600">Legal</a>
-        <a href="/contacto.html" class="hover:text-kairu-600">Contacto</a>
-      </div>
-    </div>
-  </footer>
-
-  <script>
-    // Year
-    document.getElementById('year').textContent = new Date().getFullYear();
-
-    // Mobile menu
-    document.getElementById('menuBtn')?.addEventListener('click', ()=>{
-      document.getElementById('mobileMenu')?.classList.toggle('hidden');
+  document.querySelectorAll('.ba-wrap').forEach(wrap => {
+    const range = wrap.querySelector('.ba-range');
+    const clip  = wrap.querySelector('.ba-after-clip');
+    const div   = wrap.querySelector('.ba-divider');
+    const start = Number(wrap.dataset.start || range.value);
+    clip.style.width = start + '%';
+    div.style.left   = start + '%';
+    range.addEventListener('input', e => {
+      clip.style.width = e.target.value + '%';
+      div.style.left   = e.target.value + '%';
     });
-
-    // Before/After sliders (multi-instance)
-    document.querySelectorAll('.ba-wrap').forEach(wrap => {
-      const range = wrap.querySelector('.ba-range');
-      const clip  = wrap.querySelector('.ba-after-clip');
-      const div   = wrap.querySelector('.ba-divider');
-      const start = wrap.dataset.start ? Number(wrap.dataset.start) : Number(range.value);
-
-      range.value = String(start);
-      clip.style.width = start + '%';
-      div.style.left   = start + '%';
-
-      range.addEventListener('input', (e) => {
-        const v = Number(e.target.value);
-        clip.style.width = v + '%';
-        div.style.left   = v + '%';
-      });
-    });
-  </script>
+  });
+</script>
 
 </body>
 </html>
