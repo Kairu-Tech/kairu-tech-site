@@ -19,8 +19,9 @@
   <style>
     .card { border-radius: 1rem; box-shadow: 0 8px 24px rgba(2,6,23,.06); background: rgba(255,255,255,.95); backdrop-filter: blur(6px); }
     .container-narrow { max-width: 1100px; }
+    :target { scroll-margin-top: 90px; }
 
-    /* BEFORE / AFTER SLIDER */
+    /* BEFORE / AFTER SLIDER (multi-instance) */
     .ba-wrap{
       position: relative;
       width: 100%;
@@ -96,9 +97,6 @@
       background: transparent;
       border: none;
     }
-
-    /* Smooth anchor offset for sticky header */
-    :target { scroll-margin-top: 90px; }
   </style>
 </head>
 
@@ -124,6 +122,7 @@
         <nav class="hidden md:flex items-center gap-6 text-sm">
           <a href="#como-funciona" class="hover:text-kairu-600">Cómo funciona</a>
           <a href="#beneficios" class="hover:text-kairu-600">Beneficios</a>
+          <a href="#remoto" class="hover:text-kairu-600">Remoto</a>
           <a href="#paquetes" class="hover:text-kairu-600">Opciones</a>
           <a href="/contacto.html" class="px-4 py-2 rounded-xl bg-kairu-600 text-white font-medium">
             Solicitar demo
@@ -144,6 +143,7 @@
       <div class="px-4 py-3 flex flex-col gap-3 text-sm">
         <a href="#como-funciona" class="hover:text-kairu-600">Cómo funciona</a>
         <a href="#beneficios" class="hover:text-kairu-600">Beneficios</a>
+        <a href="#remoto" class="hover:text-kairu-600">Remoto</a>
         <a href="#paquetes" class="hover:text-kairu-600">Opciones</a>
         <a href="/contacto.html" class="px-4 py-2 rounded-xl bg-kairu-600 text-white w-max">
           Solicitar demo
@@ -188,20 +188,20 @@
           </div>
 
           <p class="mt-4 text-xs text-slate-500 max-w-md">
-            Pensado para comunicación con compradores e inversores. Si buscas validación técnica y decisión interna,
-            usa la landing de “decisiones antes de construir”.
+            Orientado a comunicación comercial. Para validación interna y decisión técnica previa a obra,
+            se usa un enfoque distinto (piloto de decisión).
           </p>
         </div>
 
-        <!-- SLIDER (TERRRENO / PROYECTO) -->
+        <!-- SLIDER 1 (PARCELA / PROYECTO) -->
         <div class="card p-4">
           <p class="text-sm font-semibold">Ejemplo · Antes / Después</p>
           <p class="text-xs text-slate-500">Arrastra para comparar la parcela real con el proyecto terminado sobre el terreno.</p>
 
           <div class="mt-4 ba-wrap" data-start="55">
-            <!-- BASE (IZQUIERDA): TERRENO REAL -->
+            <!-- IZQUIERDA (BASE): PARCELA REAL -->
             <img src="/assets/ar-before.jpg" alt="Parcela real (antes)">
-            <!-- AFTER (DERECHA): PROYECTO SOBRE TERRENO -->
+            <!-- DERECHA (CLIP): PROYECTO SOBRE TERRENO -->
             <div class="ba-after-clip">
               <img src="/assets/ar-after.jpg" alt="Proyecto terminado sobre parcela real (después)">
             </div>
@@ -278,7 +278,7 @@
         <p class="text-sm text-slate-700">
           <span class="font-semibold text-kairu-700">Nota:</span>
           esta landing está orientada a comunicación comercial.
-          Para validación interna y decisiones técnicas previas a obra, utilizamos un enfoque distinto (piloto de decisión).
+          Para validación interna y decisiones técnicas previas a obra, utilizamos un enfoque distinto.
         </p>
       </div>
     </div>
@@ -313,12 +313,89 @@
     </div>
   </section>
 
+  <!-- REMOTO (NUEVO BLOQUE + SLIDER 2) -->
+  <section id="remoto" class="py-12">
+    <div class="mx-auto px-4 sm:px-6 container-narrow">
+      <div class="grid md:grid-cols-2 gap-8 items-center">
+
+        <!-- TEXTO -->
+        <div>
+          <p class="text-xs uppercase tracking-wider text-slate-500">
+            Compradores remotos · Internacional
+          </p>
+
+          <h2 class="mt-2 text-3xl font-bold">
+            Entender la vivienda sin estar allí
+          </h2>
+
+          <p class="mt-4 text-slate-600 max-w-xl">
+            Un comprador o inversor puede ver en directo el contexto de la parcela y comprender la vivienda terminada,
+            aunque se encuentre a miles de kilómetros del proyecto.
+          </p>
+
+          <p class="mt-3 text-slate-600 max-w-xl">
+            Mientras capturamos la parcela, el cliente visualiza el resultado final con foco en
+            <strong>vistas, luz y encaje con el entorno</strong>, reduciendo dudas en reuniones clave.
+          </p>
+
+          <p class="mt-4 text-sm font-medium text-slate-800">
+            No sustituye el análisis técnico ni financiero:
+            <span class="text-kairu-600">acelera comprensión y decisiones.</span>
+          </p>
+
+          <div class="mt-6 flex gap-3 flex-wrap">
+            <a href="/contacto.html" class="px-5 py-3 rounded-xl bg-kairu-600 text-white font-medium">
+              Solicitar demo
+            </a>
+            <a href="#paquetes" class="px-5 py-3 rounded-xl border border-slate-300 font-medium">
+              Ver opciones
+            </a>
+          </div>
+        </div>
+
+        <!-- SLIDER 2 (DRON / COMPRADOR REMOTO) -->
+        <div class="card p-4">
+          <p class="text-sm font-semibold">Ejemplo · Parcela / Comprador remoto</p>
+          <p class="text-xs text-slate-500">
+            Arrastra para comparar la captura de parcela con la experiencia del comprador remoto.
+          </p>
+
+          <div class="mt-4 ba-wrap" data-start="50">
+            <!-- IZQUIERDA (BASE): DRON + PARCELA (ATARDERCER) -->
+            <img src="/assets/investor-before.jpg" alt="Dron capturando la parcela (antes)">
+            <!-- DERECHA (CLIP): COMPRADOR EN CASA (NORUEGA) VIENDO PLAYA/SOL EN PANTALLA -->
+            <div class="ba-after-clip">
+              <img src="/assets/investor-after.jpg" alt="Comprador remoto viendo la vivienda terminada (después)">
+            </div>
+
+            <div class="ba-divider" aria-hidden="true">
+              <div class="ba-handle">◀ ▶</div>
+            </div>
+
+            <input class="ba-range" type="range" min="0" max="100" value="50"
+                   aria-label="Comparar parcela y comprador remoto">
+          </div>
+
+          <div class="mt-2 flex justify-between text-xs text-slate-500">
+            <span>Parcela real</span>
+            <span>Comprador remoto</span>
+          </div>
+
+          <p class="mt-2 text-[11px] text-slate-400">
+            Ejemplo ilustrativo con fines comerciales.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
   <!-- OPCIONES / PAQUETES -->
   <section id="paquetes" class="py-12">
     <div class="mx-auto px-4 sm:px-6 container-narrow">
       <h2 class="text-3xl font-bold">Opciones</h2>
       <p class="mt-3 text-slate-600 max-w-3xl">
-        Adaptamos el formato al momento comercial (preventa, inversores, presentación pública) manteniendo un alcance claro y entregables útiles.
+        Adaptamos el formato al momento comercial (preventa, inversores, presentación) con alcance claro y entregables útiles.
       </p>
 
       <div class="mt-8 grid md:grid-cols-3 gap-6">
@@ -391,7 +468,7 @@
       document.getElementById('mobileMenu')?.classList.toggle('hidden');
     });
 
-    // Before/After slider (soporta múltiples sliders en la página)
+    // Before/After sliders (multi-instance)
     document.querySelectorAll('.ba-wrap').forEach(wrap => {
       const range = wrap.querySelector('.ba-range');
       const clip  = wrap.querySelector('.ba-after-clip');
