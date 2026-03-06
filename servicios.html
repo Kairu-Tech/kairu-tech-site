@@ -1,84 +1,266 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Servicios · Kairu Tech</title><meta name="description" content="Go-to-market, partners y ventas como servicio en España y LATAM.">
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Paquetes · Kairu Tech</title>
+  <meta name="description" content="Paquetes de validación de mercado, apertura de partners y desarrollo comercial para empresas tecnológicas que quieren entrar en España y LATAM.">
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind.config = { theme: { extend: { colors: { kairu: {
-      50:'#eff6ff',100:'#dbeafe',200:'#bfdbfe',300:'#93c5fd',400:'#60a5fa',500:'#3b82f6',600:'#2563eb',700:'#1d4ed8',800:'#1e40af',900:'#1e3a8a'
-    }}}}};
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            kairu: {
+              50:'#eff6ff',
+              100:'#dbeafe',
+              200:'#bfdbfe',
+              300:'#93c5fd',
+              400:'#60a5fa',
+              500:'#3b82f6',
+              600:'#2563eb',
+              700:'#1d4ed8',
+              800:'#1e40af',
+              900:'#1e3a8a'
+            }
+          }
+        }
+      }
+    };
   </script>
-  <style>.card{border-radius:1rem;box-shadow:0 8px 24px rgba(2,6,23,.06);background:rgba(255,255,255,.9);backdrop-filter:blur(6px)}.container-narrow{max-width:1100px}</style>
-</head><body class="antialiased text-slate-800 bg-gradient-to-b from-white to-slate-50">
 
-<header class="sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-slate-200/50">
-  <div class="mx-auto px-4 sm:px-6 container-narrow">
-    <div class="flex items-center justify-between h-16">
-      <a href="/" class="flex items-center gap-3">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" class="text-kairu-600"><path d="M12 2l3.5 6.5L22 9l-5 4.9L18.5 21 12 17.8 5.5 21 7 13.9 2 9l6.5-.5L12 2z" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
-        <span class="font-semibold text-lg">Kairu <span class="text-kairu-600">Tech</span></span>
+  <style>
+    .card {
+      border-radius: 1rem;
+      box-shadow: 0 8px 24px rgba(2,6,23,.06);
+      background: rgba(255,255,255,.9);
+      backdrop-filter: blur(6px);
+    }
+    .container-narrow { max-width: 1100px; }
+  </style>
+</head>
+
+<body class="antialiased text-slate-800 bg-gradient-to-b from-white to-slate-50">
+
+<header class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-slate-200">
+  <div class="mx-auto max-w-[1440px] px-6 lg:px-8">
+    <div class="flex items-center justify-between py-4">
+      
+      <a href="/" class="flex items-center gap-4 shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-12 w-12 text-kairu-600" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 2.9l2.15 6.02h6.39l-5.17 3.76 1.98 6.02L12 15.01 6.65 18.7l1.98-6.02-5.17-3.76h6.39L12 2.9z"/>
+        </svg>
+
+        <div class="flex items-baseline gap-1 leading-none">
+          <span class="text-[30px] font-semibold tracking-tight text-slate-900">Kairu</span>
+          <span class="text-[30px] font-semibold tracking-tight text-kairu-600">Tech</span>
+        </div>
       </a>
-      <nav class="hidden md:flex items-center gap-6 text-sm"><a href="/#servicios" class="hover:text-kairu-600">Servicios</a><a href="/servicios.html" class="hover:text-kairu-600">Paquetes</a><a href="/proptech.html" class="hover:text-kairu-600">PropTech</a><a href="/kids.html" class="hover:text-kairu-600">Kids</a>
-<a href="/contacto.html" class="hover:text-kairu-600">Contacto</a><a href="/legal.html" class="hover:text-kairu-600">Legal</a><span class="text-slate-300">|</span><a href="/en/" class="hover:text-kairu-600">EN</a>
-        <a href="/contacto.html" class="px-4 py-2 rounded-xl bg-kairu-600 text-white">Hablemos</a>
-      </nav>
-      <button id="menuBtn" class="md:hidden p-2" aria-label="menu"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+
+      <div class="hidden lg:flex items-center ml-auto pl-12 xl:pl-20">
+        <nav class="flex items-center gap-10 text-[15px] font-medium text-slate-700">
+          <a href="/servicios.html" class="text-kairu-600">Paquetes</a>
+          <a href="/proptech.html" class="transition hover:text-kairu-600">PropTech</a>
+          <a href="/public-administration-security.html" class="transition hover:text-kairu-600">Public Sector</a>
+          <a href="/edtech.html" class="transition hover:text-kairu-600">EdTech</a>
+          <a href="/contacto.html" class="transition hover:text-kairu-600">Contacto</a>
+          <a href="/legal.html" class="transition hover:text-kairu-600">Legal</a>
+        </nav>
+
+        <div class="flex items-center gap-5 ml-10">
+          <div class="flex items-center gap-2 text-[15px] font-medium text-slate-500">
+            <span class="text-slate-900">ES</span>
+            <span class="text-slate-300">/</span>
+            <a href="/en/" class="transition hover:text-kairu-600">EN</a>
+          </div>
+
+          <a href="/contacto.html" class="inline-flex items-center rounded-[20px] bg-kairu-600 px-6 py-3 text-[15px] font-semibold text-white transition hover:bg-kairu-700">
+            Hablemos
+          </a>
+        </div>
+      </div>
+
+      <button id="menuBtn" class="lg:hidden inline-flex items-center justify-center rounded-xl border border-slate-200 p-2 text-slate-700" aria-label="Abrir menú" aria-expanded="false">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
     </div>
   </div>
-  <div id="mobileMenu" class="md:hidden hidden border-t border-slate-200 bg-white">
-    <div class="px-4 py-3 flex flex-col gap-3 text-sm"><a href="/#servicios" class="hover:text-kairu-600">Servicios</a><a href="/servicios.html" class="hover:text-kairu-600">Paquetes</a><a href="/kids.html" class="hover:text-kairu-600">EdTech</a>
-<a href="/contacto.html" class="hover:text-kairu-600">Contacto</a><a href="/legal.html" class="hover:text-kairu-600">Legal</a><div class="pt-2"><a href="/en/" class="hover:text-kairu-600">EN</a></div>
-      <a href="/contacto.html" class="px-4 py-2 rounded-xl bg-kairu-600 text-white w-max">Hablemos</a>
+
+  <div id="mobileMenu" class="hidden border-t border-slate-200 bg-white lg:hidden">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 py-4 flex flex-col text-sm font-medium text-slate-700">
+      <a href="/servicios.html" class="py-3 border-b border-slate-100 text-kairu-600">Paquetes</a>
+      <a href="/proptech.html" class="py-3 border-b border-slate-100 hover:text-kairu-600">PropTech</a>
+      <a href="/public-administration-security.html" class="py-3 border-b border-slate-100 hover:text-kairu-600">Public Sector</a>
+      <a href="/edtech.html" class="py-3 border-b border-slate-100 hover:text-kairu-600">EdTech</a>
+      <a href="/contacto.html" class="py-3 border-b border-slate-100 hover:text-kairu-600">Contacto</a>
+      <a href="/legal.html" class="py-3 border-b border-slate-100 hover:text-kairu-600">Legal</a>
+      <div class="flex items-center gap-2 py-3 text-slate-500">
+        <span class="text-slate-900">ES</span>
+        <span class="text-slate-300">/</span>
+        <a href="/en/" class="hover:text-kairu-600">EN</a>
+      </div>
+      <a href="/contacto.html" class="mt-2 inline-flex w-max items-center rounded-full bg-kairu-600 px-5 py-2.5 font-semibold text-white hover:bg-kairu-700">
+        Hablemos
+      </a>
     </div>
   </div>
 </header>
 
-<section class="py-16"><div class="mx-auto px-4 sm:px-6 container-narrow">
-<h1 class="text-3xl font-bold">Paquetes de trabajo</h1>
-<div class="mt-8 grid md:grid-cols-3 gap-6">
-<!-- Market Entry Sprint -->
-      <div class="p-6 bg-white rounded-2xl shadow">
-        <h3 class="text-xl font-bold mb-4">Validación de Mercado (4 semanas)</h3>
-        <p class="text-slate-600 mb-3">Comprueba rápido si tu producto encaja en España o LATAM:</p>
-        <ul class="list-disc list-inside text-slate-600 space-y-1">
-          <li>Identificación de clientes y actores clave</li>
-          <li>Mensajes claros y propuesta de valor adaptada</li>
-          <li>5–10 reuniones iniciales con potenciales clientes</li>
-        </ul>
+<section class="py-16 sm:py-20">
+  <div class="mx-auto px-4 sm:px-6 container-narrow">
+    <div class="max-w-3xl">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-slate-200 bg-white text-xs text-slate-600">
+        España · LATAM · Market Validation · Partnerships · Business Development
       </div>
 
-      <!-- Partner & Channel Build -->
-      <div class="p-6 bg-white rounded-2xl shadow">
-        <h3 class="text-xl font-bold mb-4">Construcción de Partners y Canales</h3>
-        <p class="text-slate-600 mb-3">Expande tu red con aliados estratégicos:</p>
-        <ul class="list-disc list-inside text-slate-600 space-y-1">
-          <li>Búsqueda e identificación de socios locales</li>
-          <li>Acuerdos de colaboración y activación comercial</li>
-          <li>Acciones de co-marketing para acelerar la entrada</li>
-        </ul>
-      </div>
+      <h1 class="mt-5 text-4xl sm:text-5xl font-extrabold leading-tight">
+        Paquetes de trabajo para explorar y abrir mercado
+      </h1>
 
-      <!-- Ventas como Servicio -->
-      <div class="p-6 bg-white rounded-2xl shadow">
-        <h3 class="text-xl font-bold mb-4">Ventas como Servicio</h3>
-        <p class="text-slate-600 mb-3">Un equipo de ventas temporal para crecer sin costes fijos:</p>
-        <ul class="list-disc list-inside text-slate-600 space-y-1">
-          <li>Prospección y demos con clientes cualificados</li>
-          <li>Gestión de pipeline y cierre de oportunidades</li>
-          <li>Transferencia de procesos y manuales a tu equipo</li>
-        </ul>
-      </div>
-
+      <p class="mt-5 text-lg text-slate-600">
+        Kairu Tech ofrece formatos de trabajo flexibles para ayudar a empresas tecnológicas internacionales
+        a validar mercado, abrir partners y generar primeras oportunidades comerciales en
+        <strong>España y LATAM</strong>.
+      </p>
     </div>
 
-    <p class="mt-8 text-center text-slate-500">
-      Modelo flexible: fijo mínimo + variable por éxito. Adaptamos el plan según tu etapa y necesidades.
-    </p>
-  </div></section>
+    <div class="mt-10 grid md:grid-cols-3 gap-6">
+      <div class="card p-7">
+        <div class="inline-flex rounded-full bg-kairu-50 px-3 py-1 text-xs font-medium text-kairu-700">
+          Sprint inicial
+        </div>
+        <h2 class="mt-4 text-xl font-bold">Validación de mercado</h2>
+        <p class="mt-3 text-sm text-slate-600">
+          Un sprint enfocado para comprobar si tu propuesta tiene encaje real en España o LATAM antes de invertir más recursos.
+        </p>
+
+        <ul class="mt-5 space-y-3 text-sm text-slate-700">
+          <li>• Identificación de segmentos, clientes y actores clave</li>
+          <li>• Ajuste del mensaje y propuesta de valor al mercado local</li>
+          <li>• Primeras conversaciones con potenciales clientes o partners</li>
+          <li>• Recomendaciones prácticas sobre siguientes pasos</li>
+        </ul>
+
+        <div class="mt-6 pt-5 border-t border-slate-100">
+          <p class="text-sm font-medium text-slate-900">Ideal para</p>
+          <p class="mt-1 text-sm text-slate-600">empresas que quieren validar demanda y reducir riesgo antes de entrar.</p>
+        </div>
+      </div>
+
+      <div class="card p-7">
+        <div class="inline-flex rounded-full bg-kairu-50 px-3 py-1 text-xs font-medium text-kairu-700">
+          Acceso local
+        </div>
+        <h2 class="mt-4 text-xl font-bold">Partners y canales</h2>
+        <p class="mt-3 text-sm text-slate-600">
+          Un paquete para construir relaciones con socios, colaboradores y canales que puedan acelerar tu entrada en el mercado.
+        </p>
+
+        <ul class="mt-5 space-y-3 text-sm text-slate-700">
+          <li>• Identificación y priorización de partners potenciales</li>
+          <li>• Apertura de conversaciones con actores relevantes</li>
+          <li>• Exploración de modelos de colaboración o canal</li>
+          <li>• Soporte en primeras reuniones y seguimiento comercial</li>
+        </ul>
+
+        <div class="mt-6 pt-5 border-t border-slate-100">
+          <p class="text-sm font-medium text-slate-900">Ideal para</p>
+          <p class="mt-1 text-sm text-slate-600">soluciones que necesitan apalancarse en partners, integradores o distribuidores.</p>
+        </div>
+      </div>
+
+      <div class="card p-7">
+        <div class="inline-flex rounded-full bg-kairu-50 px-3 py-1 text-xs font-medium text-kairu-700">
+          Ejecución comercial
+        </div>
+        <h2 class="mt-4 text-xl font-bold">Desarrollo de negocio</h2>
+        <p class="mt-3 text-sm text-slate-600">
+          Apoyo comercial flexible para generar pipeline inicial, abrir reuniones y acompañar las primeras oportunidades.
+        </p>
+
+        <ul class="mt-5 space-y-3 text-sm text-slate-700">
+          <li>• Prospección y outreach con enfoque local</li>
+          <li>• Apertura de reuniones con cuentas relevantes</li>
+          <li>• Seguimiento de oportunidades y próximos pasos</li>
+          <li>• Transferencia de aprendizajes y proceso al equipo interno</li>
+        </ul>
+
+        <div class="mt-6 pt-5 border-t border-slate-100">
+          <p class="text-sm font-medium text-slate-900">Ideal para</p>
+          <p class="mt-1 text-sm text-slate-600">empresas que ya quieren pasar de exploración a tracción comercial inicial.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-10 rounded-2xl border border-slate-200 bg-white px-6 py-5 text-sm text-slate-600 shadow-sm">
+      Modelo flexible: proyecto puntual, sprint de validación o apoyo comercial continuo. El alcance se adapta a la etapa, sector y objetivos de cada empresa.
+    </div>
+  </div>
+</section>
+
+<section class="py-16 bg-slate-50 border-y border-slate-200/60">
+  <div class="mx-auto px-4 sm:px-6 container-narrow">
+    <div class="grid md:grid-cols-2 gap-8 items-start">
+      <div>
+        <h2 class="text-3xl font-bold">Cómo suele empezar la colaboración</h2>
+        <p class="mt-4 text-slate-600">
+          Normalmente comenzamos con una conversación inicial para entender el producto, el mercado objetivo
+          y el tipo de apoyo que más sentido tiene en esta fase.
+        </p>
+      </div>
+
+      <div class="card p-7">
+        <ul class="space-y-4 text-sm text-slate-700">
+          <li>• Revisión de la solución, posicionamiento y objetivos</li>
+          <li>• Priorización de España, LATAM o ambos mercados</li>
+          <li>• Recomendación del paquete o formato más adecuado</li>
+          <li>• Definición de próximos pasos, timing y alcance</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-16 bg-gradient-to-r from-kairu-600 to-kairu-800 text-white">
+  <div class="mx-auto px-4 sm:px-6 container-narrow grid md:grid-cols-3 gap-8 items-center">
+    <div class="md:col-span-2">
+      <h2 class="text-3xl font-bold">¿Quieres valorar qué paquete encaja mejor?</h2>
+      <p class="mt-2 text-white/80">
+        Una primera conversación permite definir el enfoque adecuado según tu producto, tu mercado y tu momento actual.
+      </p>
+    </div>
+    <div class="md:justify-self-end flex flex-wrap gap-3">
+      <a href="/contacto.html" class="inline-block px-6 py-3 rounded-xl bg-white text-kairu-700 font-semibold hover:bg-slate-100 transition">
+        Hablemos
+      </a>
+    </div>
+  </div>
+</section>
 
 <footer class="py-10 border-t border-slate-200/60 text-sm text-slate-500">
   <div class="mx-auto px-4 sm:px-6 container-narrow flex flex-col md:flex-row items-center justify-between gap-4">
     <p>© <span id="year"></span> Kairu Tech · Madrid & London</p>
-    <div class="flex items-center gap-4"><a href="/legal.html" class="hover:text-kairu-600">Legal</a></div>
+    <div class="flex items-center gap-4">
+      <a href="/legal.html" class="hover:text-kairu-600">Legal</a>
+      <a href="/contacto.html" class="hover:text-kairu-600">Contacto</a>
+    </div>
   </div>
 </footer>
-<script>document.getElementById('year').textContent=new Date().getFullYear();document.getElementById('menuBtn').addEventListener('click',()=>{document.getElementById('mobileMenu').classList.toggle('hidden')});</script>
-</body></html>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  const menuBtn = document.getElementById('menuBtn');
+  const mobileMenu = document.getElementById('mobileMenu');
+
+  menuBtn.addEventListener('click', () => {
+    const isHidden = mobileMenu.classList.contains('hidden');
+    mobileMenu.classList.toggle('hidden');
+    menuBtn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+  });
+</script>
+</body>
+</html>
