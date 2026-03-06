@@ -114,7 +114,7 @@
     }
 
     .hero{
-      padding:78px 0 48px;
+      padding:78px 0 52px;
     }
 
     .eyebrow{
@@ -277,12 +277,12 @@
     }
 
     section{
-      padding:34px 0;
+      padding:36px 0;
     }
 
     .section-head{
       max-width:72ch;
-      margin-bottom:18px;
+      margin-bottom:20px;
     }
 
     .grid-2{
@@ -310,47 +310,96 @@
 
     .card li + li{margin-top:8px}
 
-    .split{
+    .use-table{
+      margin-top:18px;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:24px;
+      overflow:hidden;
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+      box-shadow:var(--shadow);
+    }
+
+    .use-row{
       display:grid;
-      grid-template-columns:1fr 1fr;
+      grid-template-columns:1.15fr .5fr 1.2fr;
       gap:20px;
-      align-items:start;
+      align-items:center;
+      padding:20px 24px;
+      border-top:1px solid rgba(255,255,255,.07);
     }
 
-    .steps{
-      display:grid;
-      gap:14px;
+    .use-row:first-child{
+      border-top:none;
     }
 
-    .step{
-      padding:18px;
-      border-radius:18px;
+    .use-head{
       background:rgba(255,255,255,.03);
-      border:1px solid rgba(255,255,255,.08);
+      color:var(--muted);
+      font-size:.88rem;
+      font-weight:600;
+      letter-spacing:.01em;
     }
 
-    .step strong{
-      display:block;
-      margin-bottom:6px;
-      font-size:.98rem;
+    .use-label{
+      font-weight:700;
+      font-size:1rem;
+      color:var(--text);
     }
 
-    .audience-list{
-      display:grid;
-      gap:12px;
-      margin-top:14px;
-    }
-
-    .audience-item{
-      padding:14px 16px;
-      border-radius:16px;
-      background:rgba(255,255,255,.03);
-      border:1px solid rgba(255,255,255,.08);
+    .use-text{
       color:var(--muted);
     }
 
-    .audience-item strong{
-      color:var(--text);
+    .use-badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:8px 14px;
+      border-radius:999px;
+      background:rgba(120,166,255,.14);
+      color:var(--accent-2);
+      border:1px solid rgba(120,166,255,.22);
+      font-weight:700;
+      font-size:.88rem;
+    }
+
+    .use-badge.alt{
+      background:rgba(147,245,195,.10);
+      color:var(--success);
+      border:1px solid rgba(147,245,195,.22);
+    }
+
+    .audience-grid-clean{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0,1fr));
+      gap:18px;
+      margin-top:18px;
+    }
+
+    .audience-card-clean{
+      padding:26px;
+      border-radius:24px;
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:var(--shadow);
+    }
+
+    .audience-kicker{
+      display:inline-block;
+      margin-bottom:14px;
+      font-size:.82rem;
+      font-weight:700;
+      color:var(--accent-2);
+      letter-spacing:.08em;
+    }
+
+    .audience-card-clean h3{
+      margin-bottom:10px;
+    }
+
+    .audience-card-clean p{
+      margin:0;
+      color:var(--muted);
     }
 
     .cta{
@@ -382,13 +431,22 @@
     @media (max-width: 980px){
       .hero-grid,
       .grid-2,
-      .split,
-      .grid-3{
+      .grid-3,
+      .audience-grid-clean{
         grid-template-columns:1fr;
       }
 
       .hero-points{
         grid-template-columns:1fr;
+      }
+
+      .use-row{
+        grid-template-columns:1fr;
+        gap:10px;
+      }
+
+      .use-head{
+        display:none;
       }
 
       .nav{
@@ -411,7 +469,7 @@
       <nav class="nav-links">
         <a href="#soluciones">Soluciones</a>
         <a href="#cuando-usar">Cuándo usar cada una</a>
-        <a href="#para-quien">Para quién</a>
+        <a href="#para-quien">Para quién es</a>
         <a href="#casos">Casos de uso</a>
         <a class="btn btn-secondary" href="/contacto.html">Hablemos</a>
       </nav>
@@ -465,11 +523,11 @@
             <div class="visual-list">
               <div class="visual-item">
                 <strong>Mostrar una promoción antes de existir</strong>
-                <span class="muted">Mejor comprensión para preventa, inversión y comercialización.</span>
+                <span class="muted">Más claridad para preventa, inversión y comercialización.</span>
               </div>
               <div class="visual-item">
                 <strong>Enseñar un proyecto a un comprador internacional</strong>
-                <span class="muted">Más claridad sin necesidad de visitar físicamente la parcela.</span>
+                <span class="muted">Más comprensión sin necesidad de visitar físicamente la parcela.</span>
               </div>
               <div class="visual-item">
                 <strong>Visualizar decisiones sobre el espacio real</strong>
@@ -525,88 +583,83 @@
     </section>
 
     <section id="cuando-usar">
-      <div class="container split">
-        <div>
-          <div class="section-head">
-            <h2>Cuándo usar cada una</h2>
-            <p class="lead">
-              Una forma simple de entenderlo y explicarlo en reuniones comerciales o técnicas.
-            </p>
-          </div>
-
-          <div class="steps">
-            <div class="step">
-              <strong>Si necesitas explicar una promoción completa</strong>
-              Usa <strong>Digital Twin</strong>. Es la mejor opción para mostrar el conjunto del proyecto.
-            </div>
-            <div class="step">
-              <strong>Si el comprador está en otro país</strong>
-              Usa <strong>Digital Twin</strong>. Ayuda a entender la promoción sin estar físicamente allí.
-            </div>
-            <div class="step">
-              <strong>Si la persona está en el solar, la vivienda o la zona real</strong>
-              Usa <strong>AR</strong>. Permite ver el proyecto o el cambio directamente sobre el entorno.
-            </div>
-            <div class="step">
-              <strong>Si hay que validar una decisión concreta antes o durante obra</strong>
-              Usa <strong>AR</strong>. Es muy útil para visualizar implantaciones o revisiones puntuales.
-            </div>
-          </div>
+      <div class="container">
+        <div class="section-head">
+          <h2>Cuándo usar cada una</h2>
+          <p class="lead">
+            La forma más clara de explicarlo: <strong>Digital Twin</strong> para presentar el proyecto completo.
+            <strong>AR</strong> para visualizarlo directamente sobre el espacio real.
+          </p>
         </div>
 
-        <div class="card">
-          <div class="tag">Mensaje simple</div>
-          <h3>La diferencia, explicada sin tecnicismos</h3>
-          <p style="margin-bottom:14px">
-            <strong>Digital Twin</strong> sirve para presentar y entender el proyecto completo.
-            <br><br>
-            <strong>AR</strong> sirve para ver ese proyecto o ese cambio directamente sobre el espacio real.
-          </p>
-          <p>
-            En muchos casos ambos pueden combinarse: primero para explicar la promoción a distancia y después para
-            reforzar la experiencia cuando el cliente visita la parcela o la vivienda.
-          </p>
+        <div class="use-table">
+          <div class="use-row use-head">
+            <div>Situación</div>
+            <div>Tecnología recomendada</div>
+            <div>Por qué</div>
+          </div>
+
+          <div class="use-row">
+            <div class="use-label">Presentar una promoción completa</div>
+            <div><span class="use-badge">Digital Twin</span></div>
+            <div class="use-text">Permite mostrar el conjunto del proyecto de forma más clara y comercial.</div>
+          </div>
+
+          <div class="use-row">
+            <div class="use-label">Comprador remoto o internacional</div>
+            <div><span class="use-badge">Digital Twin</span></div>
+            <div class="use-text">Ayuda a entender la promoción sin necesidad de visitar físicamente la parcela.</div>
+          </div>
+
+          <div class="use-row">
+            <div class="use-label">Visita en solar, vivienda o ubicación real</div>
+            <div><span class="use-badge alt">AR</span></div>
+            <div class="use-text">Permite ver el proyecto o el cambio directamente sobre el entorno.</div>
+          </div>
+
+          <div class="use-row">
+            <div class="use-label">Validación puntual antes o durante obra</div>
+            <div><span class="use-badge alt">AR</span></div>
+            <div class="use-text">Aporta claridad visual en implantaciones, revisiones y decisiones concretas.</div>
+          </div>
         </div>
       </div>
     </section>
 
     <section id="para-quien">
-      <div class="container split">
-        <div>
-          <div class="section-head">
-            <h2>Para quién es</h2>
-            <p class="lead">
-              Esta solución tiene sentido para perfiles que necesitan vender, presentar o decidir mejor.
-            </p>
-          </div>
-
-          <div class="audience-list">
-            <div class="audience-item">
-              <strong>Promotores inmobiliarios</strong><br>
-              Para preventa, inversión, comercialización y compradores internacionales.
-            </div>
-            <div class="audience-item">
-              <strong>Agencias premium</strong><br>
-              Para enseñar mejor promociones, viviendas singulares o proyectos con comprador remoto.
-            </div>
-            <div class="audience-item">
-              <strong>Arquitectos e ingenierías</strong><br>
-              Para apoyar presentaciones y validar decisiones visuales con más claridad.
-            </div>
-            <div class="audience-item">
-              <strong>Constructoras</strong><br>
-              Para revisiones concretas y visualización contextual en momentos clave de obra.
-            </div>
-          </div>
+      <div class="container">
+        <div class="section-head">
+          <h2>Para quién es</h2>
+          <p class="lead">
+            Soluciones pensadas para clientes B2B del sector inmobiliario y de construcción que necesitan
+            vender mejor, presentar mejor o decidir con más claridad.
+          </p>
         </div>
 
-        <div class="card">
-          <div class="tag">Encaje</div>
-          <h3>No va dirigido al cliente residencial final</h3>
-          <p>
-            Esta página está pensada para clientes B2B del sector inmobiliario y de construcción:
-            empresas que necesitan herramientas mejores para presentar proyectos, acelerar ventas o reducir fricción en decisiones.
-          </p>
+        <div class="audience-grid-clean">
+          <article class="audience-card-clean">
+            <span class="audience-kicker">01</span>
+            <h3>Promotores inmobiliarios</h3>
+            <p>Para preventa, inversión, comercialización y compradores internacionales.</p>
+          </article>
+
+          <article class="audience-card-clean">
+            <span class="audience-kicker">02</span>
+            <h3>Agencias premium</h3>
+            <p>Para enseñar mejor promociones, viviendas singulares y proyectos con comprador remoto.</p>
+          </article>
+
+          <article class="audience-card-clean">
+            <span class="audience-kicker">03</span>
+            <h3>Arquitectos e ingenierías</h3>
+            <p>Para apoyar presentaciones y validar decisiones visuales con más claridad.</p>
+          </article>
+
+          <article class="audience-card-clean">
+            <span class="audience-kicker">04</span>
+            <h3>Constructoras</h3>
+            <p>Para revisiones concretas y visualización contextual en momentos clave de obra.</p>
+          </article>
         </div>
       </div>
     </section>
