@@ -1,65 +1,212 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Legal · Kairu Tech</title><meta name="description" content="Aviso legal, privacidad y cookies.">
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Legal · Kairu Tech</title>
+  <meta name="description" content="Aviso legal, privacidad y cookies de Kairu Tech.">
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind.config = { theme: { extend: { colors: { kairu: {
-      50:'#eff6ff',100:'#dbeafe',200:'#bfdbfe',300:'#93c5fd',400:'#60a5fa',500:'#3b82f6',600:'#2563eb',700:'#1d4ed8',800:'#1e40af',900:'#1e3a8a'
-    }}}}};
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            kairu: {
+              50:'#eff6ff',
+              100:'#dbeafe',
+              200:'#bfdbfe',
+              300:'#93c5fd',
+              400:'#60a5fa',
+              500:'#3b82f6',
+              600:'#2563eb',
+              700:'#1d4ed8',
+              800:'#1e40af',
+              900:'#1e3a8a'
+            }
+          }
+        }
+      }
+    };
   </script>
-  <style>.card{border-radius:1rem;box-shadow:0 8px 24px rgba(2,6,23,.06);background:rgba(255,255,255,.9);backdrop-filter:blur(6px)}.container-narrow{max-width:1100px}</style>
-</head><body class="antialiased text-slate-800 bg-gradient-to-b from-white to-slate-50">
 
-<header class="sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-slate-200/50">
-  <div class="mx-auto px-4 sm:px-6 container-narrow">
-    <div class="flex items-center justify-between h-16">
-      <a href="/" class="flex items-center gap-3">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" class="text-kairu-600"><path d="M12 2l3.5 6.5L22 9l-5 4.9L18.5 21 12 17.8 5.5 21 7 13.9 2 9l6.5-.5L12 2z" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
-        <span class="font-semibold text-lg">Kairu <span class="text-kairu-600">Tech</span></span>
+  <style>
+    .card {
+      border-radius: 1rem;
+      box-shadow: 0 8px 24px rgba(2,6,23,.06);
+      background: rgba(255,255,255,.92);
+      backdrop-filter: blur(6px);
+    }
+    .container-narrow { max-width: 1100px; }
+  </style>
+</head>
+
+<body class="antialiased text-slate-800 bg-gradient-to-b from-white to-slate-50">
+
+<header class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-slate-200">
+  <div class="mx-auto max-w-[1440px] px-6 lg:px-8">
+    <div class="flex items-center justify-between py-4">
+      
+      <a href="/" class="flex items-center gap-4 shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-12 w-12 text-kairu-600" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 2.9l2.15 6.02h6.39l-5.17 3.76 1.98 6.02L12 15.01 6.65 18.7l1.98-6.02-5.17-3.76h6.39L12 2.9z"/>
+        </svg>
+
+        <div class="flex items-baseline gap-1 leading-none">
+          <span class="text-[30px] font-semibold tracking-tight text-slate-900">Kairu</span>
+          <span class="text-[30px] font-semibold tracking-tight text-kairu-600">Tech</span>
+        </div>
       </a>
-      <nav class="hidden md:flex items-center gap-6 text-sm"><a href="/#servicios" class="hover:text-kairu-600">Servicios</a><a href="/servicios.html" class="hover:text-kairu-600">Paquetes</a><a href="/contacto.html" class="hover:text-kairu-600">Contacto</a><a href="/legal.html" class="hover:text-kairu-600">Legal</a><span class="text-slate-300">|</span><a href="/en/" class="hover:text-kairu-600">EN</a>
-        <a href="/contacto.html" class="px-4 py-2 rounded-xl bg-kairu-600 text-white">Hablemos</a>
-      </nav>
-      <button id="menuBtn" class="md:hidden p-2" aria-label="menu"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+
+      <div class="hidden lg:flex items-center ml-auto pl-12 xl:pl-20">
+        <nav class="flex items-center gap-10 text-[15px] font-medium text-slate-700">
+          <a href="/servicios.html" class="transition hover:text-kairu-600">Paquetes</a>
+          <a href="/proptech.html" class="transition hover:text-kairu-600">PropTech</a>
+          <a href="/public-administration-security.html" class="transition hover:text-kairu-600">Public Sector</a>
+          <a href="/edtech.html" class="transition hover:text-kairu-600">EdTech</a>
+          <a href="/contacto.html" class="transition hover:text-kairu-600">Contacto</a>
+          <a href="/legal.html" class="text-kairu-600">Legal</a>
+        </nav>
+
+        <div class="flex items-center gap-5 ml-10">
+          <div class="flex items-center gap-2 text-[15px] font-medium text-slate-500">
+            <span class="text-slate-900">ES</span>
+            <span class="text-slate-300">/</span>
+            <a href="/en/legal.html" class="transition hover:text-kairu-600">EN</a>
+          </div>
+
+          <a href="/contacto.html" class="inline-flex items-center rounded-[20px] bg-kairu-600 px-6 py-3 text-[15px] font-semibold text-white transition hover:bg-kairu-700">
+            Hablemos
+          </a>
+        </div>
+      </div>
+
+      <button id="menuBtn" class="lg:hidden inline-flex items-center justify-center rounded-xl border border-slate-200 p-2 text-slate-700" aria-label="Abrir menú" aria-expanded="false">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
     </div>
   </div>
-  <div id="mobileMenu" class="md:hidden hidden border-t border-slate-200 bg-white">
-    <div class="px-4 py-3 flex flex-col gap-3 text-sm"><a href="/#servicios" class="hover:text-kairu-600">Servicios</a><a href="/servicios.html" class="hover:text-kairu-600">Paquetes</a><a href="/contacto.html" class="hover:text-kairu-600">Contacto</a><a href="/legal.html" class="hover:text-kairu-600">Legal</a><div class="pt-2"><a href="/en/" class="hover:text-kairu-600">EN</a></div>
-      <a href="/contacto.html" class="px-4 py-2 rounded-xl bg-kairu-600 text-white w-max">Hablemos</a>
+
+  <div id="mobileMenu" class="hidden border-t border-slate-200 bg-white lg:hidden">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 py-4 flex flex-col text-sm font-medium text-slate-700">
+      <a href="/servicios.html" class="py-3 border-b border-slate-100 hover:text-kairu-600">Paquetes</a>
+      <a href="/proptech.html" class="py-3 border-b border-slate-100 hover:text-kairu-600">PropTech</a>
+      <a href="/public-administration-security.html" class="py-3 border-b border-slate-100 hover:text-kairu-600">Public Sector</a>
+      <a href="/edtech.html" class="py-3 border-b border-slate-100 hover:text-kairu-600">EdTech</a>
+      <a href="/contacto.html" class="py-3 border-b border-slate-100 hover:text-kairu-600">Contacto</a>
+      <a href="/legal.html" class="py-3 border-b border-slate-100 text-kairu-600">Legal</a>
+      <div class="flex items-center gap-2 py-3 text-slate-500">
+        <span class="text-slate-900">ES</span>
+        <span class="text-slate-300">/</span>
+        <a href="/en/legal.html" class="hover:text-kairu-600">EN</a>
+      </div>
+      <a href="/contacto.html" class="mt-2 inline-flex w-max items-center rounded-full bg-kairu-600 px-5 py-2.5 font-semibold text-white hover:bg-kairu-700">
+        Hablemos
+      </a>
     </div>
   </div>
 </header>
 
-<section class="py-16">
-  <div class="mx-auto px-4 sm:px-6 container-narrow prose max-w-none">
-    
-    <h1 class="text-3xl font-bold">Aviso legal</h1>
-    <p>Este sitio web es titularidad de <strong>Kairu Tech</strong>.<br>
-    Contacto: <a href="mailto:alex@kairu.tech">alex@kairu.tech</a><br>
-    Ubicación: Madrid &amp; London</p>
+<main>
 
-    <h2 class="text-2xl font-bold mt-8">Política de privacidad</h2>
-    <p>Únicamente tratamos los datos que nos envíes de forma voluntaria (por ejemplo, a través del correo electrónico o al reservar una reunión).  
-    La base legal del tratamiento es tu solicitud de información.  
-    No cedemos tus datos a terceros salvo obligación legal.  
-    Puedes ejercer tus derechos de acceso, rectificación y supresión escribiendo a <a href="mailto:alex@kairu.tech">alex@kairu.tech</a>.</p>
+<section class="py-16 sm:py-20">
+  <div class="mx-auto px-4 sm:px-6 container-narrow">
+    <div class="max-w-3xl">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-slate-200 bg-white text-xs text-slate-600">
+        Información legal · Privacidad · Cookies
+      </div>
 
-    <h2 class="text-2xl font-bold mt-8">Cookies</h2>
-    <p>Por defecto, este sitio no instala cookies de seguimiento.  
-    En caso de incorporar herramientas externas de analítica o marketing, se actualizará esta política y se solicitará el consentimiento correspondiente.</p>
+      <h1 class="mt-5 text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight">
+        Información <span class="text-kairu-600">legal</span>
+      </h1>
 
-    <h2 class="text-2xl font-bold mt-8">Limitación de responsabilidad</h2>
-    <p>La información publicada en este sitio es de carácter general y tiene fines meramente informativos.  
-    Kairu Tech no se responsabiliza de los daños que pudieran derivarse del uso de la información contenida en esta web.</p>
+      <p class="mt-5 text-lg text-slate-600">
+        En esta página encontrarás la información básica sobre titularidad del sitio, tratamiento de datos personales, cookies y limitación de responsabilidad.
+      </p>
+    </div>
 
+    <div class="mt-10 grid gap-6">
+      <section class="card p-7">
+        <h2 class="text-2xl font-bold">Aviso legal</h2>
+        <div class="mt-4 text-slate-600 space-y-2">
+          <p>Este sitio web es titularidad de <strong>Kairu Tech</strong>.</p>
+          <p>Contacto: <a href="mailto:alex@kairu.tech" class="text-kairu-700 hover:text-kairu-800">alex@kairu.tech</a></p>
+          <p>Ubicación: Madrid & London</p>
+        </div>
+      </section>
+
+      <section class="card p-7">
+        <h2 class="text-2xl font-bold">Política de privacidad</h2>
+        <div class="mt-4 text-slate-600 space-y-4">
+          <p>
+            Únicamente tratamos los datos que nos envíes de forma voluntaria, por ejemplo a través del correo electrónico o al reservar una reunión.
+          </p>
+          <p>
+            La base legal del tratamiento es tu solicitud de información o contacto.
+          </p>
+          <p>
+            No cedemos tus datos a terceros salvo obligación legal.
+          </p>
+          <p>
+            Puedes ejercer tus derechos de acceso, rectificación o supresión escribiendo a
+            <a href="mailto:alex@kairu.tech" class="text-kairu-700 hover:text-kairu-800">alex@kairu.tech</a>.
+          </p>
+        </div>
+      </section>
+
+      <section class="card p-7">
+        <h2 class="text-2xl font-bold">Cookies</h2>
+        <div class="mt-4 text-slate-600 space-y-4">
+          <p>
+            Por defecto, este sitio no instala cookies de seguimiento.
+          </p>
+          <p>
+            Si en el futuro se incorporan herramientas externas de analítica, marketing u otros servicios que utilicen cookies, esta política se actualizará y se solicitará el consentimiento correspondiente cuando sea necesario.
+          </p>
+        </div>
+      </section>
+
+      <section class="card p-7">
+        <h2 class="text-2xl font-bold">Limitación de responsabilidad</h2>
+        <div class="mt-4 text-slate-600 space-y-4">
+          <p>
+            La información publicada en este sitio es de carácter general y tiene fines meramente informativos.
+          </p>
+          <p>
+            Kairu Tech no se responsabiliza de los daños que pudieran derivarse del uso de la información contenida en esta web o de decisiones tomadas exclusivamente sobre la base de dicha información.
+          </p>
+        </div>
+      </section>
+    </div>
   </div>
 </section>
 
+</main>
 
 <footer class="py-10 border-t border-slate-200/60 text-sm text-slate-500">
   <div class="mx-auto px-4 sm:px-6 container-narrow flex flex-col md:flex-row items-center justify-between gap-4">
     <p>© <span id="year"></span> Kairu Tech · Madrid & London</p>
-    <div class="flex items-center gap-4"><a href="/legal.html" class="hover:text-kairu-600">Legal</a></div>
+    <div class="flex items-center gap-4">
+      <a href="/legal.html" class="hover:text-kairu-600">Legal</a>
+      <a href="/contacto.html" class="hover:text-kairu-600">Contacto</a>
+    </div>
   </div>
 </footer>
-<script>document.getElementById('year').textContent=new Date().getFullYear();document.getElementById('menuBtn').addEventListener('click',()=>{document.getElementById('mobileMenu').classList.toggle('hidden')});</script>
-</body></html>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  const menuBtn = document.getElementById('menuBtn');
+  const mobileMenu = document.getElementById('mobileMenu');
+
+  menuBtn.addEventListener('click', () => {
+    const isHidden = mobileMenu.classList.contains('hidden');
+    mobileMenu.classList.toggle('hidden');
+    menuBtn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+  });
+</script>
+
+</body>
+</html>
