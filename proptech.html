@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Kairu Tech · PropTech & ConTech para España</title>
-  <meta name="description" content="Ayudamos a empresas de PropTech y ConTech a entrar en España con una propuesta clara para preventa, compradores remotos y decisiones críticas antes de construir." />
+  <title>Kairu Tech · Digital Twin y AR para inmobiliario y construcción</title>
+  <meta name="description" content="Digital Twin y Realidad Aumentada para promotores, agencias, arquitectos, ingenierías y constructoras. Presenta mejor, vende antes y decide con más claridad." />
   <style>
     :root{
       --bg:#0b1020;
@@ -17,7 +17,7 @@
       --accent-2:#90e0ff;
       --success:#93f5c3;
       --max:1180px;
-      --radius:20px;
+      --radius:22px;
       --shadow:0 10px 35px rgba(0,0,0,.28);
     }
 
@@ -28,7 +28,7 @@
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background:
         radial-gradient(1200px 700px at 10% -10%, rgba(120,166,255,.18), transparent 55%),
-        radial-gradient(900px 500px at 100% 0%, rgba(144,224,255,.12), transparent 45%),
+        radial-gradient(900px 500px at 100% 0%, rgba(144,224,255,.10), transparent 45%),
         linear-gradient(180deg, #0b1020 0%, #0a0f1d 100%);
       color:var(--text);
       line-height:1.6;
@@ -114,7 +114,7 @@
     }
 
     .hero{
-      padding:72px 0 46px;
+      padding:78px 0 48px;
     }
 
     .eyebrow{
@@ -144,12 +144,12 @@
     }
 
     h1{
-      font-size:clamp(2.3rem, 5vw, 4.4rem);
+      font-size:clamp(2.3rem, 5vw, 4.3rem);
       max-width:12ch;
     }
 
     h2{
-      font-size:clamp(1.65rem, 3vw, 2.6rem);
+      font-size:clamp(1.7rem, 3vw, 2.5rem);
       margin-bottom:12px;
     }
 
@@ -159,9 +159,9 @@
     }
 
     .lead{
-      font-size:1.1rem;
+      font-size:1.08rem;
       color:var(--muted);
-      max-width:62ch;
+      max-width:66ch;
       margin:0 0 24px;
     }
 
@@ -187,7 +187,7 @@
 
     .mini strong{
       display:block;
-      font-size:1.05rem;
+      font-size:1.02rem;
       margin-bottom:4px;
     }
 
@@ -196,70 +196,92 @@
       font-size:.94rem;
     }
 
-    .hero-card,
     .card{
       background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
       border:1px solid rgba(255,255,255,.10);
       border-radius:var(--radius);
       box-shadow:var(--shadow);
+      padding:24px;
     }
 
-    .hero-card{
-      padding:22px;
+    .tag{
+      display:inline-flex;
+      width:max-content;
+      margin-bottom:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:.8rem;
+      color:var(--accent-2);
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.03);
+    }
+
+    .muted{color:var(--muted)}
+
+    .visual-box{
+      min-height:100%;
       display:flex;
       flex-direction:column;
-      gap:16px;
-      min-height:100%;
-    }
-
-    .badge{
-      display:inline-flex;
-      align-items:center;
-      width:max-content;
-      padding:7px 10px;
-      font-size:.82rem;
-      border-radius:999px;
-      background:rgba(147,245,195,.10);
-      color:var(--success);
-      border:1px solid rgba(147,245,195,.22);
-    }
-
-    .frame{
-      min-height:240px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.08);
+      justify-content:space-between;
+      gap:18px;
+      padding:28px;
       background:
         linear-gradient(180deg, rgba(120,166,255,.10), rgba(144,224,255,.03)),
         rgba(255,255,255,.02);
-      padding:18px;
-      display:grid;
-      gap:12px;
-      align-content:start;
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:28px;
+      box-shadow:var(--shadow);
     }
 
-    .frame-row{
+    .visual-top{
       display:flex;
-      gap:10px;
       flex-wrap:wrap;
+      gap:10px;
     }
 
     .pill{
-      padding:8px 12px;
+      padding:9px 13px;
       border-radius:999px;
-      font-size:.85rem;
+      font-size:.88rem;
       color:var(--text);
       background:rgba(255,255,255,.06);
       border:1px solid rgba(255,255,255,.08);
     }
 
-    .muted{color:var(--muted)}
+    .visual-panel{
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:22px;
+      padding:20px;
+    }
+
+    .visual-panel h3{
+      margin-bottom:14px;
+    }
+
+    .visual-list{
+      display:grid;
+      gap:12px;
+    }
+
+    .visual-item{
+      padding:14px 16px;
+      border-radius:16px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.07);
+    }
+
+    .visual-item strong{
+      display:block;
+      margin-bottom:4px;
+    }
 
     section{
       padding:34px 0;
     }
 
     .section-head{
-      max-width:70ch;
+      max-width:72ch;
       margin-bottom:18px;
     }
 
@@ -275,10 +297,6 @@
       gap:18px;
     }
 
-    .card{
-      padding:24px;
-    }
-
     .card p{
       margin:0;
       color:var(--muted);
@@ -291,18 +309,6 @@
     }
 
     .card li + li{margin-top:8px}
-
-    .tag{
-      display:inline-flex;
-      width:max-content;
-      margin-bottom:12px;
-      padding:6px 10px;
-      border-radius:999px;
-      font-size:.8rem;
-      color:var(--accent-2);
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.03);
-    }
 
     .split{
       display:grid;
@@ -329,8 +335,26 @@
       font-size:.98rem;
     }
 
+    .audience-list{
+      display:grid;
+      gap:12px;
+      margin-top:14px;
+    }
+
+    .audience-item{
+      padding:14px 16px;
+      border-radius:16px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.08);
+      color:var(--muted);
+    }
+
+    .audience-item strong{
+      color:var(--text);
+    }
+
     .cta{
-      padding:28px;
+      padding:30px;
       border-radius:24px;
       background:
         linear-gradient(135deg, rgba(120,166,255,.12), rgba(144,224,255,.08)),
@@ -386,9 +410,9 @@
 
       <nav class="nav-links">
         <a href="#soluciones">Soluciones</a>
+        <a href="#cuando-usar">Cuándo usar cada una</a>
+        <a href="#para-quien">Para quién</a>
         <a href="#casos">Casos de uso</a>
-        <a href="#encaje">Cuándo usar cada una</a>
-        <a href="#como-trabajamos">Cómo trabajamos</a>
         <a class="btn btn-secondary" href="/contacto.html">Hablemos</a>
       </nav>
     </div>
@@ -398,56 +422,60 @@
     <section class="hero">
       <div class="container hero-grid">
         <div>
-          <div class="eyebrow">PropTech · ConTech · Spain market entry</div>
-          <h1>Vender mejor. Decidir antes. Construir con más claridad.</h1>
+          <div class="eyebrow">Digital Twin · Realidad Aumentada · Inmobiliario y construcción</div>
+          <h1>Presenta mejor. Vende antes. Decide con más claridad.</h1>
           <p class="lead">
-            Ayudamos a empresas de <strong>digital twins</strong>, <strong>AR</strong> y tecnologías para inmobiliario y construcción
-            a entrar en España con una propuesta clara para promotores, compradores remotos, arquitectos e ingenierías.
+            Ayudamos a <strong>promotores, agencias, arquitectos, ingenierías y constructoras</strong>
+            a visualizar proyectos de forma más clara con <strong>Digital Twin</strong> y
+            <strong>Realidad Aumentada</strong>, desde la preventa hasta decisiones concretas en parcela, vivienda u obra.
           </p>
 
           <div class="hero-actions">
-            <a class="btn btn-primary" href="/contacto.html">Hablar sobre tu proyecto</a>
+            <a class="btn btn-primary" href="/contacto.html">Solicitar una conversación</a>
             <a class="btn btn-secondary" href="#soluciones">Ver soluciones</a>
           </div>
 
           <div class="hero-points">
             <div class="mini">
               <strong>Preventa</strong>
-              <span>Más claridad para compradores e inversores antes de construir.</span>
+              <span>Explica promociones y proyectos antes de construir.</span>
             </div>
             <div class="mini">
               <strong>Comprador remoto</strong>
-              <span>Experiencias entendibles sin estar físicamente en la parcela.</span>
+              <span>Facilita ventas y presentaciones a distancia.</span>
             </div>
             <div class="mini">
-              <strong>Fase de obra</strong>
-              <span>Visualización útil para decisiones críticas previas o puntuales.</span>
+              <strong>Obra y validación</strong>
+              <span>Aporta claridad visual en momentos críticos.</span>
             </div>
           </div>
         </div>
 
-        <aside class="hero-card">
-          <div class="badge">Nueva landing unificada</div>
-          <h3>Una sola narrativa para dos tecnologías</h3>
-          <p class="muted">
-            En vez de separar “preventa” e “ingeniería”, esta página explica el ciclo completo:
-            <strong>presentación comercial</strong>, <strong>comprador remoto</strong> y <strong>decisión técnica</strong>.
-          </p>
+        <aside class="visual-box">
+          <div class="visual-top">
+            <span class="pill">Promotores</span>
+            <span class="pill">Agencias</span>
+            <span class="pill">Arquitectos</span>
+            <span class="pill">Ingenierías</span>
+            <span class="pill">Constructoras</span>
+          </div>
 
-          <div class="frame">
-            <div class="frame-row">
-              <span class="pill">Meta-dology / Digital Twin</span>
-              <span class="pill">AR / Visualización contextual</span>
+          <div class="visual-panel">
+            <h3>Qué puedes conseguir con estas tecnologías</h3>
+            <div class="visual-list">
+              <div class="visual-item">
+                <strong>Mostrar una promoción antes de existir</strong>
+                <span class="muted">Mejor comprensión para preventa, inversión y comercialización.</span>
+              </div>
+              <div class="visual-item">
+                <strong>Enseñar un proyecto a un comprador internacional</strong>
+                <span class="muted">Más claridad sin necesidad de visitar físicamente la parcela.</span>
+              </div>
+              <div class="visual-item">
+                <strong>Visualizar decisiones sobre el espacio real</strong>
+                <span class="muted">Útil para vivienda, solar, implantación o validaciones puntuales en obra.</span>
+              </div>
             </div>
-            <div class="frame-row">
-              <span class="pill">Promotores</span>
-              <span class="pill">Agencias premium</span>
-              <span class="pill">Arquitectos e ingenierías</span>
-            </div>
-            <p class="muted" style="margin:0">
-              Posicionamiento sugerido:
-              <br><strong>Helping PropTech & ConTech companies expand into Spain and Spanish-speaking markets.</strong>
-            </p>
           </div>
         </aside>
       </div>
@@ -456,44 +484,129 @@
     <section id="soluciones">
       <div class="container">
         <div class="section-head">
-          <h2>Dos tecnologías. Dos momentos distintos.</h2>
+          <h2>Dos tecnologías para momentos distintos</h2>
           <p class="lead">
-            No compiten entre sí. Se usan en momentos diferentes del proceso inmobiliario y constructivo.
+            Digital Twin y AR no compiten. Se usan en fases diferentes del proyecto para resolver necesidades distintas.
           </p>
         </div>
 
         <div class="grid-2">
           <article class="card">
-            <div class="tag">Digital Twin / Meta-dology</div>
-            <h3>Para explicar el proyecto completo, incluso a distancia</h3>
+            <div class="tag">Digital Twin</div>
+            <h3>Para explicar el proyecto completo</h3>
             <p>
-              Ideal para promotores que necesitan presentar una promoción de forma sólida a compradores remotos,
-              inversores, socios o equipos comerciales. Sirve para entender mejor el volumen, el encaje, la escala,
-              el entorno y la propuesta global del proyecto.
+              El Digital Twin es ideal cuando necesitas presentar una promoción o un proyecto de forma más completa,
+              especialmente en preventa, reuniones con inversores o compradores remotos.
             </p>
             <ul>
-              <li>Promociones residenciales y desarrollos premium</li>
-              <li>Compradores internacionales que no pueden visitar la parcela</li>
-              <li>Material para deck comercial, preventa y reuniones clave</li>
-              <li>Experiencia digital más completa que un PDF o un render estático</li>
+              <li>Presentación global de promociones o desarrollos</li>
+              <li>Compradores internacionales que no pueden visitar el proyecto</li>
+              <li>Mejor apoyo comercial que un PDF o un render estático</li>
+              <li>Más claridad para explicar conjunto, escala y contexto</li>
             </ul>
           </article>
 
           <article class="card">
-            <div class="tag">AR / Visualización sobre realidad</div>
-            <h3>Para ver el proyecto o el cambio directamente sobre el espacio real</h3>
+            <div class="tag">Realidad Aumentada</div>
+            <h3>Para visualizar sobre el espacio real</h3>
             <p>
-              Ideal cuando el usuario está en la parcela, en una vivienda o en una revisión concreta de obra y necesita
-              entender cómo quedará algo en contexto real. Aporta comprensión inmediata durante visitas, validaciones
-              y sesiones puntuales de decisión.
+              La AR funciona mejor cuando la persona está en una parcela, una vivienda o una zona concreta y necesita ver
+              cómo quedará algo directamente sobre la realidad.
             </p>
             <ul>
-              <li>Visualización sobre solar, vivienda o entorno construido</li>
-              <li>Visitas comerciales con más claridad</li>
-              <li>Revisiones concretas antes o durante obra</li>
-              <li>Más comprensión visual para perfiles no técnicos</li>
+              <li>Visualización en solar, vivienda o ubicación real</li>
+              <li>Más impacto en visitas comerciales</li>
+              <li>Apoyo a decisiones técnicas puntuales</li>
+              <li>Comprensión visual más rápida para perfiles no técnicos</li>
             </ul>
           </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="cuando-usar">
+      <div class="container split">
+        <div>
+          <div class="section-head">
+            <h2>Cuándo usar cada una</h2>
+            <p class="lead">
+              Una forma simple de entenderlo y explicarlo en reuniones comerciales o técnicas.
+            </p>
+          </div>
+
+          <div class="steps">
+            <div class="step">
+              <strong>Si necesitas explicar una promoción completa</strong>
+              Usa <strong>Digital Twin</strong>. Es la mejor opción para mostrar el conjunto del proyecto.
+            </div>
+            <div class="step">
+              <strong>Si el comprador está en otro país</strong>
+              Usa <strong>Digital Twin</strong>. Ayuda a entender la promoción sin estar físicamente allí.
+            </div>
+            <div class="step">
+              <strong>Si la persona está en el solar, la vivienda o la zona real</strong>
+              Usa <strong>AR</strong>. Permite ver el proyecto o el cambio directamente sobre el entorno.
+            </div>
+            <div class="step">
+              <strong>Si hay que validar una decisión concreta antes o durante obra</strong>
+              Usa <strong>AR</strong>. Es muy útil para visualizar implantaciones o revisiones puntuales.
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="tag">Mensaje simple</div>
+          <h3>La diferencia, explicada sin tecnicismos</h3>
+          <p style="margin-bottom:14px">
+            <strong>Digital Twin</strong> sirve para presentar y entender el proyecto completo.
+            <br><br>
+            <strong>AR</strong> sirve para ver ese proyecto o ese cambio directamente sobre el espacio real.
+          </p>
+          <p>
+            En muchos casos ambos pueden combinarse: primero para explicar la promoción a distancia y después para
+            reforzar la experiencia cuando el cliente visita la parcela o la vivienda.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section id="para-quien">
+      <div class="container split">
+        <div>
+          <div class="section-head">
+            <h2>Para quién es</h2>
+            <p class="lead">
+              Esta solución tiene sentido para perfiles que necesitan vender, presentar o decidir mejor.
+            </p>
+          </div>
+
+          <div class="audience-list">
+            <div class="audience-item">
+              <strong>Promotores inmobiliarios</strong><br>
+              Para preventa, inversión, comercialización y compradores internacionales.
+            </div>
+            <div class="audience-item">
+              <strong>Agencias premium</strong><br>
+              Para enseñar mejor promociones, viviendas singulares o proyectos con comprador remoto.
+            </div>
+            <div class="audience-item">
+              <strong>Arquitectos e ingenierías</strong><br>
+              Para apoyar presentaciones y validar decisiones visuales con más claridad.
+            </div>
+            <div class="audience-item">
+              <strong>Constructoras</strong><br>
+              Para revisiones concretas y visualización contextual en momentos clave de obra.
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="tag">Encaje</div>
+          <h3>No va dirigido al cliente residencial final</h3>
+          <p>
+            Esta página está pensada para clientes B2B del sector inmobiliario y de construcción:
+            empresas que necesitan herramientas mejores para presentar proyectos, acelerar ventas o reducir fricción en decisiones.
+          </p>
         </div>
       </div>
     </section>
@@ -501,124 +614,34 @@
     <section id="casos">
       <div class="container">
         <div class="section-head">
-          <h2>Casos de uso en España</h2>
+          <h2>Casos de uso habituales</h2>
           <p class="lead">
-            Tres conversaciones distintas, una misma categoría: tecnología para vender mejor y decidir con menos fricción.
+            Ejemplos concretos donde estas tecnologías aportan más valor.
           </p>
         </div>
 
         <div class="grid-3">
           <article class="card">
-            <div class="tag">Preventa · Inversión</div>
-            <h3>Promotores y comercialización</h3>
+            <div class="tag">Caso 1</div>
+            <h3>Promoción residencial en preventa</h3>
             <p>
-              Presentar mejor una promoción antes de construirla, acelerar comprensión del proyecto y reducir rondas de dudas
-              en preventa, financiación o reuniones con socios.
+              Mostrar el proyecto completo antes de construirlo para ayudar a comercialización, inversión y ventas.
             </p>
           </article>
 
           <article class="card">
-            <div class="tag">Remote buyer</div>
-            <h3>Comprador remoto o internacional</h3>
+            <div class="tag">Caso 2</div>
+            <h3>Comprador remoto en Londres o Hong Kong</h3>
             <p>
-              Ayudar a un comprador en Hong Kong, Londres o Dubái a entender la promoción sin estar allí.
-              Primero con una experiencia digital completa; después, si viaja, con visualización en contexto.
+              Presentar la promoción de forma más clara a distancia y reforzar después la visita física con AR si viaja.
             </p>
           </article>
 
           <article class="card">
-            <div class="tag">Engineering · Construction</div>
-            <h3>Arquitectos, ingenierías y decisiones críticas</h3>
+            <div class="tag">Caso 3</div>
+            <h3>Validación puntual en solar o fase de obra</h3>
             <p>
-              Apoyar validaciones previas a obra o revisiones puntuales con una visualización clara sobre el terreno real,
-              evitando interpretaciones ambiguas en momentos donde el coste del error es alto.
-            </p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section id="encaje">
-      <div class="container split">
-        <div>
-          <div class="section-head">
-            <h2>Cuándo usar cada una</h2>
-            <p class="lead">
-              Esta tabla narrativa te ayuda a explicarlo sin tecnicismos en reuniones, emails o LinkedIn.
-            </p>
-          </div>
-
-          <div class="steps">
-            <div class="step">
-              <strong>Si el comprador está lejos</strong>
-              Usa <strong>Digital Twin / Meta-dology</strong>. Lo importante es explorar el proyecto completo a distancia.
-            </div>
-            <div class="step">
-              <strong>Si el cliente está en la parcela o en la vivienda</strong>
-              Usa <strong>AR</strong>. Lo importante es ver el cambio o el edificio directamente sobre la realidad.
-            </div>
-            <div class="step">
-              <strong>Si la reunión es de preventa, inversión o presentación</strong>
-              Empieza con <strong>Digital Twin</strong>. Ayuda a explicar mejor el conjunto del proyecto.
-            </div>
-            <div class="step">
-              <strong>Si la reunión es una validación puntual antes o durante obra</strong>
-              Usa <strong>AR contextual</strong> como herramienta ligera de decisión.
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="tag">Cómo venderlo</div>
-          <h3>Pitch simple para KairuTech</h3>
-          <p style="margin-bottom:14px">
-            Ayudamos a empresas de PropTech y ConTech a entrar en España conectando su tecnología con casos reales de mercado:
-            <strong>preventa</strong>, <strong>comprador remoto</strong> y <strong>decisiones críticas antes de construir</strong>.
-          </p>
-
-          <ul>
-            <li><strong>Meta-dology / Digital Twin:</strong> para explicar el proyecto completo</li>
-            <li><strong>AR:</strong> para visualizarlo sobre el espacio real</li>
-            <li><strong>KairuTech:</strong> para abrir mercado, validar demanda y conseguir reuniones con clientes adecuados</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <section id="como-trabajamos">
-      <div class="container">
-        <div class="section-head">
-          <h2>Cómo trabajamos</h2>
-          <p class="lead">
-            Mantenemos el modelo KairuTech: estrategia clara, ejecución local y foco en casos con salida comercial real.
-          </p>
-        </div>
-
-        <div class="grid-3">
-          <article class="card">
-            <div class="tag">Paso 1</div>
-            <h3>Diagnóstico</h3>
-            <p>
-              Definimos qué tecnología encaja mejor en España, qué mensaje usar y qué tipo de cliente debe ser prioritario:
-              promotor, agencia premium, estudio, ingeniería o constructora.
-            </p>
-          </article>
-
-          <article class="card">
-            <div class="tag">Paso 2</div>
-            <h3>Piloto</h3>
-            <p>
-              Buscamos un primer proyecto pagado y acotado. Una parcela, una promoción o una decisión concreta.
-              Lo importante es generar una prueba comercial útil, no una demo abstracta.
-            </p>
-          </article>
-
-          <article class="card">
-            <div class="tag">Paso 3</div>
-            <h3>Escala</h3>
-            <p>
-              Convertimos ese piloto en narrativa comercial, outreach, reuniones y nuevas oportunidades en España
-              y mercados hispanohablantes.
+              Visualizar sobre el espacio real una implantación, una decisión concreta o un elemento que necesita revisión.
             </p>
           </article>
         </div>
@@ -628,10 +651,9 @@
     <section>
       <div class="container">
         <div class="cta">
-          <h2 style="margin-bottom:10px">¿Quieres introducir esta tecnología en España?</h2>
+          <h2 style="margin-bottom:10px">¿Quieres valorar si encaja en tu proyecto?</h2>
           <p class="lead" style="margin-bottom:18px">
-            Podemos valorar encaje, clientes prioritarios y una primera estrategia comercial ligera para abrir mercado
-            con foco real en PropTech y ConTech.
+            Podemos revisar tu caso y ver si tiene más sentido Digital Twin, Realidad Aumentada o una combinación de ambas.
           </p>
           <div class="hero-actions" style="margin:0">
             <a class="btn btn-primary" href="/contacto.html">Hablar sobre tu proyecto</a>
