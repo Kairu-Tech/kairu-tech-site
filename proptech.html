@@ -1,513 +1,447 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Kairu Tech · PropTech · Expansión para Digital Twin, Smart Buildings y Construction Tech</title>
-  <meta name="description" content="Kairu Tech ayuda a empresas PropTech, Digital Twin, Smart Building, Workplace Tech, AR y Construction Tech a validar mercado, encontrar partners y abrir oportunidades comerciales en España y países de LATAM como México, Colombia, Chile y Perú." />
-  <style>
-    :root{
-      --bg:#0b1020;
-      --bg-soft:#121933;
-      --card:#11182d;
-      --line:rgba(255,255,255,.10);
-      --text:#eef2ff;
-      --muted:#b9c2e3;
-      --accent:#78a6ff;
-      --accent-2:#90e0ff;
-      --success:#93f5c3;
-      --max:1180px;
-      --radius:22px;
-      --shadow:0 10px 35px rgba(0,0,0,.28);
-    }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kairu Tech · PropTech & Smart Cities</title>
 
-    *{box-sizing:border-box}
-    html{scroll-behavior:smooth}
-    body{
-      margin:0;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background:
-        radial-gradient(1200px 700px at 10% -10%, rgba(120,166,255,.18), transparent 55%),
-        radial-gradient(900px 500px at 100% 0%, rgba(144,224,255,.10), transparent 45%),
-        linear-gradient(180deg, #0b1020 0%, #0a0f1d 100%);
-      color:var(--text);
-      line-height:1.6;
-    }
+<meta name="description" content="Expansión de startups PropTech, Digital Twin, Smart Buildings e Infrastructure AI en España y LATAM.">
 
-    a{color:inherit;text-decoration:none}
-    img{max-width:100%;display:block}
+<style>
 
-    .container{
-      width:min(100% - 32px, var(--max));
-      margin:0 auto;
-    }
+:root{
+--bg:#0b1020;
+--bg-soft:#121933;
+--card:#11182d;
+--line:rgba(255,255,255,.10);
+--text:#eef2ff;
+--muted:#b9c2e3;
+--accent:#78a6ff;
+--accent-2:#90e0ff;
+--max:1180px;
+--radius:22px;
+--shadow:0 10px 35px rgba(0,0,0,.28);
+}
 
-    .topbar{
-      position:sticky;
-      top:0;
-      z-index:30;
-      backdrop-filter: blur(10px);
-      background:rgba(11,16,32,.72);
-      border-bottom:1px solid rgba(255,255,255,.06);
-    }
+*{box-sizing:border-box}
 
-    .nav{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:20px;
-      min-height:72px;
-    }
+body{
+margin:0;
+font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+background:linear-gradient(180deg,#0b1020,#0a0f1d);
+color:var(--text);
+line-height:1.6;
+}
 
-    .brand{
-      font-weight:700;
-      letter-spacing:.2px;
-      font-size:1rem;
-    }
+a{color:inherit;text-decoration:none}
 
-    .brand span{
-      color:var(--accent-2);
-    }
+.container{
+width:min(100% - 32px,var(--max));
+margin:auto;
+}
 
-    .nav-links{
-      display:flex;
-      align-items:center;
-      gap:18px;
-      flex-wrap:wrap;
-      color:var(--muted);
-      font-size:.95rem;
-    }
+.topbar{
+position:sticky;
+top:0;
+backdrop-filter:blur(10px);
+background:rgba(11,16,32,.7);
+border-bottom:1px solid rgba(255,255,255,.06);
+}
 
-    .nav-links a:hover{color:var(--text)}
+.nav{
+display:flex;
+align-items:center;
+justify-content:space-between;
+min-height:70px;
+}
 
-    .nav-links a.active{
-      color:var(--text);
-      position:relative;
-    }
+.brand{
+font-weight:700;
+}
 
-    .nav-links a.active::after{
-      content:"";
-      position:absolute;
-      left:0;
-      right:0;
-      bottom:-8px;
-      height:2px;
-      border-radius:999px;
-      background:linear-gradient(90deg, var(--accent), var(--accent-2));
-    }
+.brand span{color:var(--accent-2)}
 
-    .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      min-height:46px;
-      padding:0 18px;
-      border-radius:999px;
-      border:1px solid transparent;
-      font-weight:600;
-      transition:.2s ease;
-      cursor:pointer;
-    }
+.nav-links{
+display:flex;
+gap:18px;
+font-size:.95rem;
+color:var(--muted);
+}
 
-    .btn-primary{
-      background:linear-gradient(135deg, var(--accent), var(--accent-2));
-      color:#09101f;
-      box-shadow:0 10px 30px rgba(120,166,255,.22);
-    }
+.nav-links a:hover{color:white}
 
-    .btn-primary:hover{transform:translateY(-1px)}
+.btn{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+min-height:44px;
+padding:0 18px;
+border-radius:999px;
+font-weight:600;
+border:1px solid transparent;
+}
 
-    .btn-secondary{
-      background:rgba(255,255,255,.03);
-      color:var(--text);
-      border-color:rgba(255,255,255,.12);
-    }
+.btn-primary{
+background:linear-gradient(135deg,var(--accent),var(--accent-2));
+color:#09101f;
+}
 
-    .btn-secondary:hover{
-      background:rgba(255,255,255,.06);
-      border-color:rgba(255,255,255,.18);
-    }
+.btn-secondary{
+background:rgba(255,255,255,.04);
+border:1px solid rgba(255,255,255,.1);
+}
 
-    .hero{
-      padding:78px 0 52px;
-    }
+.hero{
+padding:80px 0 60px;
+}
 
-    .eyebrow{
-      display:inline-flex;
-      align-items:center;
-      gap:10px;
-      padding:8px 12px;
-      border:1px solid rgba(255,255,255,.10);
-      border-radius:999px;
-      background:rgba(255,255,255,.03);
-      color:var(--accent-2);
-      font-size:.88rem;
-      margin-bottom:18px;
-    }
+.hero-grid{
+display:grid;
+grid-template-columns:1.2fr .8fr;
+gap:30px;
+}
 
-    .hero-grid{
-      display:grid;
-      grid-template-columns:1.15fr .85fr;
-      gap:28px;
-      align-items:stretch;
-    }
+.eyebrow{
+display:inline-block;
+padding:6px 12px;
+border-radius:999px;
+background:rgba(255,255,255,.05);
+border:1px solid rgba(255,255,255,.1);
+color:var(--accent-2);
+font-size:.85rem;
+margin-bottom:16px;
+}
 
-    h1,h2,h3{
-      line-height:1.1;
-      letter-spacing:-.03em;
-      margin:0 0 14px;
-    }
+h1{
+font-size:clamp(2rem,5vw,3.8rem);
+margin:0 0 14px;
+}
 
-    h1{
-      font-size:clamp(2.3rem, 5vw, 4.3rem);
-      max-width:14ch;
-    }
+.lead{
+color:var(--muted);
+margin-bottom:26px;
+}
 
-    h2{
-      font-size:clamp(1.7rem, 3vw, 2.5rem);
-      margin-bottom:12px;
-    }
+.hero-actions{
+display:flex;
+gap:12px;
+flex-wrap:wrap;
+}
 
-    h3{
-      font-size:1.12rem;
-      margin-bottom:10px;
-    }
+.hero-points{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:12px;
+margin-top:26px;
+}
 
-    .lead{
-      font-size:1.08rem;
-      color:var(--muted);
-      max-width:66ch;
-      margin:0 0 24px;
-    }
+.mini{
+background:rgba(255,255,255,.04);
+border:1px solid rgba(255,255,255,.08);
+padding:14px;
+border-radius:16px;
+}
 
-    .hero-actions{
-      display:flex;
-      flex-wrap:wrap;
-      gap:12px;
-      margin:0 0 26px;
-    }
+.visual-box{
+background:rgba(255,255,255,.03);
+border:1px solid rgba(255,255,255,.08);
+padding:26px;
+border-radius:var(--radius);
+}
 
-    .hero-points{
-      display:grid;
-      grid-template-columns:repeat(3, minmax(0,1fr));
-      gap:12px;
-    }
+.visual-item{
+margin-bottom:16px;
+}
 
-    .mini{
-      background:rgba(255,255,255,.03);
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:16px;
-      padding:14px;
-    }
+.visual-item strong{
+display:block;
+}
 
-    .mini strong{
-      display:block;
-      font-size:1.02rem;
-      margin-bottom:4px;
-    }
+.visual-top{
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+margin-top:20px;
+}
 
-    .mini span{
-      color:var(--muted);
-      font-size:.94rem;
-    }
+.pill{
+padding:8px 12px;
+border-radius:999px;
+font-size:.85rem;
+background:rgba(255,255,255,.06);
+border:1px solid rgba(255,255,255,.08);
+}
 
-    .card{
-      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      border:1px solid rgba(255,255,255,.10);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      padding:24px;
-    }
+section{
+padding:40px 0;
+}
 
-    .tag{
-      display:inline-flex;
-      width:max-content;
-      margin-bottom:12px;
-      padding:6px 10px;
-      border-radius:999px;
-      font-size:.8rem;
-      color:var(--accent-2);
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.03);
-    }
+.grid-2{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:20px;
+}
 
-    .muted{color:var(--muted)}
+.card{
+background:rgba(255,255,255,.04);
+border:1px solid rgba(255,255,255,.08);
+padding:22px;
+border-radius:var(--radius);
+}
 
-    .visual-box{
-      min-height:100%;
-      display:flex;
-      flex-direction:column;
-      justify-content:space-between;
-      gap:18px;
-      padding:28px;
-      background:
-        linear-gradient(180deg, rgba(120,166,255,.10), rgba(144,224,255,.03)),
-        rgba(255,255,255,.02);
-      border:1px solid rgba(255,255,255,.10);
-      border-radius:28px;
-      box-shadow:var(--shadow);
-    }
+.tag{
+font-size:.8rem;
+color:var(--accent-2);
+margin-bottom:10px;
+display:inline-block;
+}
 
-    .visual-top{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-    }
+.cta{
+background:rgba(255,255,255,.04);
+border:1px solid rgba(255,255,255,.1);
+padding:28px;
+border-radius:var(--radius);
+}
 
-    .pill{
-      padding:9px 13px;
-      border-radius:999px;
-      font-size:.88rem;
-      color:var(--text);
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.08);
-    }
+footer{
+padding:40px 0;
+font-size:.9rem;
+color:var(--muted);
+}
 
-    .visual-panel{
-      background:rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:22px;
-      padding:20px;
-    }
+.footer-row{
+display:flex;
+justify-content:space-between;
+flex-wrap:wrap;
+border-top:1px solid rgba(255,255,255,.08);
+padding-top:20px;
+}
 
-    .visual-panel h3{
-      margin-bottom:14px;
-    }
+@media(max-width:900px){
 
-    .visual-list{
-      display:grid;
-      gap:12px;
-    }
+.hero-grid{
+grid-template-columns:1fr;
+}
 
-    .visual-item{
-      padding:14px 16px;
-      border-radius:16px;
-      background:rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.07);
-    }
+.hero-points{
+grid-template-columns:1fr;
+}
 
-    .visual-item strong{
-      display:block;
-      margin-bottom:4px;
-    }
+.grid-2{
+grid-template-columns:1fr;
+}
 
-    section{
-      padding:36px 0;
-    }
+}
 
-    .section-head{
-      max-width:72ch;
-      margin-bottom:20px;
-    }
-
-    .grid-2{
-      display:grid;
-      grid-template-columns:repeat(2, minmax(0,1fr));
-      gap:20px;
-    }
-
-    .card p{
-      margin:0;
-      color:var(--muted);
-    }
-
-    .cta{
-      padding:30px;
-      border-radius:24px;
-      background:
-        linear-gradient(135deg, rgba(120,166,255,.12), rgba(144,224,255,.08)),
-        rgba(255,255,255,.03);
-      border:1px solid rgba(255,255,255,.10);
-      box-shadow:var(--shadow);
-    }
-
-    footer{
-      padding:34px 0 50px;
-      color:var(--muted);
-      font-size:.94rem;
-    }
-
-    .footer-row{
-      display:flex;
-      justify-content:space-between;
-      gap:16px;
-      flex-wrap:wrap;
-      border-top:1px solid rgba(255,255,255,.08);
-      padding-top:22px;
-      margin-top:8px;
-    }
-
-    @media (max-width: 980px){
-      .hero-grid,
-      .grid-2{
-        grid-template-columns:1fr;
-      }
-
-      .hero-points{
-        grid-template-columns:1fr;
-      }
-
-      .nav{
-        padding:10px 0;
-        align-items:flex-start;
-        flex-direction:column;
-      }
-
-      .nav-links{
-        gap:12px;
-      }
-
-      .nav-links a.active::after{
-        display:none;
-      }
-    }
-  </style>
+</style>
 </head>
+
 <body>
-  <header class="topbar">
-    <div class="container nav">
-      <a class="brand" href="/">Kairu <span>Tech</span></a>
 
-      <nav class="nav-links">
-        <a href="/#servicios">Servicios</a>
-        <a href="/#paquetes">Paquetes</a>
-        <a href="/proptech.html" class="active">PropTech</a>
-        <a href="/kids.html">EdTech</a>
-        <a href="/contacto.html">Contacto</a>
-        <a href="/legal.html">Legal</a>
-        <a href="/en/">EN</a>
-        <a class="btn btn-secondary" href="/contacto.html">Hablemos</a>
-      </nav>
-    </div>
-  </header>
+<header class="topbar">
+<div class="container nav">
 
-  <main>
-    <section class="hero">
-      <div class="container hero-grid">
-        <div>
-          <div class="eyebrow">PropTech · Digital Twin · Smart Buildings · Workplace Tech · Construction Tech</div>
-          <h1>Expansión PropTech en España y LATAM</h1>
-          <p class="lead">
-            Kairu Tech apoya a <strong>startups y empresas tecnológicas internacionales</strong> de
-            <strong>PropTech, Digital Twin, Smart Building, Workplace Tech, Realidad Aumentada y Construction Tech</strong>
-            en la validación del mercado y la apertura de primeras oportunidades comerciales en
-            <strong>España y países como México, Colombia, Chile y Perú</strong>.
-          </p>
+<a class="brand" href="/">Kairu <span>Tech</span></a>
 
-          <div class="hero-actions">
-            <a class="btn btn-primary" href="/contacto.html">Explorar entrada en España</a>
-            <a class="btn btn-secondary" href="#soluciones">Ver cómo trabajamos</a>
-          </div>
+<nav class="nav-links">
+<a href="/#servicios">Servicios</a>
+<a href="/#paquetes">Paquetes</a>
+<a href="/proptech.html">PropTech & Smart Cities</a>
+<a href="/kids.html">Kids</a>
+<a href="/contacto.html">Contacto</a>
+<a href="/legal.html">Legal</a>
+<a href="/en/">EN</a>
+<a class="btn btn-secondary" href="/contacto.html">Hablemos</a>
+</nav>
 
-          <div class="hero-points">
-            <div class="mini">
-              <strong>Validación de mercado</strong>
-              <span>Encaje real, segmentos prioritarios y oportunidad comercial.</span>
-            </div>
-            <div class="mini">
-              <strong>Partners locales</strong>
-              <span>Identificación de actores clave y posibles colaboradores.</span>
-            </div>
-            <div class="mini">
-              <strong>Primer pipeline</strong>
-              <span>Reuniones iniciales y primeras oportunidades en España y LATAM.</span>
-            </div>
-          </div>
-        </div>
+</div>
+</header>
 
-        <aside class="visual-box">
-          <div class="visual-top">
-            <span class="pill">PropTech startups</span>
-            <span class="pill">Digital Twin</span>
-            <span class="pill">AR / VR</span>
-            <span class="pill">Smart Buildings</span>
-            <span class="pill">Workplace Tech</span>
-          </div>
+<main>
 
-          <div class="visual-panel">
-            <h3>Para quién es</h3>
-            <div class="visual-list">
-              <div class="visual-item">
-                <strong>PropTech startups</strong>
-                <span class="muted">Empresas que quieren validar si España o LATAM son mercados relevantes para su solución.</span>
-              </div>
-              <div class="visual-item">
-                <strong>Digital Twin y AR</strong>
-                <span class="muted">Plataformas que buscan partners, pilotos o primeras oportunidades comerciales.</span>
-              </div>
-              <div class="visual-item">
-                <strong>Smart Building y Workplace platforms</strong>
-                <span class="muted">Software para edificios inteligentes, workplace experience, operaciones y gestión de activos.</span>
-              </div>
-              <div class="visual-item">
-                <strong>Construction Tech</strong>
-                <span class="muted">Scaleups que quieren explorar el mercado antes de abrir equipo local.</span>
-              </div>
-            </div>
-          </div>
-        </aside>
-      </div>
-    </section>
+<section class="hero">
 
-    <section id="soluciones">
-      <div class="container">
-        <div class="section-head">
-          <h2>Cómo apoyamos la entrada en el mercado</h2>
-          <p class="lead">
-            Kairu Tech actúa como apoyo comercial y de mercado para empresas tecnológicas que quieren explorar
-            <strong>España y países de LATAM como México, Colombia, Chile y Perú</strong> de forma práctica,
-            flexible y con foco comercial.
-          </p>
-        </div>
+<div class="container hero-grid">
 
-        <div class="grid-2">
-          <article class="card">
-            <div class="tag">Market Validation</div>
-            <h3>Validación de mercado</h3>
-            <p>
-              Análisis del encaje de la solución, segmentos prioritarios, mensaje local y viabilidad comercial inicial
-              en el mercado español y en países seleccionados de LATAM.
-            </p>
-          </article>
+<div>
 
-          <article class="card">
-            <div class="tag">Business Development</div>
-            <h3>Desarrollo de negocio</h3>
-            <p>
-              Apertura de partners estratégicos, primeras reuniones comerciales y exploración de pilotos o colaboraciones
-              con actores del ecosistema PropTech, Smart Building y Built Environment.
-            </p>
-          </article>
-        </div>
-      </div>
-    </section>
+<div class="eyebrow">
+PropTech · Smart Cities · Digital Twin · Smart Buildings · Infrastructure AI
+</div>
 
-    <section>
-      <div class="container">
-        <div class="cta">
-          <h2 style="margin-bottom:10px">¿Tiene sentido explorar España o LATAM?</h2>
-          <p class="lead" style="margin-bottom:18px">
-            Una primera conversación permite valorar el encaje del mercado, el tipo de entrada más razonable
-            y las primeras oportunidades a explorar en España y en mercados como México, Colombia, Chile o Perú.
-          </p>
-          <div class="hero-actions" style="margin:0">
-            <a class="btn btn-primary" href="/contacto.html">Hablar sobre expansión</a>
-            <a class="btn btn-secondary" href="/">Volver a KairuTech</a>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
+<h1>Expansión de tecnología PropTech en España y LATAM</h1>
 
-  <footer>
-    <div class="container footer-row">
-      <div>© Kairu Tech · Madrid & London</div>
-      <div style="display:flex; gap:16px; flex-wrap:wrap;">
-        <a href="/legal.html">Legal</a>
-        <a href="/contacto.html">Contacto</a>
-      </div>
-    </div>
-  </footer>
+<p class="lead">
+Kairu Tech apoya a startups y empresas tecnológicas internacionales en PropTech, Digital Twin, Smart Buildings, Workplace Tech e Infrastructure AI que quieren explorar oportunidades en España y mercados de habla hispana como México, Colombia, Chile o Perú.
+</p>
+
+<div class="hero-actions">
+<a class="btn btn-primary" href="/contacto.html">Explorar expansión</a>
+<a class="btn btn-secondary" href="#soluciones">Cómo trabajamos</a>
+</div>
+
+<div class="hero-points">
+
+<div class="mini">
+<strong>Validación de mercado</strong>
+<span>Encaje de la solución y segmentos prioritarios.</span>
+</div>
+
+<div class="mini">
+<strong>Partners locales</strong>
+<span>Identificación de actores clave del sector.</span>
+</div>
+
+<div class="mini">
+<strong>Primer pipeline</strong>
+<span>Primeras reuniones y oportunidades comerciales.</span>
+</div>
+
+</div>
+
+</div>
+
+<aside class="visual-box">
+
+<h3>Para quién es</h3>
+
+<div class="visual-item">
+<strong>Startups PropTech</strong>
+<span>Empresas que quieren validar España o LATAM como mercado.</span>
+</div>
+
+<div class="visual-item">
+<strong>Digital Twin y AR</strong>
+<span>Plataformas que buscan pilotos o partners locales.</span>
+</div>
+
+<div class="visual-item">
+<strong>Smart Buildings</strong>
+<span>Software para edificios inteligentes y operaciones.</span>
+</div>
+
+<div class="visual-item">
+<strong>Infrastructure & Smart Cities</strong>
+<span>IA aplicada a infraestructuras y gestión urbana.</span>
+</div>
+
+<div class="visual-item">
+<strong>Construction Tech</strong>
+<span>Scaleups que quieren explorar el mercado antes de abrir equipo local.</span>
+</div>
+
+<div class="visual-top">
+
+<span class="pill">PropTech</span>
+<span class="pill">Digital Twin</span>
+<span class="pill">AR / VR</span>
+<span class="pill">Smart Buildings</span>
+<span class="pill">Workplace Tech</span>
+<span class="pill">Infrastructure AI</span>
+
+</div>
+
+</aside>
+
+</div>
+
+</section>
+
+<section id="soluciones">
+
+<div class="container">
+
+<h2>Cómo apoyamos la entrada en el mercado</h2>
+
+<p class="lead">
+Kairu Tech actúa como socio local para empresas tecnológicas que quieren explorar España y LATAM de forma práctica y con foco comercial.
+</p>
+
+<div class="grid-2">
+
+<article class="card">
+
+<div class="tag">Validación</div>
+
+<h3>Validación de mercado</h3>
+
+<p>
+Análisis del encaje de la solución, posicionamiento local y potencial comercial en España y LATAM.
+</p>
+
+</article>
+
+<article class="card">
+
+<div class="tag">Desarrollo</div>
+
+<h3>Desarrollo de negocio</h3>
+
+<p>
+Identificación de partners, primeras reuniones comerciales y exploración de pilotos con actores del sector inmobiliario.
+</p>
+
+</article>
+
+</div>
+
+</div>
+
+</section>
+
+<section>
+
+<div class="container">
+
+<div class="cta">
+
+<h2>¿Tiene sentido España o LATAM para vuestra tecnología?</h2>
+
+<p class="lead">
+Una primera conversación permite evaluar encaje de mercado, estrategia de entrada y primeras oportunidades.
+</p>
+
+<div class="hero-actions">
+
+<a class="btn btn-primary" href="/contacto.html">
+Hablar sobre expansión
+</a>
+
+<a class="btn btn-secondary" href="/contacto.html">
+¿Interesa el mercado UK?
+</a>
+
+<a class="btn btn-secondary" href="/">
+Volver a Kairu Tech
+</a>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+</main>
+
+<footer>
+
+<div class="container footer-row">
+
+<div>
+© Kairu Tech · Madrid & London
+</div>
+
+<div>
+<a href="/legal.html">Legal</a>
+&nbsp;&nbsp;
+<a href="/contacto.html">Contacto</a>
+</div>
+
+</div>
+
+</footer>
+
 </body>
 </html>
