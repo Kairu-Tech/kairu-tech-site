@@ -48,39 +48,41 @@
 <body class="antialiased text-slate-800 bg-gradient-to-b from-white to-slate-50">
 
 <header class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-slate-200">
-  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+  <div class="mx-auto max-w-[1440px] px-6 lg:px-8">
     <div class="flex items-center justify-between py-4">
       
-      <a href="/" class="flex items-center gap-3 shrink-0">
-        <div class="flex h-11 w-11 items-center justify-center rounded-xl border border-kairu-200 text-kairu-600 bg-white">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M12 2.9l2.15 6.02h6.39l-5.17 3.76 1.98 6.02L12 15.01 6.65 18.7l1.98-6.02-5.17-3.76h6.39L12 2.9z"/>
-          </svg>
-        </div>
-        <div class="leading-none">
-          <div class="text-[15px] font-semibold tracking-tight text-slate-900">Kairu</div>
-          <div class="text-[15px] font-semibold tracking-tight text-kairu-600">Tech</div>
+      <a href="/" class="flex items-center gap-4 shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-11 w-11 text-kairu-600" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 2.9l2.15 6.02h6.39l-5.17 3.76 1.98 6.02L12 15.01 6.65 18.7l1.98-6.02-5.17-3.76h6.39L12 2.9z"/>
+        </svg>
+
+        <div class="flex items-baseline gap-1 leading-none">
+          <span class="text-[28px] font-semibold tracking-tight text-slate-900">Kairu</span>
+          <span class="text-[28px] font-semibold tracking-tight text-kairu-600">Tech</span>
         </div>
       </a>
 
-      <nav class="hidden lg:flex items-center gap-7 text-[15px] font-medium text-slate-700">
-        <a href="/servicios.html" class="transition hover:text-kairu-600">Paquetes</a>
-        <a href="/proptech.html" class="transition hover:text-kairu-600">PropTech</a>
-        <a href="/public-administration-security.html" class="transition hover:text-kairu-600">Public Sector</a>
-        <a href="/edtech.html" class="transition hover:text-kairu-600">EdTech</a>
-        <a href="/contacto.html" class="transition hover:text-kairu-600">Contacto</a>
-        <a href="/legal.html" class="transition hover:text-kairu-600">Legal</a>
-      </nav>
+      <div class="hidden lg:flex items-center ml-auto pl-12 xl:pl-20">
+        <nav class="flex items-center gap-10 text-[15px] font-medium text-slate-700">
+          <a href="/servicios.html" class="transition hover:text-kairu-600">Paquetes</a>
+          <a href="/proptech.html" class="transition hover:text-kairu-600">PropTech</a>
+          <a href="/public-administration-security.html" class="transition hover:text-kairu-600">Public Sector</a>
+          <a href="/edtech.html" class="transition hover:text-kairu-600">EdTech</a>
+          <a href="/contacto.html" class="transition hover:text-kairu-600">Contacto</a>
+          <a href="/legal.html" class="transition hover:text-kairu-600">Legal</a>
+        </nav>
 
-      <div class="hidden lg:flex items-center gap-5">
-        <div class="flex items-center gap-2 text-[15px] font-medium text-slate-500">
-          <span class="text-slate-900">ES</span>
-          <span class="text-slate-300">/</span>
-          <a href="/en/" class="transition hover:text-kairu-600">EN</a>
+        <div class="flex items-center gap-5 ml-10">
+          <div class="flex items-center gap-2 text-[15px] font-medium text-slate-500">
+            <span class="text-slate-900">ES</span>
+            <span class="text-slate-300">/</span>
+            <a href="/en/" class="transition hover:text-kairu-600">EN</a>
+          </div>
+
+          <a href="/contacto.html" class="inline-flex items-center rounded-[20px] bg-kairu-600 px-6 py-3 text-[15px] font-semibold text-white transition hover:bg-kairu-700">
+            Hablemos
+          </a>
         </div>
-        <a href="/contacto.html" class="inline-flex items-center rounded-full bg-kairu-600 px-5 py-2.5 text-[15px] font-semibold text-white transition hover:bg-kairu-700">
-          Hablemos
-        </a>
       </div>
 
       <button id="menuBtn" class="lg:hidden inline-flex items-center justify-center rounded-xl border border-slate-200 p-2 text-slate-700" aria-label="Abrir menú" aria-expanded="false">
