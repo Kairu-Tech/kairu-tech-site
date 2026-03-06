@@ -1,447 +1,328 @@
 <!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Kairu Tech · PropTech & Smart Cities</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kairu Tech · PropTech</title>
+  <meta name="description" content="Ayudamos a startups y empresas tecnológicas de PropTech, Digital Twin, Smart Buildings e Infrastructure AI a explorar y entrar en España y LATAM.">
 
-<meta name="description" content="Expansión de startups PropTech, Digital Twin, Smart Buildings e Infrastructure AI en España y LATAM.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            kairu: {
+              50:'#eff6ff',
+              100:'#dbeafe',
+              200:'#bfdbfe',
+              300:'#93c5fd',
+              400:'#60a5fa',
+              500:'#3b82f6',
+              600:'#2563eb',
+              700:'#1d4ed8',
+              800:'#1e40af',
+              900:'#1e3a8a'
+            }
+          }
+        }
+      }
+    };
+  </script>
 
-<style>
-
-:root{
---bg:#0b1020;
---bg-soft:#121933;
---card:#11182d;
---line:rgba(255,255,255,.10);
---text:#eef2ff;
---muted:#b9c2e3;
---accent:#78a6ff;
---accent-2:#90e0ff;
---max:1180px;
---radius:22px;
---shadow:0 10px 35px rgba(0,0,0,.28);
-}
-
-*{box-sizing:border-box}
-
-body{
-margin:0;
-font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-background:linear-gradient(180deg,#0b1020,#0a0f1d);
-color:var(--text);
-line-height:1.6;
-}
-
-a{color:inherit;text-decoration:none}
-
-.container{
-width:min(100% - 32px,var(--max));
-margin:auto;
-}
-
-.topbar{
-position:sticky;
-top:0;
-backdrop-filter:blur(10px);
-background:rgba(11,16,32,.7);
-border-bottom:1px solid rgba(255,255,255,.06);
-}
-
-.nav{
-display:flex;
-align-items:center;
-justify-content:space-between;
-min-height:70px;
-}
-
-.brand{
-font-weight:700;
-}
-
-.brand span{color:var(--accent-2)}
-
-.nav-links{
-display:flex;
-gap:18px;
-font-size:.95rem;
-color:var(--muted);
-}
-
-.nav-links a:hover{color:white}
-
-.btn{
-display:inline-flex;
-align-items:center;
-justify-content:center;
-min-height:44px;
-padding:0 18px;
-border-radius:999px;
-font-weight:600;
-border:1px solid transparent;
-}
-
-.btn-primary{
-background:linear-gradient(135deg,var(--accent),var(--accent-2));
-color:#09101f;
-}
-
-.btn-secondary{
-background:rgba(255,255,255,.04);
-border:1px solid rgba(255,255,255,.1);
-}
-
-.hero{
-padding:80px 0 60px;
-}
-
-.hero-grid{
-display:grid;
-grid-template-columns:1.2fr .8fr;
-gap:30px;
-}
-
-.eyebrow{
-display:inline-block;
-padding:6px 12px;
-border-radius:999px;
-background:rgba(255,255,255,.05);
-border:1px solid rgba(255,255,255,.1);
-color:var(--accent-2);
-font-size:.85rem;
-margin-bottom:16px;
-}
-
-h1{
-font-size:clamp(2rem,5vw,3.8rem);
-margin:0 0 14px;
-}
-
-.lead{
-color:var(--muted);
-margin-bottom:26px;
-}
-
-.hero-actions{
-display:flex;
-gap:12px;
-flex-wrap:wrap;
-}
-
-.hero-points{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:12px;
-margin-top:26px;
-}
-
-.mini{
-background:rgba(255,255,255,.04);
-border:1px solid rgba(255,255,255,.08);
-padding:14px;
-border-radius:16px;
-}
-
-.visual-box{
-background:rgba(255,255,255,.03);
-border:1px solid rgba(255,255,255,.08);
-padding:26px;
-border-radius:var(--radius);
-}
-
-.visual-item{
-margin-bottom:16px;
-}
-
-.visual-item strong{
-display:block;
-}
-
-.visual-top{
-display:flex;
-flex-wrap:wrap;
-gap:10px;
-margin-top:20px;
-}
-
-.pill{
-padding:8px 12px;
-border-radius:999px;
-font-size:.85rem;
-background:rgba(255,255,255,.06);
-border:1px solid rgba(255,255,255,.08);
-}
-
-section{
-padding:40px 0;
-}
-
-.grid-2{
-display:grid;
-grid-template-columns:repeat(2,1fr);
-gap:20px;
-}
-
-.card{
-background:rgba(255,255,255,.04);
-border:1px solid rgba(255,255,255,.08);
-padding:22px;
-border-radius:var(--radius);
-}
-
-.tag{
-font-size:.8rem;
-color:var(--accent-2);
-margin-bottom:10px;
-display:inline-block;
-}
-
-.cta{
-background:rgba(255,255,255,.04);
-border:1px solid rgba(255,255,255,.1);
-padding:28px;
-border-radius:var(--radius);
-}
-
-footer{
-padding:40px 0;
-font-size:.9rem;
-color:var(--muted);
-}
-
-.footer-row{
-display:flex;
-justify-content:space-between;
-flex-wrap:wrap;
-border-top:1px solid rgba(255,255,255,.08);
-padding-top:20px;
-}
-
-@media(max-width:900px){
-
-.hero-grid{
-grid-template-columns:1fr;
-}
-
-.hero-points{
-grid-template-columns:1fr;
-}
-
-.grid-2{
-grid-template-columns:1fr;
-}
-
-}
-
-</style>
+  <style>
+    .card {
+      border-radius: 1rem;
+      box-shadow: 0 8px 24px rgba(2,6,23,.06);
+      background: rgba(255,255,255,.9);
+      backdrop-filter: blur(6px);
+    }
+    .container-narrow { max-width: 1100px; }
+  </style>
 </head>
 
-<body>
+<body class="antialiased text-slate-800 bg-gradient-to-b from-white to-slate-50">
 
-<header class="topbar">
-<div class="container nav">
+<header class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-slate-200">
+  <div class="mx-auto max-w-[1440px] px-6 lg:px-8">
+    <div class="flex items-center justify-between py-4">
+      
+      <a href="/" class="flex items-center gap-4 shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-12 w-12 text-kairu-600" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 2.9l2.15 6.02h6.39l-5.17 3.76 1.98 6.02L12 15.01 6.65 18.7l1.98-6.02-5.17-3.76h6.39L12 2.9z"/>
+        </svg>
 
-<a class="brand" href="/">Kairu <span>Tech</span></a>
+        <div class="flex items-baseline gap-1 leading-none">
+          <span class="text-[30px] font-semibold tracking-tight text-slate-900">Kairu</span>
+          <span class="text-[30px] font-semibold tracking-tight text-kairu-600">Tech</span>
+        </div>
+      </a>
 
-<nav class="nav-links">
-<a href="/#servicios">Servicios</a>
-<a href="/#paquetes">Paquetes</a>
-<a href="/proptech.html">PropTech & Smart Cities</a>
-<a href="/kids.html">Kids</a>
-<a href="/contacto.html">Contacto</a>
-<a href="/legal.html">Legal</a>
-<a href="/en/">EN</a>
-<a class="btn btn-secondary" href="/contacto.html">Hablemos</a>
-</nav>
+      <div class="hidden lg:flex items-center ml-auto pl-12 xl:pl-20">
+        <nav class="flex items-center gap-10 text-[15px] font-medium text-slate-700">
+          <a href="/servicios.html" class="transition hover:text-kairu-600">Paquetes</a>
+          <a href="/proptech.html" class="text-kairu-600">PropTech</a>
+          <a href="/public-administration-security.html" class="transition hover:text-kairu-600">Public Sector</a>
+          <a href="/edtech.html" class="transition hover:text-kairu-600">EdTech</a>
+          <a href="/contacto.html" class="transition hover:text-kairu-600">Contacto</a>
+          <a href="/legal.html" class="transition hover:text-kairu-600">Legal</a>
+        </nav>
 
-</div>
+        <div class="flex items-center gap-5 ml-10">
+          <div class="flex items-center gap-2 text-[15px] font-medium text-slate-500">
+            <span class="text-slate-900">ES</span>
+            <span class="text-slate-300">/</span>
+            <a href="/en/" class="transition hover:text-kairu-600">EN</a>
+          </div>
+
+          <a href="/contacto.html" class="inline-flex items-center rounded-[20px] bg-kairu-600 px-6 py-3 text-[15px] font-semibold text-white transition hover:bg-kairu-700">
+            Hablemos
+          </a>
+        </div>
+      </div>
+
+      <button id="menuBtn" class="lg:hidden inline-flex items-center justify-center rounded-xl border border-slate-200 p-2 text-slate-700" aria-label="Abrir menú" aria-expanded="false">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="mobileMenu" class="hidden border-t border-slate-200 bg-white lg:hidden">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 py-4 flex flex-col text-sm font-medium text-slate-700">
+      <a href="/servicios.html" class="py-3 border-b border-slate-100 hover:text-kairu-600">Paquetes</a>
+      <a href="/proptech.html" class="py-3 border-b border-slate-100 text-kairu-600">PropTech</a>
+      <a href="/public-administration-security.html" class="py-3 border-b border-slate-100 hover:text-kairu-600">Public Sector</a>
+      <a href="/edtech.html" class="py-3 border-b border-slate-100 hover:text-kairu-600">EdTech</a>
+      <a href="/contacto.html" class="py-3 border-b border-slate-100 hover:text-kairu-600">Contacto</a>
+      <a href="/legal.html" class="py-3 border-b border-slate-100 hover:text-kairu-600">Legal</a>
+      <div class="flex items-center gap-2 py-3 text-slate-500">
+        <span class="text-slate-900">ES</span>
+        <span class="text-slate-300">/</span>
+        <a href="/en/" class="hover:text-kairu-600">EN</a>
+      </div>
+      <a href="/contacto.html" class="mt-2 inline-flex w-max items-center rounded-full bg-kairu-600 px-5 py-2.5 font-semibold text-white hover:bg-kairu-700">
+        Hablemos
+      </a>
+    </div>
+  </div>
 </header>
 
 <main>
 
-<section class="hero">
+<section class="py-16 sm:py-20">
+  <div class="mx-auto px-4 sm:px-6 container-narrow">
+    <div class="grid md:grid-cols-2 gap-10 items-center">
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-slate-200 bg-white text-xs text-slate-600">
+          PropTech · Digital Twin · Smart Buildings · Smart Cities · Infrastructure AI
+        </div>
 
-<div class="container hero-grid">
+        <h1 class="mt-5 text-4xl sm:text-5xl font-extrabold leading-tight">
+          Expansión para empresas de <span class="text-kairu-600">PropTech</span> en España y LATAM
+        </h1>
 
-<div>
+        <p class="mt-5 text-lg text-slate-600">
+          Kairu Tech ayuda a startups y empresas tecnológicas internacionales de <strong>PropTech, Digital Twin, Smart Buildings, Workplace Tech, Construction Tech e Infrastructure AI</strong> a explorar oportunidades reales en <strong>España y mercados hispanohablantes</strong>.
+        </p>
 
-<div class="eyebrow">
-PropTech · Smart Cities · Digital Twin · Smart Buildings · Infrastructure AI
-</div>
+        <p class="mt-4 text-slate-600">
+          Apoyamos procesos de validación de mercado, apertura de partners y generación de primeras oportunidades comerciales con un enfoque local, práctico y orientado a resultados.
+        </p>
 
-<h1>Expansión de tecnología PropTech en España y LATAM</h1>
+        <div class="mt-6 flex gap-3 flex-wrap">
+          <a href="/contacto.html" class="px-5 py-3 rounded-xl bg-kairu-600 text-white font-medium hover:bg-kairu-700 transition">
+            Explorar expansión
+          </a>
+          <a href="#soluciones" class="px-5 py-3 rounded-xl border border-slate-300 font-medium hover:border-slate-400 transition">
+            Cómo trabajamos
+          </a>
+        </div>
 
-<p class="lead">
-Kairu Tech apoya a startups y empresas tecnológicas internacionales en PropTech, Digital Twin, Smart Buildings, Workplace Tech e Infrastructure AI que quieren explorar oportunidades en España y mercados de habla hispana como México, Colombia, Chile o Perú.
-</p>
+        <div class="mt-8 grid sm:grid-cols-3 gap-4">
+          <div class="card p-5">
+            <p class="font-semibold">Validación de mercado</p>
+            <p class="mt-2 text-sm text-slate-600">Encaje de la solución, segmentos prioritarios y posicionamiento local.</p>
+          </div>
 
-<div class="hero-actions">
-<a class="btn btn-primary" href="/contacto.html">Explorar expansión</a>
-<a class="btn btn-secondary" href="#soluciones">Cómo trabajamos</a>
-</div>
+          <div class="card p-5">
+            <p class="font-semibold">Partners locales</p>
+            <p class="mt-2 text-sm text-slate-600">Identificación de actores clave, colaboradores y posibles canales.</p>
+          </div>
 
-<div class="hero-points">
+          <div class="card p-5">
+            <p class="font-semibold">Primer pipeline</p>
+            <p class="mt-2 text-sm text-slate-600">Apertura de reuniones y primeras oportunidades comerciales.</p>
+          </div>
+        </div>
+      </div>
 
-<div class="mini">
-<strong>Validación de mercado</strong>
-<span>Encaje de la solución y segmentos prioritarios.</span>
-</div>
+      <aside class="card p-7">
+        <h2 class="text-2xl font-bold">Para quién es</h2>
 
-<div class="mini">
-<strong>Partners locales</strong>
-<span>Identificación de actores clave del sector.</span>
-</div>
+        <div class="mt-6 space-y-5">
+          <div>
+            <p class="font-semibold">Startups PropTech</p>
+            <p class="text-sm text-slate-600 mt-1">Empresas que quieren validar España o LATAM como mercado antes de una apuesta mayor.</p>
+          </div>
 
-<div class="mini">
-<strong>Primer pipeline</strong>
-<span>Primeras reuniones y oportunidades comerciales.</span>
-</div>
+          <div>
+            <p class="font-semibold">Digital Twin y visualización</p>
+            <p class="text-sm text-slate-600 mt-1">Plataformas que buscan pilotos, partners o primeras conversaciones comerciales.</p>
+          </div>
 
-</div>
+          <div>
+            <p class="font-semibold">Smart Buildings y Workplace Tech</p>
+            <p class="text-sm text-slate-600 mt-1">Soluciones para edificios inteligentes, operaciones, activos o experiencia del usuario.</p>
+          </div>
 
-</div>
+          <div>
+            <p class="font-semibold">Infrastructure AI y Smart Cities</p>
+            <p class="text-sm text-slate-600 mt-1">Tecnologías aplicadas a infraestructuras, entorno urbano, movilidad o gestión pública del espacio construido.</p>
+          </div>
 
-<aside class="visual-box">
+          <div>
+            <p class="font-semibold">Construction Tech</p>
+            <p class="text-sm text-slate-600 mt-1">Scaleups que quieren explorar el mercado local antes de abrir equipo o estructura propia.</p>
+          </div>
+        </div>
 
-<h3>Para quién es</h3>
-
-<div class="visual-item">
-<strong>Startups PropTech</strong>
-<span>Empresas que quieren validar España o LATAM como mercado.</span>
-</div>
-
-<div class="visual-item">
-<strong>Digital Twin y AR</strong>
-<span>Plataformas que buscan pilotos o partners locales.</span>
-</div>
-
-<div class="visual-item">
-<strong>Smart Buildings</strong>
-<span>Software para edificios inteligentes y operaciones.</span>
-</div>
-
-<div class="visual-item">
-<strong>Infrastructure & Smart Cities</strong>
-<span>IA aplicada a infraestructuras y gestión urbana.</span>
-</div>
-
-<div class="visual-item">
-<strong>Construction Tech</strong>
-<span>Scaleups que quieren explorar el mercado antes de abrir equipo local.</span>
-</div>
-
-<div class="visual-top">
-
-<span class="pill">PropTech</span>
-<span class="pill">Digital Twin</span>
-<span class="pill">AR / VR</span>
-<span class="pill">Smart Buildings</span>
-<span class="pill">Workplace Tech</span>
-<span class="pill">Infrastructure AI</span>
-
-</div>
-
-</aside>
-
-</div>
-
+        <div class="mt-6 flex flex-wrap gap-2">
+          <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-600">PropTech</span>
+          <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-600">Digital Twin</span>
+          <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-600">AR / VR</span>
+          <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-600">Smart Buildings</span>
+          <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-600">Workplace Tech</span>
+          <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-600">Infrastructure AI</span>
+        </div>
+      </aside>
+    </div>
+  </div>
 </section>
 
-<section id="soluciones">
+<section id="soluciones" class="py-16 bg-white/60 border-y border-slate-200/60">
+  <div class="mx-auto px-4 sm:px-6 container-narrow">
+    <div class="max-w-3xl">
+      <h2 class="text-3xl font-bold">Cómo apoyamos la entrada en el mercado</h2>
+      <p class="mt-4 text-slate-600">
+        Kairu Tech actúa como apoyo local para empresas tecnológicas del entorno construido que quieren explorar España y LATAM de forma práctica, flexible y con foco comercial.
+      </p>
+    </div>
 
-<div class="container">
+    <div class="mt-10 grid md:grid-cols-2 gap-6">
+      <article class="card p-7">
+        <div class="inline-flex rounded-full bg-kairu-50 px-3 py-1 text-xs font-medium text-kairu-700">
+          Validación
+        </div>
 
-<h2>Cómo apoyamos la entrada en el mercado</h2>
+        <h3 class="mt-4 text-xl font-bold">Validación de mercado</h3>
 
-<p class="lead">
-Kairu Tech actúa como socio local para empresas tecnológicas que quieren explorar España y LATAM de forma práctica y con foco comercial.
-</p>
+        <p class="mt-3 text-slate-600">
+          Análisis del encaje de la solución, posicionamiento local, segmentos prioritarios y potencial comercial inicial en España y LATAM.
+        </p>
 
-<div class="grid-2">
+        <ul class="mt-5 space-y-3 text-sm text-slate-700">
+          <li>• Revisión de la propuesta y mercado objetivo</li>
+          <li>• Identificación de segmentos relevantes</li>
+          <li>• Ajuste del mensaje al contexto local</li>
+          <li>• Recomendaciones sobre estrategia de entrada</li>
+        </ul>
+      </article>
 
-<article class="card">
+      <article class="card p-7">
+        <div class="inline-flex rounded-full bg-kairu-50 px-3 py-1 text-xs font-medium text-kairu-700">
+          Desarrollo
+        </div>
 
-<div class="tag">Validación</div>
+        <h3 class="mt-4 text-xl font-bold">Desarrollo de negocio y partners</h3>
 
-<h3>Validación de mercado</h3>
+        <p class="mt-3 text-slate-600">
+          Identificación de partners, apertura de primeras reuniones y exploración de oportunidades con actores del ecosistema PropTech, inmobiliario, construcción o smart cities.
+        </p>
 
-<p>
-Análisis del encaje de la solución, posicionamiento local y potencial comercial en España y LATAM.
-</p>
-
-</article>
-
-<article class="card">
-
-<div class="tag">Desarrollo</div>
-
-<h3>Desarrollo de negocio</h3>
-
-<p>
-Identificación de partners, primeras reuniones comerciales y exploración de pilotos con actores del sector inmobiliario.
-</p>
-
-</article>
-
-</div>
-
-</div>
-
+        <ul class="mt-5 space-y-3 text-sm text-slate-700">
+          <li>• Búsqueda de colaboradores y partners estratégicos</li>
+          <li>• Apertura de conversaciones con cuentas relevantes</li>
+          <li>• Exploración de pilotos y casos de uso</li>
+          <li>• Seguimiento comercial inicial</li>
+        </ul>
+      </article>
+    </div>
+  </div>
 </section>
 
-<section>
+<section class="py-16">
+  <div class="mx-auto px-4 sm:px-6 container-narrow">
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="card p-7">
+        <h3 class="text-xl font-bold">Mercados prioritarios</h3>
+        <p class="mt-3 text-slate-600">
+          España como punto de entrada y, según el caso, expansión hacia México, Colombia, Chile o Perú.
+        </p>
+      </div>
 
-<div class="container">
+      <div class="card p-7">
+        <h3 class="text-xl font-bold">Enfoque práctico</h3>
+        <p class="mt-3 text-slate-600">
+          Trabajo orientado a validar tracción real, generar aprendizaje comercial y abrir oportunidades concretas.
+        </p>
+      </div>
 
-<div class="cta">
+      <div class="card p-7">
+        <h3 class="text-xl font-bold">Modelo flexible</h3>
+        <p class="mt-3 text-slate-600">
+          Sprint de validación, apertura de partners o apoyo comercial según la etapa y los objetivos de cada empresa.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
 
-<h2>¿Tiene sentido España o LATAM para vuestra tecnología?</h2>
+<section class="py-16 bg-gradient-to-r from-kairu-600 to-kairu-800 text-white">
+  <div class="mx-auto px-4 sm:px-6 container-narrow grid md:grid-cols-3 gap-8 items-center">
+    <div class="md:col-span-2">
+      <h2 class="text-3xl font-bold">¿Tiene sentido España o LATAM para vuestra tecnología?</h2>
+      <p class="mt-2 text-white/80">
+        Una primera conversación permite evaluar encaje de mercado, estrategia de entrada y primeras oportunidades comerciales.
+      </p>
+    </div>
 
-<p class="lead">
-Una primera conversación permite evaluar encaje de mercado, estrategia de entrada y primeras oportunidades.
-</p>
-
-<div class="hero-actions">
-
-<a class="btn btn-primary" href="/contacto.html">
-Hablar sobre expansión
-</a>
-
-<a class="btn btn-secondary" href="/contacto.html">
-¿Interesa el mercado UK?
-</a>
-
-<a class="btn btn-secondary" href="/">
-Volver a Kairu Tech
-</a>
-
-</div>
-
-</div>
-
-</div>
-
+    <div class="md:justify-self-end flex flex-wrap gap-3">
+      <a href="/contacto.html" class="inline-block px-6 py-3 rounded-xl bg-white text-kairu-700 font-semibold hover:bg-slate-100 transition">
+        Hablar sobre expansión
+      </a>
+      <a href="/" class="inline-block px-6 py-3 rounded-xl border border-white/30 text-white font-semibold hover:bg-white/10 transition">
+        Volver a Kairu Tech
+      </a>
+    </div>
+  </div>
 </section>
 
 </main>
 
-<footer>
-
-<div class="container footer-row">
-
-<div>
-© Kairu Tech · Madrid & London
-</div>
-
-<div>
-<a href="/legal.html">Legal</a>
-&nbsp;&nbsp;
-<a href="/contacto.html">Contacto</a>
-</div>
-
-</div>
-
+<footer class="py-10 border-t border-slate-200/60 text-sm text-slate-500">
+  <div class="mx-auto px-4 sm:px-6 container-narrow flex flex-col md:flex-row items-center justify-between gap-4">
+    <p>© <span id="year"></span> Kairu Tech · Madrid & London</p>
+    <div class="flex items-center gap-4">
+      <a href="/legal.html" class="hover:text-kairu-600">Legal</a>
+      <a href="/contacto.html" class="hover:text-kairu-600">Contacto</a>
+    </div>
+  </div>
 </footer>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  const menuBtn = document.getElementById('menuBtn');
+  const mobileMenu = document.getElementById('mobileMenu');
+
+  menuBtn.addEventListener('click', () => {
+    const isHidden = mobileMenu.classList.contains('hidden');
+    mobileMenu.classList.toggle('hidden');
+    menuBtn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+  });
+</script>
 
 </body>
 </html>
