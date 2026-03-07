@@ -38,7 +38,7 @@
     .card {
       border-radius: 1rem;
       box-shadow: 0 8px 24px rgba(2,6,23,.06);
-      background: rgba(255,255,255,.9);
+      background: rgba(255,255,255,.92);
       backdrop-filter: blur(6px);
     }
     .container-narrow { max-width: 1100px; }
@@ -50,7 +50,7 @@
 <header class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-slate-200">
   <div class="mx-auto max-w-[1440px] px-6 lg:px-8">
     <div class="flex items-center justify-between py-4">
-      
+
       <a href="/" class="flex items-center gap-4 shrink-0">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-12 w-12 text-kairu-600" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M12 2.9l2.15 6.02h6.39l-5.17 3.76 1.98 6.02L12 15.01 6.65 18.7l1.98-6.02-5.17-3.76h6.39L12 2.9z"/>
@@ -64,10 +64,10 @@
 
       <div class="hidden lg:flex items-center ml-auto pl-12 xl:pl-20">
         <nav class="flex items-center gap-10 text-[15px] font-medium text-slate-700">
-          <a href="/servicios.html" class="transition hover:text-kairu-600">Paquetes</a>
+          <a href="/servicios.html" class="transition hover:text-kairu-600">Servicios</a>
           <a href="/proptech.html" class="transition hover:text-kairu-600">PropTech</a>
-          <a href="/govtech-security.html" class="transition hover:text-kairu-600">Public Sector</a>
-          <a href="/kids.html" class="transition hover:text-kairu-600">EdTech</a>
+          <a href="/public-administration-security.html" class="transition hover:text-kairu-600">Public Sector</a>
+          <a href="/edtech.html" class="transition hover:text-kairu-600">EdTech</a>
           <a href="/contacto.html" class="transition hover:text-kairu-600">Contacto</a>
           <a href="/legal.html" class="transition hover:text-kairu-600">Legal</a>
         </nav>
@@ -95,10 +95,10 @@
 
   <div id="mobileMenu" class="hidden border-t border-slate-200 bg-white lg:hidden">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 py-4 flex flex-col text-sm font-medium text-slate-700">
-      <a href="/servicios.html" class="py-3 border-b border-slate-100 hover:text-kairu-600">Paquetes</a>
+      <a href="/servicios.html" class="py-3 border-b border-slate-100 hover:text-kairu-600">Servicios</a>
       <a href="/proptech.html" class="py-3 border-b border-slate-100 hover:text-kairu-600">PropTech</a>
-      <a href="/public-administration-security.html" class="py-3 border-b border-slate-100 hover:text-kairu-600">Public Sector</a>
-      <a href="/edtech.html" class="py-3 border-b border-slate-100 hover:text-kairu-600">EdTech</a>
+      <a href="/govtech-security.html" class="py-3 border-b border-slate-100 hover:text-kairu-600">Public Sector</a>
+      <a href="/kids.html" class="py-3 border-b border-slate-100 hover:text-kairu-600">EdTech</a>
       <a href="/contacto.html" class="py-3 border-b border-slate-100 hover:text-kairu-600">Contacto</a>
       <a href="/legal.html" class="py-3 border-b border-slate-100 hover:text-kairu-600">Legal</a>
       <div class="flex items-center gap-2 py-3 text-slate-500">
@@ -138,10 +138,6 @@
             Ver servicios
           </a>
         </div>
-
-        <div class="mt-6 text-sm text-slate-500">
-          PropTech · Public Sector · EdTech
-        </div>
       </div>
 
       <div class="card p-6">
@@ -165,6 +161,45 @@
             <p class="text-3xl font-bold">Enfoque local</p>
             <p class="text-sm text-slate-600">ejecución práctica y foco en resultados</p>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-10">
+  <div class="mx-auto px-4 sm:px-6 container-narrow">
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
+      <div class="max-w-3xl">
+        <h2 class="text-3xl font-bold">Sectores prioritarios</h2>
+        <p class="mt-3 text-slate-600">
+          Kairu Tech trabaja en tres verticales principales donde la validación local, la apertura de partners y las primeras conversaciones comerciales son especialmente importantes.
+        </p>
+      </div>
+
+      <div class="mt-8 grid md:grid-cols-3 gap-6">
+        <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-6">
+          <h3 class="text-xl font-semibold text-slate-900">PropTech</h3>
+          <p class="mt-3 text-slate-600">
+            Digital Twin, Smart Buildings, Construction Tech e Infrastructure AI.
+          </p>
+          <a href="/proptech.html" class="inline-block mt-4 text-sm font-medium text-kairu-700 hover:text-kairu-800">Ver sector</a>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-6">
+          <h3 class="text-xl font-semibold text-slate-900">Public Sector</h3>
+          <p class="mt-3 text-slate-600">
+            GovTech, public safety, digital evidence y software para organizaciones complejas.
+          </p>
+          <a href="/public-administration-security.html" class="inline-block mt-4 text-sm font-medium text-kairu-700 hover:text-kairu-800">Ver sector</a>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-6">
+          <h3 class="text-xl font-semibold text-slate-900">EdTech</h3>
+          <p class="mt-3 text-slate-600">
+            Tecnología educativa, productos infantiles y soluciones para familias y colegios.
+          </p>
+          <a href="/edtech.html" class="inline-block mt-4 text-sm font-medium text-kairu-700 hover:text-kairu-800">Ver sector</a>
         </div>
       </div>
     </div>
@@ -199,41 +234,6 @@
         <p class="mt-2 text-sm text-slate-600">
           Apertura de primeras reuniones, exploración de pilotos y generación de oportunidades comerciales.
         </p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="py-16">
-  <div class="mx-auto px-4 sm:px-6 container-narrow">
-    <h2 class="text-3xl font-bold">Sectores prioritarios</h2>
-    <p class="mt-3 max-w-3xl text-slate-600">
-      Kairu Tech trabaja con tecnologías especializadas donde el acceso local, la validación comercial y la apertura de partners son especialmente importantes.
-    </p>
-
-    <div class="mt-8 grid md:grid-cols-3 gap-6">
-      <div class="card p-6">
-        <h3 class="font-semibold mt-1 text-lg">PropTech</h3>
-        <p class="text-sm text-slate-600 mt-2">
-          Digital Twin, Smart Buildings, Workplace Tech, Infrastructure AI, Construction Tech y tecnologías para el entorno construido.
-        </p>
-        <a href="/proptech.html" class="inline-block mt-4 text-sm font-medium text-kairu-700 hover:text-kairu-800">Ver página</a>
-      </div>
-
-      <div class="card p-6">
-        <h3 class="font-semibold mt-1 text-lg">Public Sector</h3>
-        <p class="text-sm text-slate-600 mt-2">
-          GovTech, public safety, bodycams, digital evidence, workforce operations y software para organizaciones complejas.
-        </p>
-        <a href="/public-administration-security.html" class="inline-block mt-4 text-sm font-medium text-kairu-700 hover:text-kairu-800">Ver página</a>
-      </div>
-
-      <div class="card p-6">
-        <h3 class="font-semibold mt-1 text-lg">EdTech</h3>
-        <p class="text-sm text-slate-600 mt-2">
-          Tecnología educativa, productos infantiles, contenidos y soluciones orientadas a aprendizaje, familias y entretenimiento.
-        </p>
-        <a href="/edtech.html" class="inline-block mt-4 text-sm font-medium text-kairu-700 hover:text-kairu-800">Ver página</a>
       </div>
     </div>
   </div>
