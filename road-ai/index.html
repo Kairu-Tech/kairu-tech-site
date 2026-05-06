@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IA para conservación y explotación viaria | KairuTech</title>
+  <meta name="description" content="Presentación web para valoración interna de una solución de IA y análisis inteligente de vídeo aplicada a conservación, explotación e infraestructuras viarias." />
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --ink: #132033;
+      --muted: #5f6f85;
+      --line: #dfe7f1;
+      --soft: #edf5fb;
+      --blue: #123d66;
+      --blue-2: #1c6d84;
+      --green: #1f8a70;
+      --amber: #f0a43a;
+      --shadow: 0 18px 55px rgba(14, 34, 60, 0.10);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--ink);
+      background: linear-gradient(180deg, #eef4fb 0%, var(--bg) 42%, #ffffff 100%);
+      line-height: 1.55;
+    }
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+    .page { width: min(1160px, calc(100% - 40px)); margin: 0 auto; }
+
+    header {
+      padding: 24px 0 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+    }
+    .brand { display: flex; flex-direction: column; gap: 2px; }
+    .brand strong { font-size: 18px; letter-spacing: -0.02em; }
+    .brand span { color: var(--muted); font-size: 14px; }
+    .top-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+    .mini-link {
+      padding: 9px 13px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.78);
+      color: var(--blue);
+      font-size: 14px;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .hero {
+      padding: 42px 0 24px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.32fr) minmax(280px, .68fr);
+      gap: 24px;
+      align-items: stretch;
+    }
+    .hero-card,
+    .side-panel,
+    .summary-card,
+    .card,
+    .image-card,
+    .table-card,
+    .callout,
+    .cta {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 12px 34px rgba(14, 34, 60, 0.06);
+    }
+    .hero-card {
+      padding: clamp(28px, 5vw, 50px);
+      border-radius: 30px;
+      box-shadow: var(--shadow);
+    }
+    .eyebrow {
+      display: inline-flex;
+      width: fit-content;
+      gap: 8px;
+      align-items: center;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 18px;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(34px, 5vw, 58px);
+      line-height: 1.03;
+      letter-spacing: -0.05em;
+      color: #101a2a;
+    }
+    .lead {
+      margin: 22px 0 0;
+      color: var(--muted);
+      font-size: 19px;
+      max-width: 820px;
+    }
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 13px 18px;
+      border-radius: 15px;
+      font-weight: 800;
+      font-size: 15px;
+      border: 1px solid transparent;
+    }
+    .button.primary { background: var(--blue); color: #fff; }
+    .button.secondary { background: #fff; color: var(--blue); border-color: var(--line); }
+
+    .side-panel {
+      padding: 26px;
+      background: linear-gradient(145deg, #123d66, #1c6d84);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 100%;
+    }
+    .side-panel h2 { margin: 0; font-size: 23px; letter-spacing: -0.03em; line-height: 1.18; }
+    .side-panel ul { margin: 22px 0 0; padding: 0; list-style: none; display: grid; gap: 13px; }
+    .side-panel li { display: flex; gap: 10px; color: rgba(255,255,255,0.9); font-size: 15px; }
+    .tick {
+      width: 22px; height: 22px; flex: 0 0 22px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.18);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 900;
+    }
+
+    section { padding: 34px 0; }
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 22px;
+      margin-bottom: 20px;
+    }
+    .section-title h2 {
+      margin: 0;
+      font-size: clamp(26px, 3.4vw, 38px);
+      line-height: 1.1;
+      letter-spacing: -0.04em;
+    }
+    .section-title p { margin: 0; max-width: 560px; color: var(--muted); }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .summary-card { padding: 20px; }
+    .summary-card .icon {
+      width: 38px; height: 38px; border-radius: 13px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--soft); color: var(--blue); font-weight: 900;
+      margin-bottom: 14px;
+    }
+    .summary-card h3 { margin: 0 0 7px; font-size: 17px; letter-spacing: -0.02em; }
+    .summary-card p { margin: 0; color: var(--muted); font-size: 14.5px; }
+
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+    .card { padding: 24px; }
+    .card h3 { margin: 0 0 9px; font-size: 19px; letter-spacing: -0.02em; }
+    .card p { margin: 0; color: var(--muted); font-size: 15px; }
+    .card ul { margin: 12px 0 0; padding-left: 18px; color: var(--muted); }
+    .card li { margin: 6px 0; }
+    .num {
+      width: 34px; height: 34px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--soft); color: var(--blue); font-weight: 900;
+      margin-bottom: 14px;
+    }
+
+    .callout {
+      padding: 28px;
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 24px;
+      align-items: center;
+      background: #0f1c2d;
+      color: #fff;
+    }
+    .callout h3 { margin: 0 0 12px; font-size: 26px; letter-spacing: -0.03em; }
+    .callout p { margin: 0; color: rgba(255,255,255,.78); }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 10px; }
+    .pill {
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.18);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+    }
+    .image-card { overflow: hidden; }
+    .image-wrap {
+      height: 330px;
+      padding: 14px;
+      background: #eef3f7;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .image-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 14px;
+    }
+    .image-caption { padding: 18px 20px 20px; }
+    .image-caption h3 { margin: 0 0 7px; font-size: 18px; letter-spacing: -0.02em; }
+    .image-caption p { margin: 0; color: var(--muted); font-size: 14.5px; }
+
+    .table-card { overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; background: #fff; }
+    th, td { padding: 15px 16px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { color: var(--blue); font-size: 13px; text-transform: uppercase; letter-spacing: .06em; background: #f7fafd; }
+    td { color: var(--muted); font-size: 15px; }
+    td strong { color: var(--ink); }
+
+    .cta {
+      margin: 34px 0 54px;
+      padding: 32px;
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
+    }
+    .cta h2 { margin: 0 0 8px; font-size: 28px; letter-spacing: -0.03em; }
+    .cta p { margin: 0; color: var(--muted); }
+    footer {
+      border-top: 1px solid var(--line);
+      padding: 26px 0 38px;
+      color: var(--muted);
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 980px) {
+      .hero, .summary, .grid-3, .grid-2, .gallery, .callout { grid-template-columns: 1fr; }
+      .section-title { align-items: flex-start; flex-direction: column; }
+      .image-wrap { height: 300px; }
+    }
+    @media (max-width: 640px) {
+      .page { width: min(100% - 24px, 1160px); }
+      header { align-items: flex-start; flex-direction: column; }
+      .hero { padding-top: 28px; }
+      .hero-card, .side-panel, .card, .callout, .cta { padding: 22px; }
+      .cta { align-items: flex-start; flex-direction: column; }
+      .image-wrap { height: 240px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="brand">
+        <strong>KairuTech</strong>
+        <span>RoadTech & Visión Artificial</span>
+      </div>
+      <div class="top-actions">
+        <a class="mini-link" href="mailto:alex@kairu.tech">alex@kairu.tech</a>
+        <a class="mini-link" href="tel:+34662328150">+34 662 328 150</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-card">
+          <div class="eyebrow">Presentación para valoración interna</div>
+          <h1>IA para conservación y explotación de infraestructuras viarias</h1>
+          <p class="lead">
+            Solución de análisis inteligente de vídeo para detectar, clasificar, medir y geolocalizar defectos de carretera y activos viarios. Pensada para apoyar inspecciones, priorización de actuaciones, seguimiento de contratos y toma de decisiones basada en datos.
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="#valor-fcc">Ver posible encaje</a>
+            <a class="button secondary" href="#imagenes">Ver ejemplos visuales</a>
+          </div>
+        </div>
+
+        <aside class="side-panel">
+          <div>
+            <h2>Resumen ejecutivo</h2>
+            <ul>
+              <li><span class="tick">✓</span><span>Analiza vídeo grabado desde vehículo, cámara portátil o smartphone.</span></li>
+              <li><span class="tick">✓</span><span>Detecta defectos, calcula áreas y los sitúa con coordenadas GPS.</span></li>
+              <li><span class="tick">✓</span><span>Entrega datos exportables para GIS, informes y sistemas internos.</span></li>
+              <li><span class="tick">✓</span><span>Facilita comparar campañas y seguir la evolución de la red.</span></li>
+            </ul>
+          </div>
+        </aside>
+      </section>
+
+      <section>
+        <div class="summary">
+          <div class="summary-card">
+            <div class="icon">01</div>
+            <h3>Captura sencilla</h3>
+            <p>No requiere equipamiento complejo para generar una primera base de datos viaria.</p>
+          </div>
+          <div class="summary-card">
+            <div class="icon">02</div>
+            <h3>Defectos y activos</h3>
+            <p>Detecta daños en firme y puede apoyar inventario de señales, marcas, bordillos y otros activos.</p>
+          </div>
+          <div class="summary-card">
+            <div class="icon">03</div>
+            <h3>Datos accionables</h3>
+            <p>Geolocalización, mediciones, segmentación y resultados comparables para priorizar actuaciones.</p>
+          </div>
+          <div class="summary-card">
+            <div class="icon">04</div>
+            <h3>Integración</h3>
+            <p>Salida en formatos interoperables como CSV o ESRI shapefile para GIS y sistemas propios.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="valor-fcc">
+        <div class="section-title">
+          <h2>Posible encaje para explotación y concesiones</h2>
+          <p>El objetivo no es sustituir los procesos existentes, sino aportar una capa objetiva de datos para inspección, seguimiento y planificación.</p>
+        </div>
+        <div class="grid-3">
+          <div class="card">
+            <h3>Seguimiento del estado de la red</h3>
+            <p>Permite obtener una visión más rápida y comparable del estado de las vías, con información geolocalizada y medible.</p>
+          </div>
+          <div class="card">
+            <h3>Priorización de actuaciones</h3>
+            <p>Ayuda a ordenar intervenciones por tipo, localización, extensión y evolución del defecto, apoyando decisiones operativas y presupuestarias.</p>
+          </div>
+          <div class="card">
+            <h3>Evidencia para reporting</h3>
+            <p>Facilita generar una base digital objetiva para justificar actuaciones, comparar campañas e informar internamente o al titular de la infraestructura.</p>
+          </div>
+          <div class="card">
+            <h3>Inventario de activos</h3>
+            <p>Además del firme, puede apoyar inventario de señales, marcas viales, bordillos, anchura de vía y otros elementos relevantes.</p>
+          </div>
+          <div class="card">
+            <h3>Integración con GIS</h3>
+            <p>Los resultados pueden visualizarse en sistemas de información geográfica o incorporarse a herramientas internas de gestión.</p>
+          </div>
+          <div class="card">
+            <h3>Comparación año a año</h3>
+            <p>Los resultados repetibles permiten analizar tendencias y evolución de deterioros entre campañas de inspección.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="como-funciona">
+        <div class="section-title">
+          <h2>Cómo funciona</h2>
+          <p>Proceso pensado para convertir vídeo grabado en información técnica explotable.</p>
+        </div>
+        <div class="grid-3">
+          <div class="card">
+            <div class="num">1</div>
+            <h3>Grabación</h3>
+            <p>Se graban tramos de carretera o infraestructura viaria con cámara en vehículo, cámara portátil o smartphone.</p>
+          </div>
+          <div class="card">
+            <div class="num">2</div>
+            <h3>Procesamiento</h3>
+            <p>La IA analiza el vídeo, detecta defectos y activos, clasifica elementos y calcula tamaño y posición.</p>
+          </div>
+          <div class="card">
+            <div class="num">3</div>
+            <h3>Explotación del dato</h3>
+            <p>Los resultados se entregan para GIS, análisis, priorización, seguimiento de evolución e informes técnicos.</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="callout">
+          <div>
+            <h3>Qué puede detectar o inventariar</h3>
+            <p>La solución combina detección de defectos de pavimento con inventario de activos viarios, siempre orientado a obtener datos útiles para mantenimiento y planificación.</p>
+          </div>
+          <div class="pill-row">
+            <span class="pill">Grietas longitudinales</span>
+            <span class="pill">Grietas transversales</span>
+            <span class="pill">Baches</span>
+            <span class="pill">Desgaste del firme</span>
+            <span class="pill">Roturas de borde</span>
+            <span class="pill">Bordillos dañados</span>
+            <span class="pill">Señales</span>
+            <span class="pill">Marcas viales</span>
+            <span class="pill">Anchura de vía</span>
+            <span class="pill">Otros activos viarios</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="imagenes">
+        <div class="section-title">
+          <h2>Ejemplos visuales</h2>
+          <p>Imágenes de referencia para entender cómo se visualizan detecciones, mapas, resultados GIS y fotogramas asociados.</p>
+        </div>
+        <div class="gallery">
+          <div class="image-card">
+            <div class="image-wrap"><img src="../assets/road-ai/ai-detection-overlay.webp" alt="Ejemplo de detección de defectos sobre vídeo" /></div>
+            <div class="image-caption">
+              <h3>Detección sobre vídeo</h3>
+              <p>Ejemplo de identificación visual de defectos y zonas afectadas sobre el vídeo analizado.</p>
+            </div>
+          </div>
+          <div class="image-card">
+            <div class="image-wrap"><img src="../assets/road-ai/gis-road-condition-map.webp" alt="Mapa GIS con estado de la red viaria" /></div>
+            <div class="image-caption">
+              <h3>Mapa de condición de red</h3>
+              <p>Visualización de tramos clasificados para facilitar lectura rápida del estado de la red.</p>
+            </div>
+          </div>
+          <div class="image-card">
+            <div class="image-wrap"><img src="../assets/road-ai/gis-individual-defects.webp" alt="Mapa GIS con defectos individuales geolocalizados" /></div>
+            <div class="image-caption">
+              <h3>Defectos geolocalizados</h3>
+              <p>Representación de incidencias individuales para análisis de localización, concentración y seguimiento.</p>
+            </div>
+          </div>
+          <div class="image-card">
+            <div class="image-wrap"><img src="../assets/road-ai/segmented-frame-library.webp" alt="Biblioteca de fotogramas segmentados vinculada a resultados" /></div>
+            <div class="image-caption">
+              <h3>Fotogramas vinculados al dato</h3>
+              <p>Los resultados pueden asociarse a imágenes segmentadas que facilitan revisión y validación técnica.</p>
+            </div>
+          </div>
+          <div class="image-card">
+            <div class="image-wrap"><img src="../assets/road-ai/gis-defect-detail.webp" alt="Detalle GIS de defectos en carretera" /></div>
+            <div class="image-caption">
+              <h3>Detalle en entorno GIS</h3>
+              <p>Capacidad de revisar tipos de defecto y su ubicación sobre una base cartográfica.</p>
+            </div>
+          </div>
+          <div class="image-card">
+            <div class="image-wrap"><img src="../assets/road-ai/point-cloud-road.webp" alt="Reconstrucción o nube de puntos de entorno viario" /></div>
+            <div class="image-caption">
+              <h3>Contexto e inventario viario</h3>
+              <p>Apoyo visual para entender elementos del entorno y activos asociados a la vía.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-title">
+          <h2>Puntos a valorar internamente</h2>
+          <p>Preguntas útiles para decidir si tiene sentido avanzar a una llamada técnica o piloto acotado.</p>
+        </div>
+        <div class="table-card">
+          <table>
+            <thead>
+              <tr>
+                <th>Área</th>
+                <th>Qué valorar</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Casos de uso</strong></td>
+                <td>Conservación ordinaria, explotación de concesiones, inventario de activos, inspecciones periódicas, reporting al titular o priorización de actuaciones.</td>
+              </tr>
+              <tr>
+                <td><strong>Datos de entrada</strong></td>
+                <td>Tipo de cámara disponible, frecuencia de grabación, tramos objetivo, calidad de vídeo y criterios de captura.</td>
+              </tr>
+              <tr>
+                <td><strong>Resultados esperados</strong></td>
+                <td>Defectos prioritarios, formatos de salida, segmentación, nivel de detalle, indicadores y necesidades de integración.</td>
+              </tr>
+              <tr>
+                <td><strong>Integración</strong></td>
+                <td>GIS, herramientas internas, informes, cuadros de mando o sistemas existentes de gestión de conservación.</td>
+              </tr>
+              <tr>
+                <td><strong>Piloto</strong></td>
+                <td>Definir un tramo representativo, una campaña de vídeo, entregables concretos y criterios de evaluación técnica.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="cta">
+        <div>
+          <h2>Siguiente paso sugerido</h2>
+          <p>Una llamada técnica breve para entender si encaja con necesidades de explotación, conservación o concesiones y, en su caso, plantear un piloto acotado.</p>
+        </div>
+        <a class="button primary" href="mailto:alex@kairu.tech?subject=Valoraci%C3%B3n%20interna%20-%20IA%20para%20conservaci%C3%B3n%20viaria">Contactar con Alex</a>
+      </section>
+    </main>
+
+    <footer>
+      <span>Ficha web | IA y análisis inteligente de vídeo para conservación y explotación viaria</span>
+      <span>Alex Barrena · KairuTech · alex@kairu.tech · +34 662 328 150 · kairu.tech</span>
+    </footer>
+  </div>
+</body>
+</html>
