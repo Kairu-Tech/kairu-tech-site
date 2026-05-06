@@ -18,14 +18,12 @@
       --primary-dark: #0e2a43;
       --accent: #1f7a8c;
       --accent-soft: #e3f3f5;
-      --success: #2f7d5c;
       --shadow: 0 18px 45px rgba(16, 32, 51, 0.10);
       --radius: 22px;
       --max: 1120px;
     }
 
     * { box-sizing: border-box; }
-
     html { scroll-behavior: smooth; }
 
     body {
@@ -112,26 +110,11 @@
       box-shadow: 0 10px 22px rgba(16, 32, 51, 0.10);
     }
 
-    .button.primary {
-      background: var(--primary);
-      color: #fff;
-    }
+    .button.primary { background: var(--primary); color: #fff; }
+    .button.secondary { background: rgba(255,255,255,0.78); color: var(--primary); border-color: var(--line); }
+    .button.light { background: #fff; color: var(--primary); border-color: var(--line); }
 
-    .button.secondary {
-      background: rgba(255,255,255,0.78);
-      color: var(--primary);
-      border-color: var(--line);
-    }
-
-    .button.light {
-      background: #fff;
-      color: var(--primary);
-      border-color: var(--line);
-    }
-
-    .hero {
-      padding: 54px 0 28px;
-    }
+    .hero { padding: 54px 0 28px; }
 
     .hero-box {
       background: var(--surface);
@@ -140,7 +123,7 @@
       padding: clamp(28px, 5vw, 54px);
       box-shadow: var(--shadow);
       display: grid;
-      grid-template-columns: 1.14fr 0.86fr;
+      grid-template-columns: 1.12fr 0.88fr;
       gap: 34px;
       align-items: center;
       overflow: hidden;
@@ -249,7 +232,7 @@
 
     .section-head p {
       margin: 0;
-      max-width: 500px;
+      max-width: 520px;
       color: var(--muted);
       font-size: 16px;
     }
@@ -257,6 +240,12 @@
     .grid-3 {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
       gap: 18px;
     }
 
@@ -299,7 +288,7 @@
       margin-bottom: 15px;
     }
 
-    .pain-grid {
+    .problem-grid {
       display: grid;
       grid-template-columns: 0.85fr 1.15fr;
       gap: 18px;
@@ -403,9 +392,7 @@
       border-bottom: 1px solid var(--line);
     }
 
-    .media-card .caption {
-      padding: 18px;
-    }
+    .media-card .caption { padding: 18px; }
 
     .media-card h3 {
       margin: 0 0 8px;
@@ -417,6 +404,56 @@
       margin: 0;
       color: var(--muted);
       font-size: 14px;
+    }
+
+    .deliverables {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .deliverable {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .deliverable strong {
+      display: block;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .pilot-box {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 28px;
+      box-shadow: 0 10px 28px rgba(16, 32, 51, 0.06);
+    }
+
+    .pilot-steps {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .pilot-step {
+      background: var(--surface-soft);
+      border-radius: 16px;
+      padding: 16px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .pilot-step strong {
+      display: block;
+      color: var(--primary-dark);
+      margin-bottom: 6px;
     }
 
     .lightbox {
@@ -431,9 +468,7 @@
       backdrop-filter: blur(5px);
     }
 
-    .lightbox.is-open {
-      display: flex;
-    }
+    .lightbox.is-open { display: flex; }
 
     .lightbox-content {
       width: min(1120px, 100%);
@@ -453,9 +488,7 @@
       border-bottom: 1px solid var(--line);
     }
 
-    .lightbox-caption {
-      padding: 24px 28px 28px;
-    }
+    .lightbox-caption { padding: 24px 28px 28px; }
 
     .lightbox-caption h3 {
       margin: 0 0 8px;
@@ -486,45 +519,6 @@
       line-height: 1;
       cursor: pointer;
     }
-
-    .table-wrap {
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      overflow: hidden;
-      box-shadow: 0 10px 28px rgba(16, 32, 51, 0.06);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 15px;
-    }
-
-    th, td {
-      padding: 16px 18px;
-      text-align: left;
-      border-bottom: 1px solid var(--line);
-      vertical-align: top;
-    }
-
-    th {
-      background: var(--surface-soft);
-      color: var(--primary-dark);
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    tr:last-child td { border-bottom: none; }
-
-    td:first-child {
-      font-weight: 750;
-      color: var(--text);
-      width: 28%;
-    }
-
-    td:last-child { color: var(--muted); }
 
     .cta {
       margin: 34px 0 54px;
@@ -567,11 +561,22 @@
       flex-wrap: wrap;
     }
 
+    @media (max-width: 1020px) {
+      .grid-4,
+      .pilot-steps {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .deliverables {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
     @media (max-width: 960px) {
       .hero-box,
       .grid-3,
       .grid-2,
-      .pain-grid,
+      .problem-grid,
       .cta {
         grid-template-columns: 1fr;
       }
@@ -598,36 +603,14 @@
         flex-direction: column;
       }
 
-      .top-actions {
-        justify-content: flex-start;
-      }
-
+      .top-actions { justify-content: flex-start; }
       .hero { padding-top: 30px; }
-      .hero-box, .card, .dark-box, .cta { padding: 24px; }
-      .media-card img { height: 205px; }
-      table, tbody, tr, td { display: block; width: 100%; }
-      thead { display: none; }
-      td { border-bottom: none; padding: 14px 16px; }
-      td:first-child { width: 100%; padding-bottom: 3px; }
-      tr { border-bottom: 1px solid var(--line); }
-      tr:last-child { border-bottom: none; }
+      .hero-box, .card, .dark-box, .cta, .pilot-box { padding: 24px; }
+      .grid-4, .pilot-steps, .deliverables { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <script>
-    /*
-      CONFIGURACIÓN RÁPIDA
-      --------------------
-      1) Las imágenes están apuntando a /assets porque están subidas directamente en la carpeta assets del repositorio.
-      2) Para el botón de descarga, sube el ZIP a tu GitHub, por ejemplo:
-         /downloads/road-ai-informacion.zip
-         y cambia DOWNLOAD_ZIP_URL por "../downloads/road-ai-informacion.zip".
-      3) También puedes usar un enlace público de Dropbox/Drive si prefieres, pero para una presentación profesional es mejor alojarlo en tu propio dominio.
-    */
-    const DOWNLOAD_ZIP_URL = "https://dl.dropboxusercontent.com/scl/fi/sfxevhh6y544wvobejo5s/road-ai-informacion.zip?rlkey=pi49vyezezq0yylm9x327veku&dl=1";
-  </script>
-
   <div class="wrap">
     <header>
       <a class="brand" href="/" aria-label="KairuTech">
@@ -639,8 +622,8 @@
       </a>
 
       <nav class="top-actions" aria-label="Acciones principales">
-        <a class="button secondary" href="#capacidades">Ver capacidades</a>
-        <a class="button secondary" href="#resultados">Ver resultados</a>
+        <a class="button secondary" href="#capacidades">Capacidades</a>
+        <a class="button secondary" href="#resultados">Resultados</a>
         <a class="button primary" href="mailto:alex@kairu.tech?subject=Road%20AI%20-%20informaci%C3%B3n%20adicional">Contactar</a>
       </nav>
     </header>
@@ -655,54 +638,34 @@
               Solución basada en inteligencia artificial y análisis inteligente de vídeo para detectar, clasificar, medir y geolocalizar defectos de carretera y activos viarios a partir de grabaciones existentes o nuevas campañas de inspección.
             </p>
             <div class="hero-actions">
-              <a class="button primary" href="#como-funciona">Cómo funciona</a>
+              <a class="button primary" href="#problema">Ver utilidad</a>
               <a class="button light" href="#descarga">Descargar información</a>
             </div>
-            <p class="hero-note">Enfoque pensado para apoyar conservación, mantenimiento, inventario, planificación y seguimiento objetivo de la red viaria.</p>
+            <p class="hero-note">Vídeo grabado desde vehículo, cámara portátil o smartphone. Sin necesidad de equipamiento complejo.</p>
           </div>
 
           <aside class="hero-panel">
             <h2>De vídeo grabado a datos útiles para decidir</h2>
             <ul>
-              <li><span class="check">✓</span><span>Reduce trabajo manual en inspección y revisión de material.</span></li>
-              <li><span class="check">✓</span><span>Facilita priorización de actuaciones con información geolocalizada.</span></li>
-              <li><span class="check">✓</span><span>Ayuda a comparar campañas y evolución de defectos año a año.</span></li>
-              <li><span class="check">✓</span><span>Entrega resultados compatibles con sistemas GIS y herramientas internas.</span></li>
+              <li><span class="check">✓</span><span>Defectos detectados, medidos y geolocalizados.</span></li>
+              <li><span class="check">✓</span><span>Resultados compatibles con GIS y herramientas internas.</span></li>
+              <li><span class="check">✓</span><span>Comparación de campañas y evolución año a año.</span></li>
+              <li><span class="check">✓</span><span>Apoyo a mantenimiento, inventario, planificación y reporting.</span></li>
             </ul>
           </aside>
         </div>
       </section>
 
-      <section id="como-funciona">
+      <section id="problema">
         <div class="section-head">
-          <h2>Cómo funciona</h2>
-          <p>Un proceso sencillo: grabar, procesar y consultar resultados en formatos útiles para análisis, planificación y reporting.</p>
+          <h2>Qué problema ayuda a resolver</h2>
+          <p>La solución aporta una base objetiva para pasar de revisiones dispersas a información comparable y trazable sobre el estado de la red.</p>
         </div>
 
-        <div class="grid-3">
-          <article class="card">
-            <div class="num">1</div>
-            <h3>Recogida de vídeo</h3>
-            <p>El análisis puede realizarse con vídeos grabados desde vehículo, cámara portátil o smartphone, sin necesidad de equipamiento complejo.</p>
-          </article>
-          <article class="card">
-            <div class="num">2</div>
-            <h3>Procesamiento con IA</h3>
-            <p>El sistema analiza las secuencias, detecta objetos y defectos, clasifica incidencias y mide tamaño y posición.</p>
-          </article>
-          <article class="card">
-            <div class="num">3</div>
-            <h3>Resultados accionables</h3>
-            <p>Los resultados se entregan como datos geolocalizados, imágenes segmentadas y formatos compatibles con sistemas GIS.</p>
-          </article>
-        </div>
-      </section>
-
-      <section>
-        <div class="pain-grid">
+        <div class="problem-grid">
           <div class="dark-box">
-            <h3>Información objetiva para gestionar mejor la red</h3>
-            <p>La solución ayuda a pasar de inspecciones dispersas o revisiones manuales a una base digital comparable, trazable y útil para planificar actuaciones.</p>
+            <h3>Menos revisión manual, más información accionable</h3>
+            <p>El objetivo es transformar vídeo de carretera en datos estructurados que ayuden a priorizar, justificar y hacer seguimiento de actuaciones.</p>
             <div class="tags">
               <span class="tag">Conservación</span>
               <span class="tag">Mantenimiento</span>
@@ -714,59 +677,76 @@
           </div>
 
           <ul class="list">
-            <li><strong>Priorización de actuaciones:</strong> apoyo para decidir dónde intervenir primero según el estado real de la vía.</li>
-            <li><strong>Seguimiento de evolución:</strong> comparación de defectos y tendencias entre campañas de inspección.</li>
-            <li><strong>Control de activos:</strong> inventario de señales, marcas viales, bordillos, tapas de registro, anchura de vía y otros elementos.</li>
-            <li><strong>Estimación de necesidades:</strong> medición de áreas deterioradas para apoyar cálculos de materiales y costes.</li>
-            <li><strong>Trazabilidad y reporting:</strong> base digital para justificar decisiones, revisar evolución y compartir información entre equipos.</li>
+            <li><strong>Priorización:</strong> identificar dónde intervenir primero según defectos medidos y geolocalizados.</li>
+            <li><strong>Seguimiento:</strong> comparar campañas y analizar la evolución de los deterioros.</li>
+            <li><strong>Inventario:</strong> registrar activos viarios como señales, marcas viales, bordillos, tapas o anchura de vía.</li>
+            <li><strong>Reporting:</strong> generar evidencias visuales y datos consistentes para compartir entre equipos.</li>
+            <li><strong>Planificación:</strong> apoyar estimaciones de materiales, costes y necesidades de mantenimiento.</li>
           </ul>
+        </div>
+      </section>
+
+      <section id="como-funciona">
+        <div class="section-head">
+          <h2>Cómo funciona</h2>
+          <p>Un proceso sencillo para convertir material de vídeo en resultados técnicos que puedan analizarse y reutilizarse.</p>
+        </div>
+
+        <div class="grid-3">
+          <article class="card">
+            <div class="num">1</div>
+            <h3>Grabación o carga de vídeo</h3>
+            <p>Se pueden utilizar grabaciones desde vehículo, cámara portátil o smartphone, realizadas específicamente o ya disponibles.</p>
+          </article>
+          <article class="card">
+            <div class="num">2</div>
+            <h3>Procesamiento con IA</h3>
+            <p>El sistema analiza las secuencias, detecta defectos y activos, clasifica incidencias y mide tamaño y posición.</p>
+          </article>
+          <article class="card">
+            <div class="num">3</div>
+            <h3>Datos para GIS y reporting</h3>
+            <p>Los resultados se entregan como datos geolocalizados, imágenes segmentadas y formatos interoperables.</p>
+          </article>
         </div>
       </section>
 
       <section id="capacidades">
         <div class="section-head">
           <h2>Capacidades principales</h2>
-          <p>La solución combina visión artificial, geolocalización y formatos interoperables para facilitar el análisis del estado de la infraestructura.</p>
+          <p>Cuatro capacidades clave para apoyar conservación, mantenimiento, inventario y análisis de infraestructura viaria.</p>
         </div>
 
-        <div class="grid-3">
+        <div class="grid-4">
           <article class="card">
-            <h3>Detección de defectos</h3>
-            <p>Identifica grietas longitudinales y transversales, baches, roturas de borde, desgaste del firme y otros deterioros.</p>
+            <h3>Detección y clasificación</h3>
+            <p>Identifica grietas, baches, roturas de borde, desgaste del firme y otros deterioros de la vía.</p>
           </article>
           <article class="card">
-            <h3>Clasificación y medición</h3>
-            <p>Clasifica los defectos detectados y calcula el área afectada para apoyar planificación, materiales y costes.</p>
+            <h3>Medición y geolocalización</h3>
+            <p>Calcula áreas afectadas y sitúa defectos mediante coordenadas GPS para su análisis posterior.</p>
           </article>
           <article class="card">
-            <h3>Geolocalización GPS</h3>
-            <p>Sitúa incidencias y activos sobre la red, facilitando su visualización y seguimiento posterior.</p>
+            <h3>Inventario de activos</h3>
+            <p>Puede registrar señales, marcas viales, tapas, bordillos, anchura de vía y otros elementos viarios.</p>
           </article>
           <article class="card">
-            <h3>Inventario viario</h3>
-            <p>Permite registrar señales, marcas viales, tapas, bordillos, anchura de vía y otros activos de carretera.</p>
-          </article>
-          <article class="card">
-            <h3>Integración GIS</h3>
-            <p>Entrega datos en formatos como CSV o ESRI shapefile, preparados para sistemas de información geográfica.</p>
-          </article>
-          <article class="card">
-            <h3>Privacidad</h3>
-            <p>Trata el vídeo con criterios de privacidad, reduciendo la presencia de personas, vehículos u otros elementos identificables en los resultados finales.</p>
+            <h3>Integración y reporting</h3>
+            <p>Entrega datos en formatos como CSV o ESRI shapefile, preparados para GIS y herramientas internas.</p>
           </article>
         </div>
       </section>
 
       <section id="resultados">
         <div class="section-head">
-          <h2>Ejemplos de resultados</h2>
-          <p>Visualizaciones orientadas a facilitar análisis técnico, revisión de incidencias, inventario e integración con herramientas existentes.</p>
+          <h2>Ejemplos visuales de resultados</h2>
+          <p>Seis ejemplos para entender cómo se pasa del vídeo a datos útiles para análisis técnico, seguimiento y planificación.</p>
         </div>
 
         <div class="media-grid">
           <article class="media-card">
-            <button class="media-trigger" type="button" data-image="../assets/road-ai-video-detection.webp" data-title="Detección sobre vídeo" data-text="Identifica defectos directamente sobre grabaciones de carretera, facilitando la revisión técnica sin depender solo de inspección manual.">
-              <img src="../assets/road-ai-video-detection.webp" alt="Detección de defectos en carretera sobre vídeo grabado" loading="lazy" />
+            <button class="media-trigger" type="button" data-image="/assets/road-ai-video-detection.webp" data-title="Detección sobre vídeo" data-text="Identifica defectos directamente sobre grabaciones de carretera, facilitando la revisión técnica sin depender solo de inspección manual.">
+              <img src="/assets/road-ai-video-detection.webp" alt="Detección de defectos en carretera sobre vídeo grabado" loading="lazy" />
             </button>
             <div class="caption">
               <h3>Detección sobre vídeo</h3>
@@ -775,8 +755,8 @@
           </article>
 
           <article class="media-card">
-            <button class="media-trigger" type="button" data-image="../assets/road-ai-detected-defects-3d.webp" data-title="Defectos detectados en contexto" data-text="Muestra la distribución de daños sobre la vía, ayudando a entender dónde se concentran las zonas deterioradas.">
-              <img src="../assets/road-ai-detected-defects-3d.webp" alt="Defectos de carretera detectados en contexto espacial" loading="lazy" />
+            <button class="media-trigger" type="button" data-image="/assets/road-ai-detected-defects-3d.webp" data-title="Defectos detectados en contexto" data-text="Muestra la distribución de daños sobre la vía, ayudando a entender dónde se concentran las zonas deterioradas.">
+              <img src="/assets/road-ai-detected-defects-3d.webp" alt="Defectos de carretera detectados en contexto espacial" loading="lazy" />
             </button>
             <div class="caption">
               <h3>Defectos detectados en contexto</h3>
@@ -785,8 +765,8 @@
           </article>
 
           <article class="media-card">
-            <button class="media-trigger" type="button" data-image="../assets/road-ai-gis-defect-detail.webp" data-title="Detalle GIS por tramo" data-text="Permite visualizar incidencias geolocalizadas dentro de un entorno GIS, facilitando el análisis por tramo o zona.">
-              <img src="../assets/road-ai-gis-defect-detail.webp" alt="Detalle de defectos en carretera dentro de un sistema GIS" loading="lazy" />
+            <button class="media-trigger" type="button" data-image="/assets/road-ai-gis-defect-detail.webp" data-title="Detalle GIS por tramo" data-text="Permite visualizar incidencias geolocalizadas dentro de un entorno GIS, facilitando el análisis por tramo o zona.">
+              <img src="/assets/road-ai-gis-defect-detail.webp" alt="Detalle de defectos en carretera dentro de un sistema GIS" loading="lazy" />
             </button>
             <div class="caption">
               <h3>Detalle GIS por tramo</h3>
@@ -795,8 +775,8 @@
           </article>
 
           <article class="media-card">
-            <button class="media-trigger" type="button" data-image="../assets/road-ai-gis-condition-map.webp" data-title="Mapa de estado de la red" data-text="Ofrece una visión global del estado de la red para comparar tramos, detectar prioridades y planificar actuaciones.">
-              <img src="../assets/road-ai-gis-condition-map.webp" alt="Mapa GIS con clasificación del estado de la red viaria" loading="lazy" />
+            <button class="media-trigger" type="button" data-image="/assets/road-ai-gis-condition-map.webp" data-title="Mapa de estado de la red" data-text="Ofrece una visión global del estado de la red para comparar tramos, detectar prioridades y planificar actuaciones.">
+              <img src="/assets/road-ai-gis-condition-map.webp" alt="Mapa GIS con clasificación del estado de la red viaria" loading="lazy" />
             </button>
             <div class="caption">
               <h3>Mapa de estado de la red</h3>
@@ -805,8 +785,8 @@
           </article>
 
           <article class="media-card">
-            <button class="media-trigger" type="button" data-image="../assets/road-ai-gis-individual-defects.webp" data-title="Defectos individuales geolocalizados" data-text="Localiza incidencias concretas y permite filtrarlas por tipo de defecto para seguimiento y análisis posterior.">
-              <img src="../assets/road-ai-gis-individual-defects.webp" alt="Mapa GIS con defectos individuales geolocalizados" loading="lazy" />
+            <button class="media-trigger" type="button" data-image="/assets/road-ai-gis-individual-defects.webp" data-title="Defectos individuales geolocalizados" data-text="Localiza incidencias concretas y permite filtrarlas por tipo de defecto para seguimiento y análisis posterior.">
+              <img src="/assets/road-ai-gis-individual-defects.webp" alt="Mapa GIS con defectos individuales geolocalizados" loading="lazy" />
             </button>
             <div class="caption">
               <h3>Defectos individuales geolocalizados</h3>
@@ -815,8 +795,8 @@
           </article>
 
           <article class="media-card">
-            <button class="media-trigger" type="button" data-image="../assets/road-ai-gis-segment-detail.webp" data-title="Ficha de segmento o incidencia" data-text="Combina imagen, mediciones y atributos técnicos para validar resultados y documentar cada incidencia.">
-              <img src="../assets/road-ai-gis-segment-detail.webp" alt="Ficha de segmento o incidencia con imagen y mediciones asociadas" loading="lazy" />
+            <button class="media-trigger" type="button" data-image="/assets/road-ai-gis-segment-detail.webp" data-title="Ficha de segmento o incidencia" data-text="Combina imagen, mediciones y atributos técnicos para validar resultados y documentar cada incidencia.">
+              <img src="/assets/road-ai-gis-segment-detail.webp" alt="Ficha de segmento o incidencia con imagen y mediciones asociadas" loading="lazy" />
             </button>
             <div class="caption">
               <h3>Ficha de segmento o incidencia</h3>
@@ -826,62 +806,52 @@
         </div>
       </section>
 
-      <section>
+      <section id="entregables">
         <div class="section-head">
-          <h2>Qué puede aportar</h2>
-          <p>Una base de información más consistente para equipos responsables de conservación, mantenimiento y gestión de infraestructura.</p>
+          <h2>Qué puede recibir el cliente</h2>
+          <p>Entregables orientados a facilitar análisis técnico, trazabilidad, integración y toma de decisiones.</p>
         </div>
 
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Área</th>
-                <th>Valor potencial</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Inspección</td>
-                <td>Recogida de datos más eficiente en coste y tiempo, con menor dependencia de revisión manual.</td>
-              </tr>
-              <tr>
-                <td>Mantenimiento</td>
-                <td>Priorización de actuaciones basada en defectos detectados, medicidos y geolocalizados.</td>
-              </tr>
-              <tr>
-                <td>Planificación</td>
-                <td>Seguimiento de tendencias año a año para apoyar planes de conservación y previsión presupuestaria.</td>
-              </tr>
-              <tr>
-                <td>Inventario</td>
-                <td>Digitalización de activos viarios como señales, marcas, bordillos, tapas o anchura de vía.</td>
-              </tr>
-              <tr>
-                <td>Integración</td>
-                <td>Resultados exportables a formatos interoperables para sistemas GIS o herramientas internas.</td>
-              </tr>
-              <tr>
-                <td>Reporting</td>
-                <td>Resultados repetibles y comparables para seguimiento objetivo, control de evolución y comunicación entre equipos.</td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="deliverables">
+          <div class="deliverable"><strong>Datos CSV o shapefile</strong>Resultados preparados para GIS o herramientas internas.</div>
+          <div class="deliverable"><strong>Defectos geolocalizados</strong>Ubicación de incidencias por tramo, punto o segmento analizado.</div>
+          <div class="deliverable"><strong>Clasificación por defecto</strong>Tipos de deterioro identificados y organizados para revisión.</div>
+          <div class="deliverable"><strong>Medición de áreas</strong>Estimación de superficies afectadas para apoyar materiales y costes.</div>
+          <div class="deliverable"><strong>Imágenes asociadas</strong>Fotogramas o evidencias visuales vinculadas a cada resultado.</div>
+          <div class="deliverable"><strong>Mapa de estado</strong>Visión global para comparar tramos y priorizar actuaciones.</div>
+        </div>
+      </section>
+
+      <section id="piloto">
+        <div class="pilot-box">
+          <div class="section-head" style="margin-bottom: 0;">
+            <h2>Ejemplo de piloto</h2>
+            <p>Una forma sencilla de valorar la utilidad es empezar con un tramo o zona acotada y revisar los resultados con el equipo técnico.</p>
+          </div>
+
+          <div class="pilot-steps">
+            <div class="pilot-step"><strong>1. Zona</strong>Selección de un tramo o área concreta.</div>
+            <div class="pilot-step"><strong>2. Vídeo</strong>Uso de grabación existente o nueva campaña sencilla.</div>
+            <div class="pilot-step"><strong>3. Análisis</strong>Procesamiento, clasificación y medición de defectos.</div>
+            <div class="pilot-step"><strong>4. Entrega</strong>Resultados en formatos GIS, CSV e imágenes asociadas.</div>
+            <div class="pilot-step"><strong>5. Revisión</strong>Validación conjunta de utilidad para mantenimiento e inventario.</div>
+          </div>
         </div>
       </section>
 
       <section id="descarga" class="cta">
         <div>
           <h2>Información de apoyo</h2>
-          <p>Descarga la información de la solución para revisarla con más detalle.</p>
+          <p>Descarga documentación complementaria con más detalle sobre capacidades, ejemplos visuales y posibles formatos de entrega.</p>
+          <p class="download-note">Información introductoria. Detalles técnicos adicionales disponibles bajo solicitud.</p>
         </div>
-        <a class="button primary" href="https://dl.dropboxusercontent.com/scl/fi/sfxevhh6y544wvobejo5s/road-ai-informacion.zip?rlkey=pi49vyezezq0yylm9x327veku&amp;dl=1" target="_blank" rel="noopener">Descargar ZIP</a>
+        <a class="button primary" href="https://dl.dropboxusercontent.com/scl/fi/sfxevhh6y544wvobejo5s/road-ai-informacion.zip?rlkey=pi49vyezezq0yylm9x327veku&amp;dl=1" target="_blank" rel="noopener">Descargar documentación</a>
       </section>
     </main>
 
     <footer>
       <span>Ficha introductoria | IA para conservación e infraestructuras viarias</span>
-      <span>Alex Barrena · KairuTech · alex@kairu.tech · +34 662 328 150 · kairu.tech</span>
+      <span>Alex Barrena · KairuTech · alex@kairu.tech · 662 328 150 · kairu.tech</span>
     </footer>
   </div>
 
