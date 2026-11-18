@@ -14,6 +14,9 @@ window.crmConnection = (() => {
 
   function showLogin(message = '') {
     storeSession(null);
+    sessionStorage.removeItem(storageKey + '-recovery');
+    document.getElementById('login-form').hidden = false;
+    document.getElementById('reset-form').hidden = true;
     document.querySelector('.shell').hidden = true;
     const modal = document.getElementById('modal');
     if (modal.open) modal.close();
@@ -77,16 +80,110 @@ window.crmConnection = (() => {
     window.dispatchEvent(new Event('crm-ready'));
   }
 
-  async function start() {
-    try {
-      const saved = sessionStorage.getItem(storageKey);
-      if (saved) {
-        session = JSON.parse(saved);
-        await unlock();
+  function showReset() {
+    document.querySelector('.shell').hidden = true;
+    document.getElementById('login').hidden = false;
+    document.getElementById('login-form').hidden = true;
+    document.getElementById('reset-form').hidden = false;
+    sessionStorage.setItem(storageKey + '-recovery', 'true');
+  }
+
+  async function restoreAccess() {
+    const fragment = new URLSearchParams(location.hash.slice(1));
+    if (fragment.has('access_token') || fragment.has('error')) {
+      history.replaceState(null, '', location.pathname + location.search);
+      if (fragment.has('error')) {
+        throw Error('El enlace ha caducado o ya se ha utilizado. Solicita un nuevo correo.');
       }
-    } catch (error) {
-      showLogin(error.message);
+      if (fragment.get('type') !== 'recovery' || !fragment.get('refresh_token')) {
+        throw Error('Solicita un nuevo enlace para cambiar la contraseña.');
+      }
+      const accessToken = fragment.get('access_token');
+      const response = await fetch(base + '/auth/v1/user', {
+        headers: { apikey: publicKey, Authorization: 'Bearer ' + accessToken }
+      });
+      if (!response.ok) throw Error('El enlace no es válido. Solicita un nuevo correo.');
+      const user = await response.json();
+      storeSession({
+        access_token: accessToken,
+        refresh_token: fragment.get('refresh_token'),
+        expires_at: Math.floor(Date.now()/1000) + Number(fragment.get('expires_in') || 3600),
+        user
+      });
+      showReset();
+      return;
     }
+    const saved = sessionStorage.getItem(storageKey);
+    if (!saved) return;
+    session = JSON.parse(saved);
+    if (sessionStorage.getItem(storageKey + '-recovery')) showReset();
+    else await unlock();
+  }
+
+  async function start() {
+    document.getElementById('forgot-password').addEventListener('click', async event => {
+      const form = document.getElementById('login-form');
+      const email = form.elements.email;
+      if (!email.reportValidity()) return;
+      const button = event.target;
+      button.disabled = true;
+      try {
+        const redirect = new URL('./', location.href).href.split('#')[0];
+        const response = await fetch(base + '/auth/v1/recover?redirect_to=' + encodeURIComponent(redirect), {
+          method: 'POST',
+          headers: { apikey: publicKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email.value.trim() })
+        });
+        if (!response.ok) throw Error(response.status === 429
+          ? 'Espera unos minutos antes de solicitar otro correo.'
+          : 'No se pudo enviar el correo. Inténtalo de nuevo.');
+        document.getElementById('login-error').textContent = 'Si el email tiene una cuenta, recibirás un enlace para cambiar la contraseña.';
+      } catch (error) {
+        document.getElementById('login-error').textContent = error.message;
+      } finally {
+        button.disabled = false;
+      }
+    });
+    document.getElementById('reset-form').addEventListener('submit', async event => {
+      event.preventDefault();
+      const form = event.target;
+      const password = form.elements.password.value;
+      const confirmation = form.elements.confirmation.value;
+      const message = document.getElementById('reset-error');
+      if (password !== confirmation) {
+        message.textContent = 'Las dos contraseñas deben coincidir.';
+        return;
+      }
+      const submit = form.querySelector('[type=submit]');
+      submit.disabled = true;
+      message.textContent = '';
+      try {
+        const accessToken = await token();
+        const response = await fetch(base + '/auth/v1/user', {
+          method: 'PUT',
+          headers: { apikey: publicKey, Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
+        });
+        if (!response.ok) {
+          const result = await response.json().catch(() => ({}));
+          const errors = {
+            weak_password: 'La contraseña no cumple los requisitos de seguridad.',
+            same_password: 'Elige una contraseña diferente a la anterior.',
+            reauthentication_needed: 'Solicita un nuevo enlace para confirmar el cambio.',
+            session_not_found: 'Solicita un nuevo enlace para cambiar la contraseña.'
+          };
+          throw Error(errors[result.code] || 'No se pudo cambiar la contraseña. Solicita un nuevo enlace e inténtalo de nuevo.');
+        }
+        form.reset();
+        await logout();
+        document.getElementById('login-error').textContent = 'Contraseña actualizada. Ya puedes entrar con la nueva.';
+      } catch (error) {
+        message.textContent = error.message;
+      } finally {
+        submit.disabled = false;
+      }
+    });
+    document.getElementById('cancel-reset').addEventListener('click', () => logout());
     document.getElementById('login-form').addEventListener('submit', async event => {
       event.preventDefault();
       const form = event.target;
@@ -110,6 +207,11 @@ window.crmConnection = (() => {
         submit.disabled = false;
       }
     });
+    try {
+      await restoreAccess();
+    } catch (error) {
+      showLogin(error.message);
+    }
   }
 
   async function logout() {

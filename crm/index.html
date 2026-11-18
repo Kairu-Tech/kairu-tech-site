@@ -6,24 +6,35 @@
 <meta name="robots" content="noindex,nofollow">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://ypffaagjhrrgxsrxlluo.supabase.co; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="description" content="Panel privado de seguimiento comercial de KairuTech.">
-<link rel="stylesheet" href="./style.css">
-<script defer src="./connection.js"></script>
-<script defer src="./app.js"></script>
+<link rel="stylesheet" href="./style.css?v=20261118-brand">
+<script defer src="./connection.js?v=20261118-reset"></script>
+<script defer src="./app.js?v=20261118-brand"></script>
 </head>
 <body>
 <section id="login" class="login-wrap">
 <form id="login-form" class="login-card">
-<div class="brand"><span class="brand-icon" aria-hidden="true">K</span><strong>KairuTech</strong></div>
+<div class="brand"><svg class="brand-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.9l2.15 6.02h6.39l-5.17 3.76 1.98 6.02L12 15.01 6.65 18.7l1.98-6.02-5.17-3.76h6.39L12 2.9z"/></svg><span class="brand-word">Kairu <span class="brand-tech">Tech</span></span></div>
 <h1>Tu seguimiento comercial</h1>
 <p>Accede a tu espacio privado.</p>
 <label>Email<input name="email" type="email" autocomplete="username" required></label>
 <label>Contraseña<input name="password" type="password" autocomplete="current-password" required></label>
 <p id="login-error" class="error" role="alert"></p>
 <button type="submit" class="primary">Entrar</button>
+<button type="button" id="forgot-password">He olvidado mi contraseña</button>
+</form>
+<form id="reset-form" class="login-card" hidden>
+<div class="brand"><svg class="brand-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.9l2.15 6.02h6.39l-5.17 3.76 1.98 6.02L12 15.01 6.65 18.7l1.98-6.02-5.17-3.76h6.39L12 2.9z"/></svg><span class="brand-word">Kairu <span class="brand-tech">Tech</span></span></div>
+<h1>Nueva contraseña</h1>
+<p>Escribe la contraseña que utilizarás para entrar al CRM.</p>
+<label>Nueva contraseña<input name="password" type="password" autocomplete="new-password" minlength="8" required></label>
+<label>Repetir contraseña<input name="confirmation" type="password" autocomplete="new-password" minlength="8" required></label>
+<p id="reset-error" class="error" role="alert"></p>
+<button type="submit" class="primary">Guardar contraseña</button>
+<button type="button" id="cancel-reset">Volver al acceso</button>
 </form></section>
 <div class="shell" hidden>
 <aside class="sidebar">
-<div class="brand"><span class="brand-icon" aria-hidden="true">K</span><div><strong>KairuTech</strong><small>Operaciones comerciales</small></div></div>
+<div class="brand"><svg class="brand-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.9l2.15 6.02h6.39l-5.17 3.76 1.98 6.02L12 15.01 6.65 18.7l1.98-6.02-5.17-3.76h6.39L12 2.9z"/></svg><div><span class="brand-word">Kairu <span class="brand-tech">Tech</span></span><small>Operaciones comerciales</small></div></div>
 <nav aria-label="Navegación principal" id="nav"></nav>
 <div class="profile"><span class="avatar">AB</span><div><strong>Alex Barrena</strong><small>Espacio privado</small></div></div>
 </aside>
