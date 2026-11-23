@@ -216,3 +216,6 @@ textarea{min-height:67px;resize:vertical}
     grid-template-columns: 1fr;
   }
 }
+
+.license-summary{margin-bottom:18px}
+.contact-cell{white-space:pre-line;min-width:180px;max-width:320px;font-size:.76rem}

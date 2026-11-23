@@ -21,7 +21,7 @@ const value=x=>x!==''&&x!=null;
 const active=d=>!['Cierre ganado','Cierre perdido','En pausa'].includes(d.stage);
 const hasAction=d=>!['Cierre perdido','En pausa'].includes(d.stage)&&d.next;
 const filterFields=[['project','Proyecto'],['country','País'],['region','Región'],['sector','Sector'],['priority','Prioridad'],['stage','Estado comercial'],['type','Tipo']];
-const navItems=[['home','▦','Esta semana'],['pipeline','☷','Pipeline'],['forecast','◴','Forecast trimestral'],['reviews','◷','Revisiones']];
+const navItems=[['home','▦','Esta semana'],['pipeline','☷','Pipeline'],['clients','▤','Clientes y licencias'],['forecast','◴','Forecast trimestral'],['reviews','◷','Revisiones']];
 const subsets={
   Zentynel:[['','Todas'],['spain','España'],['portugal','Portugal'],['latam','Latinoamérica']],
   Flowity:[['','Todas'],['dip','Diputaciones'],['road','Carreteras']]
@@ -37,6 +37,7 @@ const fields=[
   ['relevantDate','Fecha relevante','date'],['closeDate','Cierre previsto / efectivo','date'],['nextDate','Fecha de la próxima acción','date'],
   ['next','Próximo paso','textarea'],['notes','Notas','textarea']
 ];
+let clientTab='clients',customerQuery='',customerProject='',licenseFilter='all';
 let rows=[],error='',view='home',project='',subset='',filters={},query='',layout='list',fQuarter=quarterFor(today()),fProject='',editor=null,toastTimer;
 const entries=kind=>rows.filter(x=>x.data.kind===kind);
 const opportunities=()=>entries('opportunity').map(x=>x.data);
@@ -58,7 +59,7 @@ const projectIds={Zentynel:'zentynel',Flowity:'flowity',Metadology:'metadology'}
 function fromDatabase(row) {
   const name=Object.keys(projectIds).find(key=>projectIds[key]===row.project_id)||'';
   return {record_id:row.id,version:row.version,timestamp:row.updated_at,reason:row.change_reason,
-    data:{...row.data,id:row.id,kind:row.kind,name:row.name,project:name}};
+    data:{...row.data,id:row.id,kind:row.kind,name:row.name,project:name,clientId:row.client_id||''}};
 }
 async function api(path, options) {
   if (!options) {
@@ -78,7 +79,7 @@ async function api(path, options) {
   const {data,version,reason}=JSON.parse(options.body);
   const payload={
     id:data.id,project_id:projectIds[data.project]||null,kind:data.kind,
-    name:data.name,data,change_reason:reason.trim()||'Actualización'
+    name:data.name,data,client_id:data.kind==='license'?data.clientId:null,change_reason:reason.trim()||'Actualización'
   };
   const saved=await crmConnection.request('crm_records'+(version>=0?'?id=eq.'+data.id+'&version=eq.'+version:''),{
     method:version>=0?'PATCH':'POST',
@@ -104,11 +105,11 @@ function jump(v,p=''){location.hash=v+(p?'/'+colors[projects.indexOf(p)]:'');}
 function render(){
   $('nav').innerHTML='<div class="nav-label">Seguimiento</div>'+navItems.map(([v,i,l])=>button('nav','<span class="nav-icon" aria-hidden="true">'+i+'</span>'+l,'data-view="'+v+'"',view===v?'active':'')).join('')+'<div class="nav-label">Proyectos</div>'+projects.map(p=>button('project',dot(p)+p,'data-project="'+p+'"',view==='project'&&project===p?'active':'')).join('');
   $('breadcrumb').textContent=view==='project'?project:(navItems.find(x=>x[0]===view)?.[2]||'Seguimiento comercial');
-  $('page').innerHTML=error?'<div class="card"><p class="error">'+esc(error)+'</p>'+button('reload','Volver a cargar')+'</div>':({home,pipeline,project:pipeline,forecast,reviews}[view]||home)();
+  $('page').innerHTML=error?'<div class="card"><p class="error">'+esc(error)+'</p>'+button('reload','Volver a cargar')+'</div>':({home,pipeline,project:pipeline,forecast,reviews,clients}[view]||home)();
 }
 function home(){
   const all=opportunities(), open=all.filter(active), [start,end]=week();
-  const outstanding=all.filter(hasAction);
+  const outstanding=[...all,...entries('client').map(r=>r.data),...entries('license').map(r=>r.data)].filter(hasAction);
   const weekTasks=outstanding.filter(d=>d.nextDate&&d.nextDate<=end).sort((a,b)=>a.nextDate.localeCompare(b.nextDate));
   const later=outstanding.filter(d=>!d.nextDate||d.nextDate>end).sort((a,b)=>(a.nextDate||'z').localeCompare(b.nextDate||'z'));
   const eur=open.filter(d=>d.currency==='EUR'&&value(d.amount));const top=open.filter(d=>d.priority==='Alta');
@@ -119,7 +120,7 @@ function home(){
   '<div class="grid split"><section class="card">'+cardHead('Tareas de esta semana','Incluye acciones pendientes de semanas anteriores.')+(weekTasks.length?weekTasks.map(d=>task(d,true)).join(''):blank('Sin tareas con fecha para esta semana.'))+'</section><section class="card">'+cardHead('Estado del pipeline','',button('nav','Ver pipeline →','data-view="pipeline"','text-button'))+stages.filter(s=>all.some(d=>d.stage===s)).map(s=>{const n=all.filter(d=>d.stage===s).length;return '<div class="bar-row"><span>'+esc(s)+'</span><progress aria-label="'+esc(s)+'" max="'+max+'" value="'+n+'"></progress><b>'+n+'</b></div>';}).join('')+'</section></div>'+
   '<div class="grid split"><section class="card">'+cardHead('Próximas acciones','Acciones futuras y pendientes de programar.')+(later.length?later.map(d=>task(d,true)).join(''):blank('Sin próximas acciones registradas.'))+'</section>'+
   '<section class="card">'+cardHead('Revisión de prioridades','Registra decisiones y consulta revisiones anteriores.')+button('nav','Ir a revisiones →','data-view="reviews"','text-button')+'</section></div>'+
-  '<section class="card">'+cardHead('Proyectos')+'<div class="grid projects">'+projects.map(p=>button('project',dot(p)+esc(p)+'<small>'+open.filter(d=>d.project===p).length+' activas</small>','data-project="'+p+'"','project-card')).join('')+'</div></section>';
+  licenseSummary()+'<section class="card">'+cardHead('Proyectos')+'<div class="grid projects">'+projects.map(p=>button('project',dot(p)+esc(p)+'<small>'+open.filter(d=>d.project===p).length+' activas</small>','data-project="'+p+'"','project-card')).join('')+'</div></section>';
 }
 function scoped(){
   return opportunities().filter(d=>{
@@ -195,7 +196,7 @@ function reviews(){
 }
 function formField([key,label,typ='text',required=false],data){
   const v=data[key]??'', name=' name="'+key+'"'+(required?' required':'');
-  const list=Array.isArray(typ)?typ:typ==='country'?[...new Set([...countries,...opportunities().map(x=>x.country).filter(Boolean)])].sort((a,b)=>a.localeCompare(b,'es')):typ==='region'?[...new Set([...regions,...opportunities().map(x=>x.region).filter(Boolean)])]:typ==='link'?opportunities().filter(d=>(d.project===data.project||d.id===v)&&(quarterFor(d.closeDate)===data.quarter||d.id===v)).map(d=>[d.id,d.name]):null;
+  const list=typ==='client'?entries('client').map(r=>r.data).filter(d=>d.project===data.project||d.id===v).map(d=>[d.id,d.name]):Array.isArray(typ)?typ:typ==='country'?[...new Set([...countries,...opportunities().map(x=>x.country).filter(Boolean)])].sort((a,b)=>a.localeCompare(b,'es')):typ==='region'?[...new Set([...regions,...opportunities().map(x=>x.region).filter(Boolean)])]:typ==='link'?opportunities().filter(d=>(d.project===data.project||d.id===v)&&(quarterFor(d.closeDate)===data.quarter||d.id===v)).map(d=>[d.id,d.name]):null;
   let control;
   if(list)control='<select'+name+'>'+opts(list,v,'Seleccionar')+'</select>';
   else if(typ==='textarea')control='<textarea'+name+'>'+esc(v)+'</textarea>';
@@ -206,11 +207,11 @@ function formField([key,label,typ='text',required=false],data){
   }
   return '<label'+(typ==='textarea'?' class="wide"':'')+'>'+esc(label)+control+'</label>';
 }
-const fieldsFor=d=>d.kind==='opportunity'?fields:d.kind==='goal'?goalFields:reviewFields;
+const fieldsFor=d=>d.kind==='client'?clientFields:d.kind==='license'?licenseFields:d.kind==='opportunity'?fields:d.kind==='goal'?goalFields:reviewFields;
 function showEditor(row,kind='opportunity'){
   const d=row?.data||{id:crypto.randomUUID(),kind,project:view==='project'?project:kind==='goal'?fProject:'',stage:'Prospección',priority:'Por revisar',currency:'EUR',quarter:fQuarter,reviewDate:today()};
   editor={row,data:d};
-  const title=row?d.name:kind==='goal'?'Nuevo objetivo':kind==='review'?'Registrar revisión':'Nueva oportunidad';
+  const title=row?d.name:kind==='client'?'Nuevo cliente':kind==='license'?'Nueva licencia':kind==='goal'?'Nuevo objetivo':kind==='review'?'Registrar revisión':'Nueva oportunidad';
   $('modal-content').innerHTML='<header class="dialog-head"><h2>'+esc(title)+'</h2>'+button('close','✕','aria-label="Cerrar ficha"')+'</header>'+
   '<div class="dialog-body"><form id="editor"><div class="fields">'+fieldsFor(d).map(f=>formField(f,d)).join('')+'<label class="wide">Motivo del cambio<input name="reason" placeholder="Ej. Confirmación tras la reunión"></label></div>'+
   (d.sourceUrl?'<p class="sub"><a target="_blank" rel="noopener" href="'+esc(d.sourceUrl)+'">Abrir archivo de origen ↗</a></p>':'')+
@@ -244,6 +245,11 @@ document.addEventListener('submit',async e=>{
   for(const [k] of fieldsFor(data))d[k]=String(form.get(k)??'').trim();
   const submit=e.target.querySelector('[type=submit]');submit.disabled=true;
   try {
+    if(d.kind==='license'){
+      const client=get(d.clientId)?.data;
+      if(!client||client.kind!=='client'||client.project!==d.project)throw Error('Elige un cliente del mismo proyecto.');
+      if(d.startDate&&d.endDate&&d.endDate<d.startDate)throw Error('El vencimiento debe ser posterior o igual al inicio.');
+    }
     if(d.kind==='goal'&&d.linked){
       const linked=get(d.linked)?.data;
       if(!linked||linked.project!==d.project||quarterFor(linked.closeDate)!==d.quarter||!value(linked.amount)||!(linked.stage==='Cierre ganado'||(active(linked)&&value(linked.probability))))throw Error('La oportunidad vinculada debe tener importe, probabilidad (o estar ganada) y fecha de cierre en el mismo proyecto y trimestre.');
@@ -254,10 +260,17 @@ document.addEventListener('submit',async e=>{
   }catch(err){if(err.status===409)await load();$('form-error').textContent=err.message;submit.disabled=false;}
 });
 document.addEventListener('input',e=>{
+  if(e.target.id==='customer-query'){customerQuery=e.target.value;$('customer-results').innerHTML=customerResults();}
   if(e.target.id==='query'){query=e.target.value;$('results').innerHTML=resultTable();}
 });
 document.addEventListener('change',e=>{
   const el=e.target;
+  if(el.id==='customer-project'){customerProject=el.value;render();}
+  if(el.id==='license-filter'){licenseFilter=el.value;render();}
+  if(editor?.data.kind==='license'&&el.closest('#editor')&&el.name==='project'){
+    const form=el.closest('form');
+    form.elements.clientId.parentElement.outerHTML=formField(licenseFields.find(([k])=>k==='clientId'),{project:el.value});
+  }
   if(el.dataset.filter){filters[el.dataset.filter]=el.value;$('results').innerHTML=resultTable();}
   if(el.id==='quarter'){fQuarter=el.value;render();}
   if(el.id==='forecast-project'){fProject=el.value;render();}
@@ -280,6 +293,9 @@ document.addEventListener('click',async e=>{
   if(action==='logout')await crmConnection.logout();
   if(action==='export')exportRecords();
   if(action==='new')showEditor(null);
+  if(action==='client-tab'){clientTab=key;render();}
+  if(action==='new-client')showEditor(null,'client');
+  if(action==='new-license')showEditor(null,'license');
   if(action==='goal'||action==='review')showEditor(null,action);
   if(action==='open'&&row)showEditor(row);
   if(action==='close')$('modal').close();
@@ -303,7 +319,6 @@ document.addEventListener('click',async e=>{
   }
 });
 addEventListener('hashchange',route);
-route();
 addEventListener('crm-ready',()=>load());
 addEventListener('crm-locked',()=>{
   rows=[];editor=null;error='';
@@ -316,12 +331,87 @@ setInterval(()=>{
 
 
 function exportRecords(){
-  const data=(view==='pipeline'||view==='project')?filtered():opportunities();
-  const columns=fields.map(([key,label])=>[key,label]);
+  const data=view==='clients'?customerData():(view==='pipeline'||view==='project')?filtered():opportunities();
+  const columns=(view==='clients'?(clientTab==='licenses'?licenseFields:clientFields):fields).map(([key,label])=>[key,label]);
   const csvCell=value=>'"'+String(value??'').replace(/^[=+@\t\r-]/,"'$&").replace(/"/g,'""')+'"';
-  const csv=[columns.map(([,label])=>csvCell(label)).join(';'),...data.map(row=>columns.map(([key])=>csvCell(row[key])).join(';'))].join('\r\n');
+  const csv=[columns.map(([,label])=>csvCell(label)).join(';'),...data.map(row=>columns.map(([key])=>csvCell(key==='clientId'?(get(row[key])?.data.name||row[key]):row[key])).join(';'))].join('\r\n');
   const url=URL.createObjectURL(new Blob(['\ufeff',csv],{type:'text/csv;charset=utf-8'}));
   const link=document.createElement('a');
   link.href=url;link.download='KairuTech_seguimiento_'+today()+'.csv';
   link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
+
+const clientFields=[
+  ['name','Cliente','text',true],['project','Proyecto',projects,true],
+  ['clientStatus','Situación',['Actual','En pausa','Baja']],
+  ['sector','Sector'],['country','País','country'],['region','Región','region'],
+  ['contact','Contactos, cargos, emails y teléfonos','textarea'],
+  ['next','Próxima acción','textarea'],['nextDate','Fecha de seguimiento','date'],
+  ['priority','Prioridad',priorities],['risk','Riesgo / datos por confirmar','textarea'],
+  ['source','Fuente','textarea'],['notes','Notas de seguimiento','textarea']
+];
+const licenseFields=[
+  ['name','Licencia / contrato','text',true],['project','Proyecto',projects,true],
+  ['clientId','Cliente','client',true],
+  ['licenseStatus','Situación',['Por confirmar','Vigente confirmada','Renovación en curso','Renovada','Finalizada']],
+  ['startDate','Fecha de inicio','date'],['endDate','Fecha de vencimiento','date'],
+  ['renewalNotice','Fecha de aviso de renovación','date'],
+  ['users','Usuarios contratados'],['amount','Importe del periodo','amount'],
+  ['currency','Moneda',['EUR','USD','GBP','MXN','CLP']],
+  ['renewalTerms','Condiciones de renovación','textarea'],
+  ['next','Próxima acción','textarea'],['nextDate','Fecha de seguimiento','date'],
+  ['risk','Datos por confirmar','textarea'],['source','Fuente','textarea'],
+  ['notes','Notas','textarea']
+];
+function licenseTiming(d){
+  if(d.licenseStatus==='Renovada'||d.licenseStatus==='Finalizada')return {key:'closed',label:d.licenseStatus,color:'neutral'};
+  if(!d.endDate)return {key:'unknown',label:'Sin vencimiento',color:'neutral'};
+  const days=Math.round((Date.parse(d.endDate+'T12:00Z')-Date.parse(today()+'T12:00Z'))/86400000);
+  if(days<0)return {key:'past',label:'Periodo vencido · confirmar renovación',color:'warm'};
+  if(days<=30)return {key:'30',label:'Vence en '+days+' días',color:'warm'};
+  if(days<=60)return {key:'60',label:'Vence en '+days+' días',color:''};
+  if(days<=90)return {key:'90',label:'Vence en '+days+' días',color:''};
+  return {key:'later',label:'En plazo según fechas',color:'green'};
+}
+function licenseSummary(){
+  const data=entries('license').map(r=>r.data).filter(d=>['past','30','60','90'].includes(licenseTiming(d).key))
+    .sort((a,b)=>a.endDate.localeCompare(b.endDate));
+  return '<section class="card license-summary">'+cardHead('Licencias y renovaciones',data.length+' periodos para revisar.',button('nav','Ver clientes →','data-view="clients"','text-button'))+
+    (data.length?data.slice(0,5).map(d=>'<div class="record">'+openBtn(d,d.name,short(d.endDate))+tag(licenseTiming(d).label,licenseTiming(d).color)+'</div>').join(''):blank('Sin licencias próximas a vencer ni periodos vencidos pendientes.'))+'</section>';
+}
+function customerData(){
+  const kind=clientTab==='licenses'?'license':'client';
+  const normalize=s=>String(s??'').normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase();
+  return entries(kind).map(r=>r.data).filter(d=>
+    (!customerProject||d.project===customerProject)&&
+    (!customerQuery||normalize([d.name,d.contact,d.next,get(d.clientId)?.data.name].join(' ')).includes(normalize(customerQuery)))&&
+    (kind!=='license'||licenseFilter==='all'||licenseTiming(d).key===licenseFilter)
+  ).sort((a,b)=>kind==='license'?(a.endDate||'z').localeCompare(b.endDate||'z'):a.name.localeCompare(b.name,'es'));
+}
+function customerResults(){
+  const data=customerData();
+  if(!data.length)return blank('No hay registros en esta vista.');
+  const licenses=clientTab==='licenses';
+  return '<div class="scroll"><table><thead><tr><th>'+ (licenses?'Licencia':'Cliente')+'</th><th>Proyecto</th>'+
+    (licenses?'<th>Vencimiento</th><th>Periodo / situación</th>':'<th>Contactos</th><th>Licencias registradas</th>')+
+    '<th>Próximo paso</th></tr></thead><tbody>'+data.map(d=>{
+      const timing=licenses?licenseTiming(d):null;
+      const count=licenses?0:entries('license').filter(r=>r.data.clientId===d.id).length;
+      return '<tr><td>'+openBtn(d,d.name,licenses?(get(d.clientId)?.data.name||'Cliente por revisar'):(d.clientStatus||'Actual'))+'</td><td>'+esc(d.project)+'</td>'+
+        (licenses?'<td>'+esc(short(d.endDate))+'</td><td>'+tag(timing.label,timing.color)+'</td>':
+        '<td class="contact-cell">'+esc(d.contact||'Pendiente de completar')+'</td><td>'+count+'</td>')+
+        '<td>'+esc(d.next||'—')+(d.nextDate?'<div class="meta">'+esc(short(d.nextDate))+'</div>':'')+'</td></tr>';
+    }).join('')+'</tbody></table></div>';
+}
+function clients(){
+  return head('Clientes y licencias','Clientes actuales, periodos contratados y seguimiento de renovaciones.',
+    '<div class="top-actions">'+button('new-client','＋ Cliente')+button('new-license','＋ Licencia','','primary')+'</div>')+
+    '<div class="chips">'+button('client-tab','Clientes','data-key="clients"',clientTab==='clients'?'selected':'')+
+    button('client-tab','Licencias','data-key="licenses"',clientTab==='licenses'?'selected':'')+'</div>'+
+    '<section class="card"><div class="filters"><label class="filter-search">Buscar<input id="customer-query" type="search" value="'+esc(customerQuery)+'" placeholder="Cliente, contacto o acción"></label>'+
+    '<label>Proyecto<select id="customer-project">'+opts(projects,customerProject,'Todos')+'</select></label>'+
+    (clientTab==='licenses'?'<label>Vencimiento<select id="license-filter">'+opts([['all','Todos'],['past','Periodo vencido'],['30','Hasta 30 días'],['60','De 31 a 60 días'],['90','De 61 a 90 días'],['later','Más de 90 días'],['closed','Renovadas / finalizadas'],['unknown','Sin fecha']],licenseFilter)+'</select></label>':'')+
+    '</div><div id="customer-results">'+customerResults()+'</div></section>';
+}
+
+route();
