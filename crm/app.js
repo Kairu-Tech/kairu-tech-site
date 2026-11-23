@@ -20,7 +20,7 @@ const quarterFor=d=>d?d.slice(0,4)+'-T'+Math.ceil(Number(d.slice(5,7))/3):'';
 const value=x=>x!==''&&x!=null;
 const active=d=>!['Cierre ganado','Cierre perdido','En pausa'].includes(d.stage);
 const hasAction=d=>!['Cierre perdido','En pausa'].includes(d.stage)&&d.next;
-const filterFields=[['project','Proyecto'],['country','País'],['region','Región'],['sector','Sector'],['priority','Prioridad'],['stage','Estado comercial'],['type','Tipo']];
+const filterFields=[['project','Proyecto'],['country','País'],['region','Región'],['sector','Sector'],['priority','Prioridad'],['stage','Estado comercial'],['type','Tipo'],['commercialMonth','Mes cierre / renovación']];
 const navItems=[['home','▦','Esta semana'],['pipeline','☷','Pipeline'],['clients','▤','Clientes y licencias'],['forecast','◴','Forecast trimestral'],['reviews','◷','Revisiones']];
 const subsets={
   Zentynel:[['','Todas'],['spain','España'],['portugal','Portugal'],['latam','Latinoamérica']],
@@ -40,7 +40,10 @@ const fields=[
 let clientTab='clients',customerQuery='',customerProject='',licenseFilter='all';
 let rows=[],error='',view='home',project='',subset='',filters={},query='',layout='list',fQuarter=quarterFor(today()),fProject='',editor=null,toastTimer;
 const entries=kind=>rows.filter(x=>x.data.kind===kind);
-const opportunities=()=>entries('opportunity').map(x=>x.data);
+const opportunities=()=>[
+  ...entries('opportunity').map(x=>({...x.data,commercialMonth:(x.data.closeDate||'').slice(0,7)})),
+  ...renewalOpportunities()
+];
 const get=id=>rows.find(r=>r.record_id===id);
 const openBtn=(d,label,meta='')=>'<button type="button" class="open" data-action="open" data-id="'+esc(d.id)+'">'+esc(label)+(meta?'<span class="meta">'+esc(meta)+'</span>':'')+'</button>';
 const button=(a,label,extra='',cl='')=>'<button type="button" class="'+cl+'" data-action="'+a+'" '+extra+'>'+label+'</button>';
@@ -109,7 +112,8 @@ function render(){
 }
 function home(){
   const all=opportunities(), open=all.filter(active), [start,end]=week();
-  const outstanding=[...all,...entries('client').map(r=>r.data),...entries('license').map(r=>r.data)].filter(hasAction);
+  const projected=new Set(all.filter(d=>d.kind==='license').map(d=>d.id));
+  const outstanding=[...all,...entries('client').map(r=>r.data),...entries('license').map(r=>r.data).filter(d=>!projected.has(d.id)&&licenseTiming(d).key!=='closed')].filter(hasAction);
   const weekTasks=outstanding.filter(d=>d.nextDate&&d.nextDate<=end).sort((a,b)=>a.nextDate.localeCompare(b.nextDate));
   const later=outstanding.filter(d=>!d.nextDate||d.nextDate>end).sort((a,b)=>(a.nextDate||'z').localeCompare(b.nextDate||'z'));
   const eur=open.filter(d=>d.currency==='EUR'&&value(d.amount));const top=open.filter(d=>d.priority==='Alta');
@@ -117,7 +121,7 @@ function home(){
   const max=Math.max(1,...stages.map(s=>all.filter(d=>d.stage===s).length));
   return '<section class="hero"><div><p class="eyebrow">Semana comercial</p><h1>Seguimiento comercial</h1><p>Prioridades, oportunidades y próximos pasos de KairuTech.</p></div><span class="hero-date">'+esc(short(start)+' — '+dateLong.format(new Date(end+'T12:00Z')))+'</span></section>'+
   '<div class="grid metrics">'+metric('Pipeline abierto',open.filter(d=>d.stage!=='Prospección').length,open.filter(d=>d.stage==='Prospección').length+' fichas en prospección')+metric('Acciones pendientes',weekTasks.length,'Esta semana y vencidas')+metric('Prioridad alta',top.length,'Oportunidades activas')+metric('Valor estimado en EUR',eur.length?money(eur.reduce((s,d)=>s+Number(d.amount),0)):'—',eur.length+' fichas con importe')+'</div>'+
-  '<div class="grid split"><section class="card">'+cardHead('Tareas de esta semana','Incluye acciones pendientes de semanas anteriores.')+(weekTasks.length?weekTasks.map(d=>task(d,true)).join(''):blank('Sin tareas con fecha para esta semana.'))+'</section><section class="card">'+cardHead('Estado del pipeline','',button('nav','Ver pipeline →','data-view="pipeline"','text-button'))+stages.filter(s=>all.some(d=>d.stage===s)).map(s=>{const n=all.filter(d=>d.stage===s).length;return '<div class="bar-row"><span>'+esc(s)+'</span><progress aria-label="'+esc(s)+'" max="'+max+'" value="'+n+'"></progress><b>'+n+'</b></div>';}).join('')+'</section></div>'+
+  renewalAlertPanel()+'<div class="grid split"><section class="card">'+cardHead('Tareas de esta semana','Incluye acciones pendientes de semanas anteriores.')+(weekTasks.length?weekTasks.map(d=>task(d,true)).join(''):blank('Sin tareas con fecha para esta semana.'))+'</section><section class="card">'+cardHead('Estado del pipeline','',button('nav','Ver pipeline →','data-view="pipeline"','text-button'))+stages.filter(s=>all.some(d=>d.stage===s)).map(s=>{const n=all.filter(d=>d.stage===s).length;return '<div class="bar-row"><span>'+esc(s)+'</span><progress aria-label="'+esc(s)+'" max="'+max+'" value="'+n+'"></progress><b>'+n+'</b></div>';}).join('')+'</section></div>'+
   '<div class="grid split"><section class="card">'+cardHead('Próximas acciones','Acciones futuras y pendientes de programar.')+(later.length?later.map(d=>task(d,true)).join(''):blank('Sin próximas acciones registradas.'))+'</section>'+
   '<section class="card">'+cardHead('Revisión de prioridades','Registra decisiones y consulta revisiones anteriores.')+button('nav','Ir a revisiones →','data-view="reviews"','text-button')+'</section></div>'+
   licenseSummary()+'<section class="card">'+cardHead('Proyectos')+'<div class="grid projects">'+projects.map(p=>button('project',dot(p)+esc(p)+'<small>'+open.filter(d=>d.project===p).length+' activas</small>','data-project="'+p+'"','project-card')).join('')+'</div></section>';
@@ -140,7 +144,7 @@ function filtered(){
 function pipeline(){
   const scope=scoped(), title=view==='project'?project:'Pipeline comercial';
   const specialized=view==='project'&&subsets[project];
-  const filter=filterFields.filter(([k])=>view!=='project'||k!=='project').map(([k,l])=>'<label>'+l+'<select data-filter="'+k+'">'+opts([...new Set(scope.map(d=>d[k]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es')),filters[k],'Todos')+'</select></label>').join('');
+  const filter=filterFields.filter(([k])=>view!=='project'||k!=='project').map(([k,l])=>'<label>'+l+'<select data-filter="'+k+'">'+opts([...new Set(scope.map(d=>d[k]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es')).map(v=>k==='commercialMonth'?[v,monthLabel(v)]:v),filters[k],'Todos')+'</select></label>').join('');
   return head(title,view==='project'?'Oportunidades y seguimiento del proyecto.':'Prospección, cierre, renovación y seguimiento en una sola vista.')+
     (specialized?'<div class="chips">'+specialized.map(([k,l])=>button('subset',l,'data-key="'+k+'"',k===subset?'selected':'')).join('')+'</div>':'')+
     '<div class="card"><div class="filters"><label class="filter-search">Buscar<input type="search" id="query" value="'+esc(query)+'" placeholder="Cuenta, contacto o próximo paso"></label>'+filter+'</div>'+
@@ -150,8 +154,8 @@ function resultTable(){
   const data=filtered().sort((a,b)=>(priorities.indexOf(a.priority||'Por revisar')-priorities.indexOf(b.priority||'Por revisar'))||a.name.localeCompare(b.name,'es'));
   if(!data.length)return blank('No hay oportunidades en esta vista. Puedes crear una desde el botón superior.');
   const count='<p class="sub">'+data.length+' '+(data.length===1?'oportunidad':'oportunidades')+'</p>';
-  if(layout==='board')return count+'<div class="board">'+stages.map(s=>'<section class="lane"><h3>'+esc(s)+' · '+data.filter(d=>d.stage===s).length+'</h3>'+data.filter(d=>d.stage===s).map(d=>openBtn(d,d.name,d.project+' · '+(d.priority||'Por revisar'))).join('')+'</section>').join('')+'</div>';
-  return count+'<div class="scroll"><table><thead><tr><th>Cuenta / oportunidad</th><th>País</th><th>Estado comercial</th><th>Prioridad</th><th>Importe</th><th>Próxima acción</th></tr></thead><tbody>'+data.map(d=>'<tr><td>'+openBtn(d,d.name,d.project+' · '+(d.type||'Por cualificar'))+'</td><td>'+esc(d.country||'—')+'</td><td>'+tag(d.stage||'Prospección',d.stage==='Cierre ganado'?'green':'neutral')+'</td><td>'+priority(d)+'</td><td class="nobr">'+(value(d.amount)?esc(money(Number(d.amount),d.currency)):'—')+'</td><td>'+esc(d.next||'—')+(d.nextDate?'<div class="meta">'+esc(short(d.nextDate))+'</div>':'')+'</td></tr>').join('')+'</tbody></table></div>';
+  if(layout==='board')return count+'<div class="board">'+stages.map(s=>'<section class="lane"><h3>'+esc(s)+' · '+data.filter(d=>d.stage===s).length+'</h3>'+data.filter(d=>d.stage===s).map(d=>openBtn(d,d.name,d.project+' · '+(d.type||'Cliente directo')+' · '+(d.priority||'Por revisar'))).join('')+'</section>').join('')+'</div>';
+  return count+'<div class="scroll"><table><thead><tr><th>Cuenta / oportunidad</th><th>País</th><th>Estado comercial</th><th>Prioridad</th><th>Importe</th><th>Próxima acción</th></tr></thead><tbody>'+data.map(d=>'<tr><td>'+openBtn(d,d.name,d.project+' · '+(d.type||'Por cualificar')+(d.commercialMonth?' · '+monthLabel(d.commercialMonth):''))+'</td><td>'+esc(d.country||'—')+'</td><td>'+tag(d.stage||'Prospección',d.stage==='Cierre ganado'?'green':'neutral')+'</td><td>'+priority(d)+'</td><td class="nobr">'+(value(d.amount)?esc(money(Number(d.amount),d.currency)):'—')+'</td><td>'+esc(d.next||'—')+(d.nextDate?'<div class="meta">'+esc(short(d.nextDate))+'</div>':'')+(d.kind==='license'?'<div class="meta">'+esc((renewalAlert(get(d.id).data)?.label||'Sin revisión pendiente'))+'</div>':'')+'</td></tr>').join('')+'</tbody></table></div>';
 }
 const goalFields=[['name','Objetivo','text',true],['project','Proyecto',projects,true],['quarter','Trimestre (AAAA-T1 a AAAA-T4)','quarter',true],['currency','Moneda',['EUR','USD','GBP','MXN','CLP','BRL','COP','PEN'],true],['conservative','Conservador','amount'],['base','Base','amount'],['upside','Optimista','amount'],['linked','Sustituir por una oportunidad','link'],['notes','Notas y supuestos','textarea']];
 const reviewFields=[['name','Título','text',true],['reviewDate','Fecha de revisión','date',true],['project','Proyecto',projects],['reviewNext','Próxima revisión','date'],['notes','Decisiones, cambios de prioridad y próximos pasos','textarea',true]];
@@ -161,6 +165,7 @@ function forecast(){
   const candidates=all.filter(d=>quarterFor(d.closeDate)===fQuarter&&(!fProject||d.project===fProject)&&(active(d)||d.stage==='Cierre ganado'));
   const real=candidates.filter(d=>value(d.amount)&&(d.stage==='Cierre ganado'||value(d.probability)));
   const missing=candidates.length-real.length;
+  const undated=all.filter(d=>d.kind==='license'&&!d.closeDate&&active(d)&&(!fProject||d.project===fProject));
   const totals=new Map();
   for(const d of real){
     const c=d.currency||'EUR', a=Number(d.amount), p=d.stage==='Cierre ganado'?1:Number(d.probability)/100;
@@ -176,13 +181,15 @@ function forecast(){
   const format=i=>[...totals.entries()].sort().map(([c,a])=>money(a[i],c)).join(' · ')||'—';
   const year=Number(fQuarter.slice(0,4));
   const periods=[...new Set([year-1,year,year+1,Number(today().slice(0,4)),...entries('goal').map(x=>Number(x.data.quarter?.slice(0,4))).filter(Boolean),...all.map(x=>Number(x.closeDate?.slice(0,4))).filter(Boolean)])].sort((a,b)=>a-b).flatMap(y=>[1,2,3,4].map(q=>y+'-T'+q));
-  return head('Forecast trimestral','Proyección por moneda a partir de oportunidades fechadas y objetivos por validar.',button('goal','＋ Objetivo','','primary'))+
+  return head('Forecast trimestral','Oportunidades y renovaciones por trimestre. Para renovaciones sin cierre previsto se usa el vencimiento futuro como referencia.',button('goal','＋ Objetivo','','primary'))+
   '<div class="forecast-controls"><label class="sub" for="quarter">Trimestre</label><select id="quarter">'+opts(periods,fQuarter)+'</select><label class="sub" for="forecast-project">Proyecto</label><select id="forecast-project">'+opts(projects,fProject,'Todos los proyectos')+'</select></div>'+
   '<div class="grid metrics forecast-metrics">'+metric('Conservador',format(0),'Probabilidad −20 puntos')+metric('Base',format(1),'Probabilidad de la ficha')+metric('Optimista',format(2),'Probabilidad +20 puntos')+'</div>'+
   '<div class="grid split"><section class="card">'+cardHead('Oportunidades del trimestre',missing?missing+' con importe o probabilidad pendiente.':'Las ganadas computan al 100 %.')+
-  (candidates.length?candidates.map(d=>'<div class="record">'+openBtn(d,d.name,d.project+' · '+short(d.closeDate))+'</div>').join(''):blank('Añade una fecha de cierre a una oportunidad para incluirla aquí.'))+'</section>'+
+  (candidates.length?candidates.map(d=>'<div class="record">'+openBtn(d,d.name,d.project+' · '+(d.type||'Cliente directo')+' · '+short(d.closeDate))+'</div>').join(''):blank('Añade una fecha de cierre a una oportunidad para incluirla aquí.'))+'</section>'+
   '<section class="card">'+cardHead('Objetivos por validar','Al vincular una oportunidad, su valor sustituye al del objetivo.')+
-  (goals.length?goals.map(d=>'<div class="record">'+openBtn(d,d.name,d.linked?'Sustituido por '+(get(d.linked)?.data.name||'oportunidad vinculada'):(value(d.base)?money(Number(d.base),d.currency):'Sin importe base'))+(d.linked?(real.some(x=>x.id===d.linked)?tag('Sustituido','green'):tag('Vínculo por revisar','warm')):tag('Genérico','neutral'))+'</div>').join(''):blank('Todavía no hay objetivos genéricos para este trimestre.'))+'</section></div>';
+  (goals.length?goals.map(d=>'<div class="record">'+openBtn(d,d.name,d.linked?'Sustituido por '+(get(d.linked)?.data.name||'oportunidad vinculada'):(value(d.base)?money(Number(d.base),d.currency):'Sin importe base'))+(d.linked?(real.some(x=>x.id===d.linked)?tag('Sustituido','green'):tag('Vínculo por revisar','warm')):tag('Genérico','neutral'))+'</div>').join(''):blank('Todavía no hay objetivos genéricos para este trimestre.'))+'</section></div>'+
+    '<section class="card">'+cardHead('Renovaciones pendientes de fechar','Programa su cierre para asignarlas a un trimestre.')+
+    (undated.length?undated.map(d=>'<div class="record">'+openBtn(d,d.name,d.project+' · '+(value(d.amount)?money(Number(d.amount),d.currency):'Importe por confirmar'))+'</div>').join(''):blank('Todas las renovaciones abiertas tienen una fecha de referencia o de cierre.'))+'</section>';
 }
 function reviews(){
   const history=entries('review').map(r=>r.data).sort((a,b)=>b.reviewDate.localeCompare(a.reviewDate));
@@ -213,7 +220,7 @@ function showEditor(row,kind='opportunity'){
   editor={row,data:d};
   const title=row?d.name:kind==='client'?'Nuevo cliente':kind==='license'?'Nueva licencia':kind==='goal'?'Nuevo objetivo':kind==='review'?'Registrar revisión':'Nueva oportunidad';
   $('modal-content').innerHTML='<header class="dialog-head"><h2>'+esc(title)+'</h2>'+button('close','✕','aria-label="Cerrar ficha"')+'</header>'+
-  '<div class="dialog-body"><form id="editor"><div class="fields">'+fieldsFor(d).map(f=>formField(f,d)).join('')+'<label class="wide">Motivo del cambio<input name="reason" placeholder="Ej. Confirmación tras la reunión"></label></div>'+
+  '<div class="dialog-body">'+(d.kind==='license'?'<p class="sub">El importe del periodo corresponde a la licencia actual. Completa el importe, la probabilidad y la fecha de cierre de la renovación para incluirla en el forecast.</p>':'')+'<form id="editor"><div class="fields">'+fieldsFor(d).map(f=>formField(f,d)).join('')+'<label class="wide">Motivo del cambio<input name="reason" placeholder="Ej. Confirmación tras la reunión"></label></div>'+
   (d.sourceUrl?'<p class="sub"><a target="_blank" rel="noopener" href="'+esc(d.sourceUrl)+'">Abrir archivo de origen ↗</a></p>':'')+
   '<p id="form-error" class="error" role="alert"></p><div class="dialog-foot">'+(row?button('history','Ver historial','data-id="'+esc(d.id)+'"'):'')+'<button type="submit" class="primary">Guardar</button></div></form><div id="history"></div></div>';
   if(!$('modal').open)$('modal').showModal();
@@ -246,15 +253,16 @@ document.addEventListener('submit',async e=>{
   const submit=e.target.querySelector('[type=submit]');submit.disabled=true;
   try {
     if(d.kind==='license'){
+      if(d.renewalStage==='Cierre ganado'&&!d.renewalCloseDate)throw Error('Indica la fecha de cierre de la renovación ganada.');
       const client=get(d.clientId)?.data;
       if(!client||client.kind!=='client'||client.project!==d.project)throw Error('Elige un cliente del mismo proyecto.');
       if(d.startDate&&d.endDate&&d.endDate<d.startDate)throw Error('El vencimiento debe ser posterior o igual al inicio.');
     }
     if(d.kind==='goal'&&d.linked){
-      const linked=get(d.linked)?.data;
+      const linked=opportunities().find(item=>item.id===d.linked);
       if(!linked||linked.project!==d.project||quarterFor(linked.closeDate)!==d.quarter||!value(linked.amount)||!(linked.stage==='Cierre ganado'||(active(linked)&&value(linked.probability))))throw Error('La oportunidad vinculada debe tener importe, probabilidad (o estar ganada) y fecha de cierre en el mismo proyecto y trimestre.');
     }
-    if(d.kind==='opportunity'&&data.next!==d.next&&data.actionDoneAt)delete d.actionDoneAt;
+    if(['opportunity','license','client'].includes(d.kind)&&data.next!==d.next&&data.actionDoneAt)delete d.actionDoneAt;
     await save(d,row?.version??-1,String(form.get('reason')??''));
     $('modal').close();await load();toast('Versión guardada');
   }catch(err){if(err.status===409)await load();$('form-error').textContent=err.message;submit.disabled=false;}
@@ -359,12 +367,16 @@ const licenseFields=[
   ['users','Usuarios contratados'],['amount','Importe del periodo','amount'],
   ['currency','Moneda',['EUR','USD','GBP','MXN','CLP']],
   ['renewalTerms','Condiciones de renovación','textarea'],
+  ['renewalStage','Estado comercial de la renovación',stages.filter(s=>!['Prospección','Contacto inicial'].includes(s))],
+  ['renewalAmount','Importe previsto de la renovación','amount'],
+  ['renewalProbability','Probabilidad de renovación (%)','prob'],
+  ['renewalCloseDate','Fecha prevista / efectiva de cierre de renovación','date'],
   ['next','Próxima acción','textarea'],['nextDate','Fecha de seguimiento','date'],
   ['risk','Datos por confirmar','textarea'],['source','Fuente','textarea'],
   ['notes','Notas','textarea']
 ];
 function licenseTiming(d){
-  if(d.licenseStatus==='Renovada'||d.licenseStatus==='Finalizada')return {key:'closed',label:d.licenseStatus,color:'neutral'};
+  if(d.licenseStatus==='Renovada'||d.licenseStatus==='Finalizada'||['Cierre ganado','Cierre perdido'].includes(d.renewalStage))return {key:'closed',label:d.renewalStage||d.licenseStatus,color:'neutral'};
   if(!d.endDate)return {key:'unknown',label:'Sin vencimiento',color:'neutral'};
   const days=Math.round((Date.parse(d.endDate+'T12:00Z')-Date.parse(today()+'T12:00Z'))/86400000);
   if(days<0)return {key:'past',label:'Periodo vencido · confirmar renovación',color:'warm'};
@@ -398,9 +410,9 @@ function customerResults(){
       const timing=licenses?licenseTiming(d):null;
       const count=licenses?0:entries('license').filter(r=>r.data.clientId===d.id).length;
       return '<tr><td>'+openBtn(d,d.name,licenses?(get(d.clientId)?.data.name||'Cliente por revisar'):(d.clientStatus||'Actual'))+'</td><td>'+esc(d.project)+'</td>'+
-        (licenses?'<td>'+esc(short(d.endDate))+'</td><td>'+tag(timing.label,timing.color)+'</td>':
+        (licenses?'<td>'+esc(short(d.endDate))+'</td><td>'+tag(timing.label,timing.color)+'<div class="meta">'+esc(d.renewalStage||'Renovación')+' · Revisión '+esc(short(d.nextDate||d.renewalNotice||renewalStart(d)))+'</div></td>':
         '<td class="contact-cell">'+esc(d.contact||'Pendiente de completar')+'</td><td>'+count+'</td>')+
-        '<td>'+esc(d.next||'—')+(d.nextDate?'<div class="meta">'+esc(short(d.nextDate))+'</div>':'')+'</td></tr>';
+        '<td>'+esc(d.next||'—')+(d.nextDate?'<div class="meta">'+esc(short(d.nextDate))+'</div>':'')+(d.kind==='license'?'<div class="meta">'+esc((renewalAlert(get(d.id).data)?.label||'Sin revisión pendiente'))+'</div>':'')+'</td></tr>';
     }).join('')+'</tbody></table></div>';
 }
 function clients(){
@@ -412,6 +424,69 @@ function clients(){
     '<label>Proyecto<select id="customer-project">'+opts(projects,customerProject,'Todos')+'</select></label>'+
     (clientTab==='licenses'?'<label>Vencimiento<select id="license-filter">'+opts([['all','Todos'],['past','Periodo vencido'],['30','Hasta 30 días'],['60','De 31 a 60 días'],['90','De 61 a 90 días'],['later','Más de 90 días'],['closed','Renovadas / finalizadas'],['unknown','Sin fecha']],licenseFilter)+'</select></label>':'')+
     '</div><div id="customer-results">'+customerResults()+'</div></section>';
+}
+
+
+
+function renewalStart(d){
+  return d.renewalNotice || (d.endDate?addDays(d.endDate,-90):'');
+}
+
+function renewalOpportunities(){
+  return entries('license').map(row=>row.data).filter(d=>{
+    if(['Renovada','Finalizada'].includes(d.licenseStatus)){
+      return ['Cierre ganado','Cierre perdido'].includes(d.renewalStage);
+    }
+    return Boolean(d.endDate||d.renewalNotice||d.renewalStage||d.renewalCloseDate);
+  }).map(d=>{
+    const client=get(d.clientId)?.data;
+    const stage=d.renewalStage||'Renovación';
+    const closed=['Cierre ganado','Cierre perdido'].includes(stage);
+    const manualAction=Boolean(d.next);
+    const nextDate=d.nextDate||(!d.actionDoneAt?renewalStart(d):'');
+    return {
+      ...d,
+      name:'Renovación · '+(client?.name||d.name),
+      organisation:client?.name||d.name,
+      country:client?.country||d.country||'',
+      region:client?.region||d.region||'',
+      sector:client?.sector||d.sector||'',
+      contact:client?.contact||'',
+      stage,type:'Renovación',
+      priority:d.priority||(nextDate&&nextDate<=today()?'Alta':'Media'),
+      amount:d.renewalAmount??'',probability:d.renewalProbability??'',
+      closeDate:d.renewalCloseDate||(d.endDate&&d.endDate>=today()?d.endDate:''),
+      commercialMonth:(d.renewalCloseDate||d.endDate||'').slice(0,7),
+      next:closed?'':manualAction?d.next:d.actionDoneAt?'Programar siguiente revisión':'Revisar licencia y preparar renovación',
+      nextDate:closed?'':nextDate
+    };
+  });
+}
+
+function renewalAlert(d){
+  if(licenseTiming(d).key==='closed'||['Cierre ganado','Cierre perdido'].includes(d.renewalStage))return null;
+  const reviewDate=d.nextDate||(!d.actionDoneAt?renewalStart(d):'');
+  if(reviewDate&&reviewDate<today())return {date:reviewDate,label:'Revisión pendiente desde '+short(reviewDate),color:'warm'};
+  if(reviewDate&&reviewDate<=week()[1])return {date:reviewDate,label:'Revisar esta semana · '+short(reviewDate),color:'warm'};
+  if(d.endDate&&d.endDate<today())return {date:reviewDate||d.endDate,label:'Periodo vencido · confirmar vigencia'+(reviewDate?' · Próximo seguimiento '+short(reviewDate):''),color:'warm'};
+  if(reviewDate)return {date:reviewDate,label:'Próxima revisión · '+short(reviewDate),color:'neutral'};
+  if(d.endDate&&d.endDate<=addDays(today(),90))return {date:d.endDate,label:'Programar revisión antes del '+short(d.endDate),color:''};
+  return null;
+}
+
+function renewalAlertPanel(){
+  const alerts=entries('license').map(row=>({data:row.data,alert:renewalAlert(row.data)})).filter(x=>x.alert)
+    .sort((a,b)=>a.alert.date.localeCompare(b.alert.date));
+  const pending=alerts.filter(x=>x.alert.date<=week()[1]);
+  if(!alerts.length)return '';
+  return '<section class="card license-summary">'+cardHead('Cuándo revisar tus licencias',pending.length+' revisiones pendientes o previstas esta semana.')+
+    '<div class="scroll"><table><thead><tr><th>Cliente / licencia</th><th>Aviso</th><th>Vencimiento</th><th></th></tr></thead><tbody>'+
+    alerts.map(({data,alert})=>'<tr><td>'+openBtn(data,get(data.clientId)?.data.name||data.name,data.project)+'</td><td>'+tag(alert.label,alert.color)+'</td><td>'+esc(short(data.endDate))+'</td><td>'+
+      button('open','Revisar y programar','data-id="'+esc(data.id)+'"')+'</td></tr>').join('')+'</tbody></table></div></section>';
+}
+
+function monthLabel(month){
+  return new Intl.DateTimeFormat('es-ES',{month:'long',year:'numeric',timeZone:'Europe/Madrid'}).format(new Date(month+'-01T12:00:00Z'));
 }
 
 route();
