@@ -21,7 +21,7 @@ const value=x=>x!==''&&x!=null;
 const active=d=>!['Cierre ganado','Cierre perdido','En pausa'].includes(d.stage);
 const hasAction=d=>!['Cierre perdido','En pausa'].includes(d.stage)&&d.next;
 const filterFields=[['project','Proyecto'],['country','País'],['region','Región'],['sector','Sector'],['priority','Prioridad'],['stage','Estado comercial'],['type','Tipo'],['commercialMonth','Mes cierre / renovación']];
-const navItems=[['home','▦','Esta semana'],['pipeline','☷','Pipeline'],['clients','▤','Clientes y licencias'],['forecast','◴','Forecast trimestral'],['reviews','◷','Revisiones']];
+const navItems=[['home','▦','Esta semana'],['pipeline','☷','Pipeline'],['clients','▤','Clientes y licencias'],['forecast','◴','Forecast trimestral'],['reviews','◷','Revisión semanal']];
 const subsets={
   Zentynel:[['','Todas'],['spain','España'],['portugal','Portugal'],['latam','Latinoamérica']],
   Flowity:[['','Todas'],['dip','Diputaciones'],['road','Carreteras']]
@@ -30,14 +30,14 @@ const fields=[
   ['name','Cuenta / oportunidad','text',true],['project','Proyecto',projects,true],['stage','Estado comercial',stages,true],
   ['organisation','Organismo, empresa, proveedor o partner'],['type','Tipo de oportunidad',types],['sector','Sector'],
   ['country','País','country'],['region','Región','region'],['territory','Comunidad / territorio'],
-  ['priority','Prioridad',priorities],['risk','Riesgo'],['contact','Contacto'],
+  ['priority','Prioridad',priorities],['risk','Riesgo'],['contacts','Contactos','contacts'],
   ['source','Fuente','textarea'],['need','Necesidad detectada','textarea'],['proposal','Propuesta de valor','textarea'],
   ['meetings','Reuniones','textarea'],['demos','Demos','textarea'],['emails','Emails y comunicaciones','textarea'],
   ['objections','Objeciones','textarea'],['amount','Importe estimado','amount'],['currency','Moneda',['EUR','USD','GBP','MXN','CLP','BRL','COP','PEN']],['probability','Probabilidad (%)','prob'],
   ['relevantDate','Fecha relevante','date'],['closeDate','Cierre previsto / efectivo','date'],['nextDate','Fecha de la próxima acción','date'],
   ['next','Próximo paso','textarea'],['notes','Notas','textarea']
 ];
-let clientTab='clients',customerQuery='',customerProject='',licenseFilter='all';
+let clientTab='clients',customerQuery='',customerProject='',licenseFilter='all',renewalStateFilter='all';
 let rows=[],error='',view='home',project='',subset='',filters={},query='',layout='list',fQuarter=quarterFor(today()),fProject='',editor=null,toastTimer;
 const entries=kind=>rows.filter(x=>x.data.kind===kind);
 const opportunities=()=>[
@@ -62,7 +62,9 @@ const projectIds={Zentynel:'zentynel',Flowity:'flowity',Metadology:'metadology'}
 function fromDatabase(row) {
   const name=Object.keys(projectIds).find(key=>projectIds[key]===row.project_id)||'';
   return {record_id:row.id,version:row.version,timestamp:row.updated_at,reason:row.change_reason,
-    data:{...row.data,id:row.id,kind:row.kind,name:row.name,project:name,clientId:row.client_id||''}};
+    data:{...row.data,id:row.id,kind:row.kind,name:row.name,project:name,clientId:row.client_id||'',
+      ...(['client','opportunity'].includes(row.kind)?{contacts:readContacts(row.data)}:{}),
+      ...(row.kind==='license'?{licenseStatus:renewalStatus(row.data)}:{})}};
 }
 async function api(path, options) {
   if (!options) {
@@ -123,7 +125,7 @@ function home(){
   '<div class="grid metrics">'+metric('Pipeline abierto',open.filter(d=>d.stage!=='Prospección').length,open.filter(d=>d.stage==='Prospección').length+' fichas en prospección')+metric('Acciones pendientes',weekTasks.length,'Esta semana y vencidas')+metric('Prioridad alta',top.length,'Oportunidades activas')+metric('Valor estimado en EUR',eur.length?money(eur.reduce((s,d)=>s+Number(d.amount),0)):'—',eur.length+' fichas con importe')+'</div>'+
   renewalAlertPanel()+'<div class="grid split"><section class="card">'+cardHead('Tareas de esta semana','Incluye acciones pendientes de semanas anteriores.')+(weekTasks.length?weekTasks.map(d=>task(d,true)).join(''):blank('Sin tareas con fecha para esta semana.'))+'</section><section class="card">'+cardHead('Estado del pipeline','',button('nav','Ver pipeline →','data-view="pipeline"','text-button'))+stages.filter(s=>all.some(d=>d.stage===s)).map(s=>{const n=all.filter(d=>d.stage===s).length;return '<div class="bar-row"><span>'+esc(s)+'</span><progress aria-label="'+esc(s)+'" max="'+max+'" value="'+n+'"></progress><b>'+n+'</b></div>';}).join('')+'</section></div>'+
   '<div class="grid split"><section class="card">'+cardHead('Próximas acciones','Acciones futuras y pendientes de programar.')+(later.length?later.map(d=>task(d,true)).join(''):blank('Sin próximas acciones registradas.'))+'</section>'+
-  '<section class="card">'+cardHead('Revisión de prioridades','Registra decisiones y consulta revisiones anteriores.')+button('nav','Ir a revisiones →','data-view="reviews"','text-button')+'</section></div>'+
+  '<section class="card">'+cardHead('Revisión semanal','Registra decisiones y consulta revisiones anteriores.')+button('nav','Ir a revisión semanal →','data-view="reviews"','text-button')+'</section></div>'+
   licenseSummary()+'<section class="card">'+cardHead('Proyectos')+'<div class="grid projects">'+projects.map(p=>button('project',dot(p)+esc(p)+'<small>'+open.filter(d=>d.project===p).length+' activas</small>','data-project="'+p+'"','project-card')).join('')+'</div></section>';
 }
 function scoped(){
@@ -155,7 +157,7 @@ function resultTable(){
   if(!data.length)return blank('No hay oportunidades en esta vista. Puedes crear una desde el botón superior.');
   const count='<p class="sub">'+data.length+' '+(data.length===1?'oportunidad':'oportunidades')+'</p>';
   if(layout==='board')return count+'<div class="board">'+stages.map(s=>'<section class="lane"><h3>'+esc(s)+' · '+data.filter(d=>d.stage===s).length+'</h3>'+data.filter(d=>d.stage===s).map(d=>openBtn(d,d.name,d.project+' · '+(d.type||'Cliente directo')+' · '+(d.priority||'Por revisar'))).join('')+'</section>').join('')+'</div>';
-  return count+'<div class="scroll"><table><thead><tr><th>Cuenta / oportunidad</th><th>País</th><th>Estado comercial</th><th>Prioridad</th><th>Importe</th><th>Próxima acción</th></tr></thead><tbody>'+data.map(d=>'<tr><td>'+openBtn(d,d.name,d.project+' · '+(d.type||'Por cualificar')+(d.commercialMonth?' · '+monthLabel(d.commercialMonth):''))+'</td><td>'+esc(d.country||'—')+'</td><td>'+tag(d.stage||'Prospección',d.stage==='Cierre ganado'?'green':'neutral')+'</td><td>'+priority(d)+'</td><td class="nobr">'+(value(d.amount)?esc(money(Number(d.amount),d.currency)):'—')+'</td><td>'+esc(d.next||'—')+(d.nextDate?'<div class="meta">'+esc(short(d.nextDate))+'</div>':'')+(d.kind==='license'?'<div class="meta">'+esc((renewalAlert(get(d.id).data)?.label||'Sin revisión pendiente'))+'</div>':'')+'</td></tr>').join('')+'</tbody></table></div>';
+  return count+'<div class="scroll"><table><thead><tr><th>Cuenta / oportunidad</th><th>País</th><th>Estado comercial</th><th>Prioridad</th><th>Importe</th><th>Próxima acción</th></tr></thead><tbody>'+data.map(d=>'<tr><td>'+openBtn(d,d.name,d.project+' · '+(d.type||'Por cualificar')+(d.commercialMonth?' · '+monthLabel(d.commercialMonth):''))+'</td><td>'+esc(d.country||'—')+'</td><td>'+tag(d.kind==='license'?renewalStatus(get(d.id).data):d.stage||'Prospección',d.stage==='Cierre ganado'?'green':'neutral')+'</td><td>'+priority(d)+'</td><td class="nobr">'+(value(d.amount)?esc(money(Number(d.amount),d.currency)):'—')+'</td><td>'+esc(d.next||'—')+(d.nextDate?'<div class="meta">'+esc(short(d.nextDate))+'</div>':'')+(d.kind==='license'?'<div class="meta">'+esc((renewalAlert(get(d.id).data)?.label||'Sin revisión pendiente'))+'</div>':'')+'</td></tr>').join('')+'</tbody></table></div>';
 }
 const goalFields=[['name','Objetivo','text',true],['project','Proyecto',projects,true],['quarter','Trimestre (AAAA-T1 a AAAA-T4)','quarter',true],['currency','Moneda',['EUR','USD','GBP','MXN','CLP','BRL','COP','PEN'],true],['conservative','Conservador','amount'],['base','Base','amount'],['upside','Optimista','amount'],['linked','Sustituir por una oportunidad','link'],['notes','Notas y supuestos','textarea']];
 const reviewFields=[['name','Título','text',true],['reviewDate','Fecha de revisión','date',true],['project','Proyecto',projects],['reviewNext','Próxima revisión','date'],['notes','Decisiones, cambios de prioridad y próximos pasos','textarea',true]];
@@ -195,13 +197,14 @@ function reviews(){
   const history=entries('review').map(r=>r.data).sort((a,b)=>b.reviewDate.localeCompare(a.reviewDate));
   const attention=opportunities().filter(d=>active(d)&&['Alta','Por revisar'].includes(d.priority||'Por revisar')).filter(d=>d.next||(d.priority==='Alta'&&d.stage!=='Prospección'));
   const nextReview=history.find(d=>d.reviewNext)?.reviewNext;
-  return head('Revisión de prioridades',nextReview?'Próxima revisión · '+short(nextReview):'Revisa el pipeline y guarda las decisiones de cada revisión.',button('review','＋ Registrar revisión','','primary'))+
+  return head('Revisión semanal',nextReview?'Próximo seguimiento · '+short(nextReview):'Revisa el pipeline y guarda las decisiones de cada revisión.',button('review','＋ Registrar revisión semanal','','primary'))+
   '<div class="grid split"><section class="card">'+cardHead('Prioridad alta o por revisar')+
   (attention.length?attention.map(d=>'<div class="record">'+openBtn(d,d.name,d.project+' · '+(d.next||'Sin próxima acción'))+priority(d)+'</div>').join(''):blank('Sin oportunidades destacadas.'))+'</section>'+
-  '<section class="card">'+cardHead('Revisiones anteriores')+
+  '<section class="card">'+cardHead('Histórico de revisiones semanales')+
   (history.length?history.map(d=>'<div class="record">'+openBtn(d,d.name,short(d.reviewDate)+' · '+(d.project||'Todos los proyectos')+(d.reviewNext?' · Próxima '+short(d.reviewNext):''))+'</div>').join(''):blank('Todavía no hay revisiones registradas.'))+'</section></div>';
 }
 function formField([key,label,typ='text',required=false],data){
+  if(typ==='contacts')return contactsEditor(readContacts(data));
   const v=data[key]??'', name=' name="'+key+'"'+(required?' required':'');
   const list=typ==='client'?entries('client').map(r=>r.data).filter(d=>d.project===data.project||d.id===v).map(d=>[d.id,d.name]):Array.isArray(typ)?typ:typ==='country'?[...new Set([...countries,...opportunities().map(x=>x.country).filter(Boolean)])].sort((a,b)=>a.localeCompare(b,'es')):typ==='region'?[...new Set([...regions,...opportunities().map(x=>x.region).filter(Boolean)])]:typ==='link'?opportunities().filter(d=>(d.project===data.project||d.id===v)&&(quarterFor(d.closeDate)===data.quarter||d.id===v)).map(d=>[d.id,d.name]):null;
   let control;
@@ -216,11 +219,11 @@ function formField([key,label,typ='text',required=false],data){
 }
 const fieldsFor=d=>d.kind==='client'?clientFields:d.kind==='license'?licenseFields:d.kind==='opportunity'?fields:d.kind==='goal'?goalFields:reviewFields;
 function showEditor(row,kind='opportunity'){
-  const d=row?.data||{id:crypto.randomUUID(),kind,project:view==='project'?project:kind==='goal'?fProject:'',stage:'Prospección',priority:'Por revisar',currency:'EUR',quarter:fQuarter,reviewDate:today()};
+  const d=row?.data||{licenseStatus:'Por renovar',id:crypto.randomUUID(),kind,project:view==='project'?project:kind==='goal'?fProject:'',stage:'Prospección',priority:'Por revisar',currency:'EUR',quarter:fQuarter,reviewDate:today()};
   editor={row,data:d};
-  const title=row?d.name:kind==='client'?'Nuevo cliente':kind==='license'?'Nueva licencia':kind==='goal'?'Nuevo objetivo':kind==='review'?'Registrar revisión':'Nueva oportunidad';
+  const title=row?d.name:kind==='client'?'Nuevo cliente':kind==='license'?'Nueva licencia':kind==='goal'?'Nuevo objetivo':kind==='review'?'Registrar revisión semanal':'Nueva oportunidad';
   $('modal-content').innerHTML='<header class="dialog-head"><h2>'+esc(title)+'</h2>'+button('close','✕','aria-label="Cerrar ficha"')+'</header>'+
-  '<div class="dialog-body">'+(d.kind==='license'?'<p class="sub">El importe del periodo corresponde a la licencia actual. Completa el importe, la probabilidad y la fecha de cierre de la renovación para incluirla en el forecast.</p>':'')+'<form id="editor"><div class="fields">'+fieldsFor(d).map(f=>formField(f,d)).join('')+'<label class="wide">Motivo del cambio<input name="reason" placeholder="Ej. Confirmación tras la reunión"></label></div>'+
+  '<div class="dialog-body">'+(d.kind==='license'?'<p class="sub">El importe del periodo corresponde a la licencia actual. Completa el importe y la fecha de cierre de la renovación para incluirla en el forecast. Las renovadas cuentan al 100 %; las pendientes utilizan la probabilidad indicada.</p>':'')+'<form id="editor"><div class="fields">'+fieldsFor(d).map(f=>formField(f,d)).join('')+'<label class="wide">Motivo del cambio<input name="reason" placeholder="Ej. Confirmación tras la reunión"></label></div>'+
   (d.sourceUrl?'<p class="sub"><a target="_blank" rel="noopener" href="'+esc(d.sourceUrl)+'">Abrir archivo de origen ↗</a></p>':'')+
   '<p id="form-error" class="error" role="alert"></p><div class="dialog-foot">'+(row?button('history','Ver historial','data-id="'+esc(d.id)+'"'):'')+'<button type="submit" class="primary">Guardar</button></div></form><div id="history"></div></div>';
   if(!$('modal').open)$('modal').showModal();
@@ -236,7 +239,7 @@ async function history(id){
     if(!$('modal').open||$('history')!==target)return;
     target.innerHTML='<h3>Historial de versiones</h3>'+versions.map((r,i)=>{
       const d=r.data;
-      const items=fieldsFor(d).filter(([k])=>value(d[k])).map(([k,l])=>'<dt>'+esc(l)+'</dt><dd>'+esc(k==='linked'?(get(d[k])?.data.name||d[k]):d[k])+'</dd>').join('');
+      const items=fieldsFor(d).filter(([k])=>value(d[k])).map(([k,l,type])=>'<dt>'+esc(l)+'</dt><dd>'+esc(type==='contacts'?contactSummary(readContacts(d)):k==='linked'?(get(d[k])?.data.name||d[k]):d[k])+'</dd>').join('');
       const originalData=d.raw?'<details><summary>Fila de origen completa</summary><dl>'+Object.entries(d.raw).filter(([,v])=>value(v)).map(([k,v])=>'<dt>'+esc(k)+'</dt><dd>'+esc(Array.isArray(v)?v.join(' · '):v)+'</dd>').join('')+'</dl></details>':'';
       return '<details class="version"><summary>'+esc((r.version===0?'Versión original':'Versión '+r.version)+' · '+dateLong.format(new Date(r.timestamp))+' · '+r.reason)+'</summary><dl>'+items+'</dl>'+originalData+
         (i?button('restore','Restaurar como nueva versión','data-id="'+esc(id)+'" data-version="'+r.version+'"'):'')+'</details>';
@@ -249,11 +252,29 @@ document.addEventListener('submit',async e=>{
   e.preventDefault();
   const {row,data}=editor, form=new FormData(e.target);
   const d={...data};
-  for(const [k] of fieldsFor(data))d[k]=String(form.get(k)??'').trim();
+  for(const [k,,type] of fieldsFor(data)){
+    if(type==='contacts')continue;
+    d[k]=String(form.get(k)??'').trim();
+  }
+  if(['client','opportunity'].includes(d.kind)){
+    d.contacts=Array.from(e.target.querySelectorAll('.contact-edit-row')).map(el=>({
+      name:el.querySelector('[data-contact="name"]').value.trim(),
+      email:el.querySelector('[data-contact="email"]').value.trim(),
+      phone:el.querySelector('[data-contact="phone"]').value.trim(),
+      role:el.querySelector('[data-contact="role"]').value.trim()
+    })).filter(c=>Object.values(c).some(Boolean));
+    d.contact=contactSummary(d.contacts);
+  }
   const submit=e.target.querySelector('[type=submit]');submit.disabled=true;
   try {
     if(d.kind==='license'){
-      if(d.renewalStage==='Cierre ganado'&&!d.renewalCloseDate)throw Error('Indica la fecha de cierre de la renovación ganada.');
+      if(d.licenseStatus==='Renovado'){
+        d.renewalStage='Cierre ganado';
+      }else if(d.licenseStatus==='Finalizada'){
+        d.renewalStage='Cierre perdido';
+      }else if(['Cierre ganado','Cierre perdido'].includes(d.renewalStage)){
+        d.renewalStage='Renovación';
+      }
       const client=get(d.clientId)?.data;
       if(!client||client.kind!=='client'||client.project!==d.project)throw Error('Elige un cliente del mismo proyecto.');
       if(d.startDate&&d.endDate&&d.endDate<d.startDate)throw Error('El vencimiento debe ser posterior o igual al inicio.');
@@ -275,6 +296,7 @@ document.addEventListener('change',e=>{
   const el=e.target;
   if(el.id==='customer-project'){customerProject=el.value;render();}
   if(el.id==='license-filter'){licenseFilter=el.value;render();}
+  if(el.id==='renewal-state-filter'){renewalStateFilter=el.value;render();}
   if(editor?.data.kind==='license'&&el.closest('#editor')&&el.name==='project'){
     const form=el.closest('form');
     form.elements.clientId.parentElement.outerHTML=formField(licenseFields.find(([k])=>k==='clientId'),{project:el.value});
@@ -302,6 +324,11 @@ document.addEventListener('click',async e=>{
   if(action==='export')exportRecords();
   if(action==='new')showEditor(null);
   if(action==='client-tab'){clientTab=key;render();}
+  if(action==='add-contact'){
+    const list=$('contact-editor-list');
+    list.insertAdjacentHTML('beforeend',contactEditorRow({}));
+  }
+  if(action==='remove-contact')el.closest('.contact-edit-row').remove();
   if(action==='new-client')showEditor(null,'client');
   if(action==='new-license')showEditor(null,'license');
   if(action==='goal'||action==='review')showEditor(null,action);
@@ -340,9 +367,10 @@ setInterval(()=>{
 
 function exportRecords(){
   const data=view==='clients'?customerData():(view==='pipeline'||view==='project')?filtered():opportunities();
-  const columns=(view==='clients'?(clientTab==='licenses'?licenseFields:clientFields):fields).map(([key,label])=>[key,label]);
+  const columns=(view==='clients'?(clientTab==='licenses'?licenseFields:clientFields):fields).flatMap(([key,label])=>key==='contacts'?
+    [['_contactName','Nombre del contacto'],['_contactEmail','Email'],['_contactPhone','Teléfono'],['_contactRole','Cargo']]:[[key,label]]);
   const csvCell=value=>'"'+String(value??'').replace(/^[=+@\t\r-]/,"'$&").replace(/"/g,'""')+'"';
-  const csv=[columns.map(([,label])=>csvCell(label)).join(';'),...data.map(row=>columns.map(([key])=>csvCell(key==='clientId'?(get(row[key])?.data.name||row[key]):row[key])).join(';'))].join('\r\n');
+  const csv=[columns.map(([,label])=>csvCell(label)).join(';'),...data.map(row=>columns.map(([key])=>csvCell(exportValue(row,key))).join(';'))].join('\r\n');
   const url=URL.createObjectURL(new Blob(['\ufeff',csv],{type:'text/csv;charset=utf-8'}));
   const link=document.createElement('a');
   link.href=url;link.download='KairuTech_seguimiento_'+today()+'.csv';
@@ -353,7 +381,7 @@ const clientFields=[
   ['name','Cliente','text',true],['project','Proyecto',projects,true],
   ['clientStatus','Situación',['Actual','En pausa','Baja']],
   ['sector','Sector'],['country','País','country'],['region','Región','region'],
-  ['contact','Contactos, cargos, emails y teléfonos','textarea'],
+  ['contacts','Contactos','contacts'],
   ['next','Próxima acción','textarea'],['nextDate','Fecha de seguimiento','date'],
   ['priority','Prioridad',priorities],['risk','Riesgo / datos por confirmar','textarea'],
   ['source','Fuente','textarea'],['notes','Notas de seguimiento','textarea']
@@ -361,13 +389,12 @@ const clientFields=[
 const licenseFields=[
   ['name','Licencia / contrato','text',true],['project','Proyecto',projects,true],
   ['clientId','Cliente','client',true],
-  ['licenseStatus','Situación',['Por confirmar','Vigente confirmada','Renovación en curso','Renovada','Finalizada']],
+  ['licenseStatus','Estado de renovación',['Por renovar','Renovado','Finalizada'],true],
   ['startDate','Fecha de inicio','date'],['endDate','Fecha de vencimiento','date'],
   ['renewalNotice','Fecha de aviso de renovación','date'],
   ['users','Usuarios contratados'],['amount','Importe del periodo','amount'],
   ['currency','Moneda',['EUR','USD','GBP','MXN','CLP']],
   ['renewalTerms','Condiciones de renovación','textarea'],
-  ['renewalStage','Estado comercial de la renovación',stages.filter(s=>!['Prospección','Contacto inicial'].includes(s))],
   ['renewalAmount','Importe previsto de la renovación','amount'],
   ['renewalProbability','Probabilidad de renovación (%)','prob'],
   ['renewalCloseDate','Fecha prevista / efectiva de cierre de renovación','date'],
@@ -376,7 +403,7 @@ const licenseFields=[
   ['notes','Notas','textarea']
 ];
 function licenseTiming(d){
-  if(d.licenseStatus==='Renovada'||d.licenseStatus==='Finalizada'||['Cierre ganado','Cierre perdido'].includes(d.renewalStage))return {key:'closed',label:d.renewalStage||d.licenseStatus,color:'neutral'};
+  if(['Renovado','Finalizada'].includes(renewalStatus(d)))return {key:'closed',label:renewalStatus(d),color:'neutral'};
   if(!d.endDate)return {key:'unknown',label:'Sin vencimiento',color:'neutral'};
   const days=Math.round((Date.parse(d.endDate+'T12:00Z')-Date.parse(today()+'T12:00Z'))/86400000);
   if(days<0)return {key:'past',label:'Periodo vencido · confirmar renovación',color:'warm'};
@@ -396,6 +423,7 @@ function customerData(){
   const normalize=s=>String(s??'').normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase();
   return entries(kind).map(r=>r.data).filter(d=>
     (!customerProject||d.project===customerProject)&&
+    (kind!=='license'||renewalStateFilter==='all'||renewalStatus(d)===renewalStateFilter)&&
     (!customerQuery||normalize([d.name,d.contact,d.next,get(d.clientId)?.data.name].join(' ')).includes(normalize(customerQuery)))&&
     (kind!=='license'||licenseFilter==='all'||licenseTiming(d).key===licenseFilter)
   ).sort((a,b)=>kind==='license'?(a.endDate||'z').localeCompare(b.endDate||'z'):a.name.localeCompare(b.name,'es'));
@@ -404,16 +432,32 @@ function customerResults(){
   const data=customerData();
   if(!data.length)return blank('No hay registros en esta vista.');
   const licenses=clientTab==='licenses';
-  return '<div class="scroll"><table><thead><tr><th>'+ (licenses?'Licencia':'Cliente')+'</th><th>Proyecto</th>'+
-    (licenses?'<th>Vencimiento</th><th>Periodo / situación</th>':'<th>Contactos</th><th>Licencias registradas</th>')+
-    '<th>Próximo paso</th></tr></thead><tbody>'+data.map(d=>{
-      const timing=licenses?licenseTiming(d):null;
-      const count=licenses?0:entries('license').filter(r=>r.data.clientId===d.id).length;
-      return '<tr><td>'+openBtn(d,d.name,licenses?(get(d.clientId)?.data.name||'Cliente por revisar'):(d.clientStatus||'Actual'))+'</td><td>'+esc(d.project)+'</td>'+
-        (licenses?'<td>'+esc(short(d.endDate))+'</td><td>'+tag(timing.label,timing.color)+'<div class="meta">'+esc(d.renewalStage||'Renovación')+' · Revisión '+esc(short(d.nextDate||d.renewalNotice||renewalStart(d)))+'</div></td>':
-        '<td class="contact-cell">'+esc(d.contact||'Pendiente de completar')+'</td><td>'+count+'</td>')+
-        '<td>'+esc(d.next||'—')+(d.nextDate?'<div class="meta">'+esc(short(d.nextDate))+'</div>':'')+(d.kind==='license'?'<div class="meta">'+esc((renewalAlert(get(d.id).data)?.label||'Sin revisión pendiente'))+'</div>':'')+'</td></tr>';
-    }).join('')+'</tbody></table></div>';
+  const columns=licenses
+    ? '<th>Estado</th><th>Vencimiento</th><th>Seguimiento de renovación</th>'
+    : '<th>Nombre del contacto</th><th>Email</th><th>Teléfono</th><th>Licencias</th>';
+  const body=data.map(d=>{
+    let details;
+    if(licenses){
+      const status=renewalStatus(d);
+      const notice=renewalAlert(d);
+      details='<td>'+tag(status,status==='Renovado'?'green':status==='Finalizada'?'neutral':'warm')+'</td>'+
+        '<td>'+esc(short(d.endDate))+'</td>'+
+        '<td>'+esc(notice?.label||'Sin seguimiento pendiente')+'</td>';
+    }else{
+      const contacts=readContacts(d);
+      const contactColumn=key=>contacts.length
+        ? contacts.map(c=>'<div class="contact-line">'+esc(c[key]||'—')+'</div>').join('')
+        : '—';
+      const count=entries('license').filter(r=>r.data.clientId===d.id).length;
+      details='<td>'+contactColumn('name')+'</td><td>'+contactColumn('email')+'</td>'+
+        '<td>'+contactColumn('phone')+'</td><td>'+count+'</td>';
+    }
+    return '<tr><td>'+openBtn(d,d.name,licenses?(get(d.clientId)?.data.name||'Cliente por revisar'):(d.clientStatus||'Actual'))+'</td>'+
+      '<td>'+esc(d.project)+'</td>'+details+'<td>'+esc(d.next||'—')+
+      (d.nextDate?'<div class="meta">'+esc(short(d.nextDate))+'</div>':'')+'</td></tr>';
+  }).join('');
+  return '<div class="scroll"><table><thead><tr><th>'+(licenses?'Licencia':'Cliente')+'</th>'+
+    '<th>Proyecto</th>'+columns+'<th>Próximo paso</th></tr></thead><tbody>'+body+'</tbody></table></div>';
 }
 function clients(){
   return head('Clientes y licencias','Clientes actuales, periodos contratados y seguimiento de renovaciones.',
@@ -422,7 +466,7 @@ function clients(){
     button('client-tab','Licencias','data-key="licenses"',clientTab==='licenses'?'selected':'')+'</div>'+
     '<section class="card"><div class="filters"><label class="filter-search">Buscar<input id="customer-query" type="search" value="'+esc(customerQuery)+'" placeholder="Cliente, contacto o acción"></label>'+
     '<label>Proyecto<select id="customer-project">'+opts(projects,customerProject,'Todos')+'</select></label>'+
-    (clientTab==='licenses'?'<label>Vencimiento<select id="license-filter">'+opts([['all','Todos'],['past','Periodo vencido'],['30','Hasta 30 días'],['60','De 31 a 60 días'],['90','De 61 a 90 días'],['later','Más de 90 días'],['closed','Renovadas / finalizadas'],['unknown','Sin fecha']],licenseFilter)+'</select></label>':'')+
+    (clientTab==='licenses'?'<label>Estado<select id="renewal-state-filter">'+opts([['all','Todos'],['Por renovar','Por renovar'],['Renovado','Renovado'],['Finalizada','Finalizada']],renewalStateFilter)+'</select></label><label>Vencimiento<select id="license-filter">'+opts([['all','Todos'],['past','Periodo vencido'],['30','Hasta 30 días'],['60','De 31 a 60 días'],['90','De 61 a 90 días'],['later','Más de 90 días'],['closed','Renovadas / finalizadas'],['unknown','Sin fecha']],licenseFilter)+'</select></label>':'')+
     '</div><div id="customer-results">'+customerResults()+'</div></section>';
 }
 
@@ -434,13 +478,13 @@ function renewalStart(d){
 
 function renewalOpportunities(){
   return entries('license').map(row=>row.data).filter(d=>{
-    if(['Renovada','Finalizada'].includes(d.licenseStatus)){
+    if(['Renovado','Finalizada'].includes(renewalStatus(d))){
       return ['Cierre ganado','Cierre perdido'].includes(d.renewalStage);
     }
     return Boolean(d.endDate||d.renewalNotice||d.renewalStage||d.renewalCloseDate);
   }).map(d=>{
     const client=get(d.clientId)?.data;
-    const stage=d.renewalStage||'Renovación';
+    const stage=renewalStatus(d)==='Renovado'?'Cierre ganado':renewalStatus(d)==='Finalizada'?'Cierre perdido':d.renewalStage||'Renovación';
     const closed=['Cierre ganado','Cierre perdido'].includes(stage);
     const manualAction=Boolean(d.next);
     const nextDate=d.nextDate||(!d.actionDoneAt?renewalStart(d):'');
@@ -455,9 +499,9 @@ function renewalOpportunities(){
       stage,type:'Renovación',
       priority:d.priority||(nextDate&&nextDate<=today()?'Alta':'Media'),
       amount:d.renewalAmount??'',probability:d.renewalProbability??'',
-      closeDate:d.renewalCloseDate||(d.endDate&&d.endDate>=today()?d.endDate:''),
+      closeDate:d.renewalCloseDate||(!closed&&d.endDate&&d.endDate>=today()?d.endDate:''),
       commercialMonth:(d.renewalCloseDate||d.endDate||'').slice(0,7),
-      next:closed?'':manualAction?d.next:d.actionDoneAt?'Programar siguiente revisión':'Revisar licencia y preparar renovación',
+      next:closed?'':manualAction?d.next:d.actionDoneAt?'Programar siguiente seguimiento':'Contactar al cliente para preparar la renovación',
       nextDate:closed?'':nextDate
     };
   });
@@ -466,11 +510,11 @@ function renewalOpportunities(){
 function renewalAlert(d){
   if(licenseTiming(d).key==='closed'||['Cierre ganado','Cierre perdido'].includes(d.renewalStage))return null;
   const reviewDate=d.nextDate||(!d.actionDoneAt?renewalStart(d):'');
-  if(reviewDate&&reviewDate<today())return {date:reviewDate,label:'Revisión pendiente desde '+short(reviewDate),color:'warm'};
-  if(reviewDate&&reviewDate<=week()[1])return {date:reviewDate,label:'Revisar esta semana · '+short(reviewDate),color:'warm'};
+  if(reviewDate&&reviewDate<today())return {date:reviewDate,label:'Seguimiento pendiente desde '+short(reviewDate),color:'warm'};
+  if(reviewDate&&reviewDate<=week()[1])return {date:reviewDate,label:'Contactar esta semana · '+short(reviewDate),color:'warm'};
   if(d.endDate&&d.endDate<today())return {date:reviewDate||d.endDate,label:'Periodo vencido · confirmar vigencia'+(reviewDate?' · Próximo seguimiento '+short(reviewDate):''),color:'warm'};
-  if(reviewDate)return {date:reviewDate,label:'Próxima revisión · '+short(reviewDate),color:'neutral'};
-  if(d.endDate&&d.endDate<=addDays(today(),90))return {date:d.endDate,label:'Programar revisión antes del '+short(d.endDate),color:''};
+  if(reviewDate)return {date:reviewDate,label:'Próximo seguimiento · '+short(reviewDate),color:'neutral'};
+  if(d.endDate&&d.endDate<=addDays(today(),90))return {date:d.endDate,label:'Programar seguimiento antes del '+short(d.endDate),color:''};
   return null;
 }
 
@@ -479,14 +523,71 @@ function renewalAlertPanel(){
     .sort((a,b)=>a.alert.date.localeCompare(b.alert.date));
   const pending=alerts.filter(x=>x.alert.date<=week()[1]);
   if(!alerts.length)return '';
-  return '<section class="card license-summary">'+cardHead('Cuándo revisar tus licencias',pending.length+' revisiones pendientes o previstas esta semana.')+
+  return '<section class="card license-summary">'+cardHead('Seguimientos de renovación',pending.length+' seguimientos pendientes o previstos esta semana.')+
     '<div class="scroll"><table><thead><tr><th>Cliente / licencia</th><th>Aviso</th><th>Vencimiento</th><th></th></tr></thead><tbody>'+
     alerts.map(({data,alert})=>'<tr><td>'+openBtn(data,get(data.clientId)?.data.name||data.name,data.project)+'</td><td>'+tag(alert.label,alert.color)+'</td><td>'+esc(short(data.endDate))+'</td><td>'+
-      button('open','Revisar y programar','data-id="'+esc(data.id)+'"')+'</td></tr>').join('')+'</tbody></table></div></section>';
+      button('open','Ver y programar seguimiento','data-id="'+esc(data.id)+'"')+'</td></tr>').join('')+'</tbody></table></div></section>';
 }
 
 function monthLabel(month){
   return new Intl.DateTimeFormat('es-ES',{month:'long',year:'numeric',timeZone:'Europe/Madrid'}).format(new Date(month+'-01T12:00:00Z'));
+}
+
+
+
+function renewalStatus(d){
+  if(d.licenseStatus==='Finalizada'||d.renewalStage==='Cierre perdido')return 'Finalizada';
+  if(['Renovado','Renovada'].includes(d.licenseStatus)||d.renewalStage==='Cierre ganado')return 'Renovado';
+  return 'Por renovar';
+}
+
+function readContacts(d){
+  if(Array.isArray(d.contacts))return d.contacts;
+  const sourceRows=d.raw?.filas;
+  if(Array.isArray(sourceRows)){
+    const contacts=sourceRows.map(row=>{
+      const cells=row.celdas||{};
+      return {
+        name:[cells['4'],cells['5']].filter(Boolean).join(' '),
+        role:String(cells['6']??''),
+        email:String(cells['7']??''),
+        phone:String(cells['8']??'')
+      };
+    }).filter(c=>Object.values(c).some(Boolean));
+    if(contacts.length)return contacts;
+  }
+  if(!d.contact)return [];
+  return String(d.contact).split('\n').filter(Boolean).map(line=>{
+    const parts=line.split(' · ').map(x=>x.trim()).filter(Boolean);
+    const email=parts.find(x=>/^[^\s@]+@[^\s@]+$/.test(x))||'';
+    const phone=parts.find(x=>!x.includes('@')&&/^[+()\d .-]+$/.test(x)&&x.replace(/\D/g,'').length>=6)||'';
+    const rest=parts.filter(x=>x!==email&&x!==phone);
+    return {name:rest[0]||'',role:rest.slice(1).join(' · '),email,phone};
+  });
+}
+
+function contactSummary(contacts){
+  return contacts.map(c=>[c.name,c.role,c.email,c.phone].filter(Boolean).join(' · ')).join('\n');
+}
+
+function contactEditorRow(contact){
+  const controls=[['name','Nombre del contacto','text'],['email','Email','email'],['phone','Teléfono','tel'],['role','Cargo','text']]
+    .map(([key,label,type])=>'<label>'+label+'<input data-contact="'+key+'" type="'+type+'" value="'+esc(contact[key]||'')+'"></label>').join('');
+  return '<div class="contact-edit-row">'+controls+
+    button('remove-contact','Quitar contacto','aria-label="Quitar este contacto"','text-button')+'</div>';
+}
+
+function contactsEditor(contacts){
+  return '<fieldset class="contacts-editor wide"><legend>Contactos</legend><div id="contact-editor-list">'+
+    (contacts.length?contacts:[{}]).map(contactEditorRow).join('')+'</div>'+
+    button('add-contact','＋ Añadir contacto')+'</fieldset>';
+}
+
+function exportValue(row,key){
+  const fields={_contactName:'name',_contactEmail:'email',_contactPhone:'phone',_contactRole:'role'};
+  if(fields[key])return readContacts(row).map(c=>c[fields[key]]||'').join('\n');
+  if(key==='clientId')return get(row[key])?.data.name||row[key];
+  return row[key];
 }
 
 route();
