@@ -6,6 +6,18 @@ const colors=['zentynel','flowity','metadology'];
 const stages=['Prospección','Contacto inicial','Cualificación','Reunión / demo','Propuesta','Negociación','Cierre ganado','Cierre perdido','Renovación','Seguimiento','En pausa'];
 const channelTypes=['Venta directa','Distribuidor','Colaborador'];
 const channelFields=[['channelType','Canal comercial',channelTypes,true],['channelPartner','Distribuidor / colaborador','partner']];
+const ownerFields=[
+  ['commercialOwnerName','Responsable comercial — nombre'],
+  ['commercialOwnerEmail','Responsable comercial — email','email'],
+  ['commercialOwnerPhone','Responsable comercial — teléfono','tel']
+];
+const quoteFields=[
+  ['quoteStatus','Presupuesto',['Por confirmar','Pendiente de enviar','Enviado','Aceptado','Rechazado']],
+  ['quoteReference','Referencia del presupuesto'],
+  ['quoteDate','Fecha de envío del presupuesto','date']
+];
+const responseFields=[['responseStatus','Respuesta',['Pendiente de respuesta','Respondido','No requiere respuesta']]];
+let operation=null;
 const priorities=['Alta','Media','Baja','Por revisar'];
 const countries=['España','Portugal','México','Chile','Reino Unido','Colombia','Brasil','Perú','Paraguay','Países Bajos','Grecia','Austria','Bélgica','Alemania','Italia','Chequia','Irlanda','EE. UU.'];
 const regions=['España','Portugal','Latinoamérica','Europa','Norteamérica'];
@@ -22,20 +34,20 @@ const quarterFor=d=>d?d.slice(0,4)+'-T'+Math.ceil(Number(d.slice(5,7))/3):'';
 const value=x=>x!==''&&x!=null;
 const active=d=>!['Cierre ganado','Cierre perdido','En pausa'].includes(d.stage);
 const hasAction=d=>!['Cierre perdido','En pausa'].includes(d.stage)&&d.next;
-const filterFields=[['project','Proyecto'],['country','País'],['region','Región'],['sector','Sector'],['priority','Prioridad'],['stage','Estado comercial'],['type','Tipo'],['commercialMonth','Mes cierre / renovación'],['channelType','Canal comercial'],['channelPartner','Distribuidor / colaborador']];
+const filterFields=[['project','Proyecto'],['country','País'],['region','Región'],['sector','Sector'],['priority','Prioridad'],['stage','Estado comercial'],['type','Tipo'],['commercialMonth','Mes cierre / renovación'],['channelType','Canal comercial'],['channelPartner','Distribuidor / colaborador'],['commercialOwnerName','Responsable comercial']];
 const navItems=[['home','▦','Esta semana'],['pipeline','☷','Pipeline'],['clients','▤','Clientes y licencias'],['forecast','◴','Forecast trimestral'],['reviews','◷','Revisión semanal']];
 const subsets={
   Zentynel:[['','Todas'],['spain','España'],['portugal','Portugal'],['latam','Latinoamérica']],
   Flowity:[['','Todas'],['dip','Diputaciones'],['road','Carreteras']]
 };
 const fields=[
-  ['name','Cuenta / oportunidad','text',true],['project','Proyecto',projects,true],...channelFields,['stage','Estado comercial',stages,true],
+  ['name','Cuenta / oportunidad','text',true],['project','Proyecto',projects,true],...channelFields,['stage','Estado comercial',stages,true],...ownerFields,...responseFields,
   ['organisation','Organismo, empresa, proveedor o partner'],['type','Tipo de oportunidad',types],['sector','Sector'],
   ['country','País','country'],['region','Región','region'],['territory','Comunidad / territorio'],
   ['priority','Prioridad',priorities],['risk','Riesgo'],['contacts','Contactos','contacts'],
   ['source','Fuente','textarea'],['need','Necesidad detectada','textarea'],['proposal','Propuesta de valor','textarea'],
   ['meetings','Reuniones','textarea'],['demos','Demos','textarea'],['emails','Emails y comunicaciones','textarea'],
-  ['objections','Objeciones','textarea'],['amount','Importe estimado','amount'],['currency','Moneda',['EUR','USD','GBP','MXN','CLP','BRL','COP','PEN']],['probability','Probabilidad (%)','prob'],
+  ['objections','Objeciones','textarea'],...quoteFields,['amount','Importe presupuesto / estimado sin IVA','amount'],['currency','Moneda',['EUR','USD','GBP','MXN','CLP','BRL','COP','PEN']],['probability','Probabilidad (%)','prob'],
   ['relevantDate','Fecha relevante','date'],['closeDate','Cierre previsto / efectivo','date'],['nextDate','Fecha de la próxima acción','date'],
   ['next','Próximo paso','textarea'],['notes','Notas','textarea']
 ];
@@ -64,7 +76,7 @@ const projectIds={Zentynel:'zentynel',Flowity:'flowity',Metadology:'metadology'}
 function fromDatabase(row) {
   const name=Object.keys(projectIds).find(key=>projectIds[key]===row.project_id)||'';
   return {record_id:row.id,version:row.version,timestamp:row.updated_at,reason:row.change_reason,
-    data:{...row.data,id:row.id,kind:row.kind,name:row.name,project:name,clientId:row.client_id||'',
+    data:{...row.data,id:row.id,kind:row.kind,name:row.name,project:name,clientId:row.client_id||'',parentId:row.parent_id||row.data?.parentId||'',
       ...(['client','opportunity'].includes(row.kind)?{contacts:readContacts(row.data)}:{}),
       ...(row.kind==='license'?{licenseStatus:renewalStatus(row.data)}:{})}};
 }
@@ -86,7 +98,7 @@ async function api(path, options) {
   const {data,version,reason}=JSON.parse(options.body);
   const payload={
     id:data.id,project_id:projectIds[data.project]||null,kind:data.kind,
-    name:data.name,data,client_id:data.kind==='license'?data.clientId:null,change_reason:reason.trim()||'Actualización'
+    name:data.name,data,parent_id:data.kind==='activity'?data.parentId:null,client_id:data.kind==='license'?data.clientId:null,change_reason:reason.trim()||'Actualización'
   };
   const saved=await crmConnection.request('crm_records'+(version>=0?'?id=eq.'+data.id+'&version=eq.'+version:''),{
     method:version>=0?'PATCH':'POST',
@@ -125,7 +137,7 @@ function home(){
   const max=Math.max(1,...stages.map(s=>all.filter(d=>d.stage===s).length));
   return '<section class="hero"><div><p class="eyebrow">Semana comercial</p><h1>Seguimiento comercial</h1><p>Prioridades, oportunidades y próximos pasos de KairuTech.</p></div><span class="hero-date">'+esc(short(start)+' — '+dateLong.format(new Date(end+'T12:00Z')))+'</span></section>'+
   '<div class="grid metrics">'+metric('Pipeline abierto',open.filter(d=>d.stage!=='Prospección').length,open.filter(d=>d.stage==='Prospección').length+' fichas en prospección')+metric('Acciones pendientes',weekTasks.length,'Esta semana y vencidas')+metric('Prioridad alta',top.length,'Oportunidades activas')+metric('Valor estimado en EUR',eur.length?money(eur.reduce((s,d)=>s+Number(d.amount),0)):'—',eur.length+' fichas con importe')+'</div>'+
-  renewalAlertPanel()+'<div class="grid split"><section class="card">'+cardHead('Tareas de esta semana','Incluye acciones pendientes de semanas anteriores.')+(weekTasks.length?weekTasks.map(d=>task(d,true)).join(''):blank('Sin tareas con fecha para esta semana.'))+'</section><section class="card">'+cardHead('Estado del pipeline','',button('nav','Ver pipeline →','data-view="pipeline"','text-button'))+stages.filter(s=>all.some(d=>d.stage===s)).map(s=>{const n=all.filter(d=>d.stage===s).length;return '<div class="bar-row"><span>'+esc(s)+'</span><progress aria-label="'+esc(s)+'" max="'+max+'" value="'+n+'"></progress><b>'+n+'</b></div>';}).join('')+'</section></div>'+
+  todayContactsPanel()+renewalAlertPanel()+'<div class="grid split"><section class="card">'+cardHead('Tareas de esta semana','Incluye acciones pendientes de semanas anteriores.')+(weekTasks.length?weekTasks.map(d=>task(d,true)).join(''):blank('Sin tareas con fecha para esta semana.'))+'</section><section class="card">'+cardHead('Estado del pipeline','',button('nav','Ver pipeline →','data-view="pipeline"','text-button'))+stages.filter(s=>all.some(d=>d.stage===s)).map(s=>{const n=all.filter(d=>d.stage===s).length;return '<div class="bar-row"><span>'+esc(s)+'</span><progress aria-label="'+esc(s)+'" max="'+max+'" value="'+n+'"></progress><b>'+n+'</b></div>';}).join('')+'</section></div>'+
   '<div class="grid split"><section class="card">'+cardHead('Próximas acciones','Acciones futuras y pendientes de programar.')+(later.length?later.map(d=>task(d,true)).join(''):blank('Sin próximas acciones registradas.'))+'</section>'+
   '<section class="card">'+cardHead('Revisión semanal','Registra decisiones y consulta revisiones anteriores.')+button('nav','Ir a revisión semanal →','data-view="reviews"','text-button')+'</section></div>'+
   licenseSummary()+'<section class="card">'+cardHead('Proyectos')+'<div class="grid projects">'+projects.map(p=>button('project',dot(p)+esc(p)+'<small>'+open.filter(d=>d.project===p).length+' activas</small>','data-project="'+p+'"','project-card')).join('')+'</div></section>';
@@ -143,7 +155,7 @@ function scoped(){
 }
 function filtered(){
   const normalize=s=>String(s??'').normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase();
-  return scoped().filter(d=>filterFields.every(([k])=>!filters[k]||d[k]===filters[k])&&(!query||normalize([d.name,d.organisation,d.contact,d.next,d.sector,d.channelPartner].join(' ')).includes(normalize(query))));
+  return scoped().filter(d=>filterFields.every(([k])=>!filters[k]||d[k]===filters[k])&&(!query||normalize([d.name,d.organisation,d.contact,d.next,d.sector,d.channelPartner,commercialOwner(d).commercialOwnerName].join(' ')).includes(normalize(query))));
 }
 function pipeline(){
   const scope=scoped(), title=view==='project'?project:'Pipeline comercial';
@@ -159,7 +171,7 @@ function resultTable(){
   if(!data.length)return blank('No hay oportunidades en esta vista. Puedes crear una desde el botón superior.');
   const count='<p class="sub">'+data.length+' '+(data.length===1?'oportunidad':'oportunidades')+'</p>';
   if(layout==='board')return count+'<div class="board">'+stages.map(s=>'<section class="lane"><h3>'+esc(s)+' · '+data.filter(d=>d.stage===s).length+'</h3>'+data.filter(d=>d.stage===s).map(d=>openBtn(d,d.name,d.project+' · '+channelSummary(d)+' · '+(d.priority||'Por revisar'))).join('')+'</section>').join('')+'</div>';
-  return count+'<div class="scroll"><table><thead><tr><th>Cuenta / oportunidad</th><th>Canal</th><th>Distribuidor / colaborador</th><th>Estado comercial</th><th>Prioridad</th><th>Importe</th><th>Próxima acción</th></tr></thead><tbody>'+data.map(d=>'<tr><td>'+openBtn(d,d.name,d.project+(d.country?' · '+d.country:'')+' · '+(d.type||'Por cualificar')+(d.commercialMonth?' · '+monthLabel(d.commercialMonth):''))+'</td><td>'+esc(channelDetails(d).channelType)+'</td><td>'+esc(channelDetails(d).channelPartner||'—')+'</td><td>'+tag(d.kind==='license'?renewalStatus(get(d.id).data):d.stage||'Prospección',d.stage==='Cierre ganado'?'green':'neutral')+'</td><td>'+priority(d)+'</td><td class="nobr">'+(value(d.amount)?esc(money(Number(d.amount),d.currency)):'—')+'</td><td>'+esc(d.next||'—')+(d.nextDate?'<div class="meta">'+esc(short(d.nextDate))+'</div>':'')+(d.kind==='license'?'<div class="meta">'+esc((renewalAlert(get(d.id).data)?.label||'Sin revisión pendiente'))+'</div>':'')+'</td></tr>').join('')+'</tbody></table></div>';
+  return count+'<div class="scroll"><table><thead><tr><th>Cuenta / oportunidad</th><th>Canal</th><th>Distribuidor / colaborador</th><th>Estado comercial</th><th>Prioridad</th><th>Importe</th><th>Próxima acción</th></tr></thead><tbody>'+data.map(d=>'<tr><td>'+openBtn(d,d.name,d.project+(d.country?' · '+d.country:'')+' · '+(d.type||'Por cualificar')+(d.commercialMonth?' · '+monthLabel(d.commercialMonth):''))+'</td><td>'+esc(channelDetails(d).channelType)+'</td><td>'+esc(channelDetails(d).channelPartner||'—')+ownerMeta(d)+'</td><td>'+tag(d.kind==='license'?renewalStatus(get(d.id).data):d.stage||'Prospección',d.stage==='Cierre ganado'?'green':'neutral')+'</td><td>'+priority(d)+'</td><td class="nobr">'+(value(d.amount)?esc(money(Number(d.amount),d.currency)):'—')+quoteMeta(d)+'</td><td>'+esc(d.next||'—')+(d.nextDate?'<div class="meta">'+esc(short(d.nextDate))+'</div>':'')+(d.kind==='license'?'<div class="meta">'+esc((renewalAlert(get(d.id).data)?.label||'Sin revisión pendiente'))+'</div>':'')+'</td></tr>').join('')+'</tbody></table></div>';
 }
 const goalFields=[['name','Objetivo','text',true],['project','Proyecto',projects,true],['quarter','Trimestre (AAAA-T1 a AAAA-T4)','quarter',true],['currency','Moneda',['EUR','USD','GBP','MXN','CLP','BRL','COP','PEN'],true],['conservative','Conservador','amount'],['base','Base','amount'],['upside','Optimista','amount'],['linked','Sustituir por una oportunidad','link'],['notes','Notas y supuestos','textarea']];
 const reviewFields=[['name','Título','text',true],['reviewDate','Fecha de revisión','date',true],['project','Proyecto',projects],['reviewNext','Próxima revisión','date'],['notes','Decisiones, cambios de prioridad y próximos pasos','textarea',true]];
@@ -167,7 +179,7 @@ function forecast(){
   const all=opportunities().filter(d=>(!fChannel||channelDetails(d).channelType===fChannel)&&(!fPartner||channelDetails(d).channelPartner===fPartner));
   const goals=entries('goal').map(r=>r.data).filter(d=>!fChannel&&!fPartner&&d.quarter===fQuarter&&(!fProject||d.project===fProject));
   const candidates=all.filter(d=>quarterFor(d.closeDate)===fQuarter&&(!fProject||d.project===fProject)&&(active(d)||d.stage==='Cierre ganado'));
-  const real=candidates.filter(d=>value(d.amount)&&(d.stage==='Cierre ganado'||value(d.probability)));
+  const real=candidates.filter(d=>d.quoteStatus!=='Rechazado'&&value(d.amount)&&(d.stage==='Cierre ganado'||value(d.probability)));
   const missing=candidates.length-real.length;
   const undated=all.filter(d=>d.kind==='license'&&!d.closeDate&&active(d)&&(!fProject||d.project===fProject));
   const totals=new Map();
@@ -188,12 +200,12 @@ function forecast(){
   return head('Forecast trimestral','Oportunidades y renovaciones por trimestre. Para renovaciones sin cierre previsto se usa el vencimiento futuro como referencia.',button('goal','＋ Objetivo','','primary'))+
   '<div class="forecast-controls"><label class="sub" for="quarter">Trimestre</label><select id="quarter">'+opts(periods,fQuarter)+'</select><label class="sub" for="forecast-project">Proyecto</label><select id="forecast-project">'+opts(projects,fProject,'Todos los proyectos')+'</select><label class="sub" for="forecast-channel">Canal</label><select id="forecast-channel">'+opts(channelTypes,fChannel,'Todos')+'</select><label class="sub" for="forecast-partner">Distribuidor / colaborador</label><select id="forecast-partner">'+opts(knownPartners(),fPartner,'Todos')+'</select></div>'+
   '<div class="grid metrics forecast-metrics">'+metric('Conservador',format(0),'Probabilidad −20 puntos')+metric('Base',format(1),'Probabilidad de la ficha')+metric('Optimista',format(2),'Probabilidad +20 puntos')+'</div>'+
-  '<div class="grid split"><section class="card">'+cardHead('Oportunidades del trimestre',missing?missing+' con importe o probabilidad pendiente.':'Las ganadas computan al 100 %.')+
+  '<div class="grid split"><section class="card">'+cardHead('Oportunidades del trimestre',missing?missing+' con datos pendientes para la previsión.':'Las ganadas computan al 100 %.')+
   (candidates.length?candidates.map(d=>'<div class="record">'+openBtn(d,d.name,d.project+' · '+(d.type||'Cliente directo')+' · '+short(d.closeDate))+'</div>').join(''):blank('Añade una fecha de cierre a una oportunidad para incluirla aquí.'))+'</section>'+
   '<section class="card">'+cardHead('Objetivos por validar','Al vincular una oportunidad, su valor sustituye al del objetivo.')+
   (goals.length?goals.map(d=>'<div class="record">'+openBtn(d,d.name,d.linked?'Sustituido por '+(get(d.linked)?.data.name||'oportunidad vinculada'):(value(d.base)?money(Number(d.base),d.currency):'Sin importe base'))+(d.linked?(real.some(x=>x.id===d.linked)?tag('Sustituido','green'):tag('Vínculo por revisar','warm')):tag('Genérico','neutral'))+'</div>').join(''):blank(fChannel||fPartner?'Los objetivos genéricos se consultan con todos los canales seleccionados.':'Todavía no hay objetivos genéricos para este trimestre.'))+'</section></div>'+
     '<section class="card">'+cardHead('Renovaciones pendientes de fechar','Programa su cierre para asignarlas a un trimestre.')+
-    (undated.length?undated.map(d=>'<div class="record">'+openBtn(d,d.name,d.project+' · '+(value(d.amount)?money(Number(d.amount),d.currency):'Importe por confirmar'))+'</div>').join(''):blank('Todas las renovaciones abiertas tienen una fecha de referencia o de cierre.'))+'</section>';
+    (undated.length?undated.map(d=>'<div class="record">'+openBtn(d,d.name,d.project+' · '+(value(d.amount)?money(Number(d.amount),d.currency):'Importe por confirmar'))+'</div>').join(''):blank('Todas las renovaciones abiertas tienen una fecha de referencia o de cierre.'))+'</section>'+forecastReadiness(all.filter(d=>!fProject||d.project===fProject));
 }
 function reviews(){
   const history=entries('review').map(r=>r.data).sort((a,b)=>b.reviewDate.localeCompare(a.reviewDate));
@@ -207,6 +219,7 @@ function reviews(){
 }
 function formField([key,label,typ='text',required=false],data){
   if(typ==='contacts')return contactsEditor(readContacts(data));
+  if(key==='payerName')return '<label>Nombre de otra entidad<input name="payerName" value="'+esc(data.payerName||'')+'"'+(data.payerType==='Otra entidad'?'':' disabled')+'></label>';
   if(typ==='partner'){
     const direct=data.channelType==='Venta directa';
     return '<label>Distribuidor / colaborador<input name="channelPartner" list="channel-partners" value="'+esc(direct?'':data.channelPartner||'')+'"'+(direct?' disabled':'')+'><datalist id="channel-partners">'+
@@ -219,7 +232,7 @@ function formField([key,label,typ='text',required=false],data){
   else if(typ==='textarea')control='<textarea'+name+'>'+esc(v)+'</textarea>';
   else{
     const number=typ==='amount'||typ==='prob';
-    const type=number?'number':typ==='date'?'date':'text';
+    const type=number?'number':['date','email','tel'].includes(typ)?typ:'text';
     control='<input'+name+' type="'+type+'" value="'+esc(v)+'"'+(number?' min="0" step="0.01"':'')+(typ==='prob'?' max="100"':'')+(typ==='quarter'?' pattern="[0-9]{4}-T[1-4]" placeholder="2026-T4"':'')+'>';
   }
   return '<label'+(typ==='textarea'?' class="wide"':'')+'>'+esc(label)+control+'</label>';
@@ -230,9 +243,11 @@ function showEditor(row,kind='opportunity'){
   editor={row,data:d};
   const title=row?d.name:kind==='client'?'Nuevo cliente':kind==='license'?'Nueva licencia':kind==='goal'?'Nuevo objetivo':kind==='review'?'Registrar revisión semanal':'Nueva oportunidad';
   $('modal-content').innerHTML='<header class="dialog-head"><h2>'+esc(title)+'</h2>'+button('close','✕','aria-label="Cerrar ficha"')+'</header>'+
-  '<div class="dialog-body">'+(d.kind==='license'?'<p class="sub">'+esc(channelSummary(d))+' · Se gestiona en la ficha del cliente.</p><p class="sub">El importe del periodo corresponde a la licencia actual. Completa el importe y la fecha de cierre de la renovación para incluirla en el forecast. Las renovadas cuentan al 100 %; las pendientes utilizan la probabilidad indicada.</p>':'')+'<form id="editor"><div class="fields">'+fieldsFor(d).map(f=>formField(f,d)).join('')+'<label class="wide">Motivo del cambio<input name="reason" placeholder="Ej. Confirmación tras la reunión"></label></div>'+
+  '<div class="dialog-body">'+(d.kind==='license'?'<p class="sub">'+esc(channelSummary(d))+' (canal del cliente) · Pagador: '+esc(payerDisplay(d))+' · Responsable: '+esc(commercialOwner(d).commercialOwnerName||'Por asignar')+'. Los campos de responsable de esta licencia permiten indicar una persona distinta.</p><p class="sub">El importe del periodo corresponde a la licencia actual. Completa el importe y la fecha de cierre de la renovación para incluirla en el forecast. Las renovadas cuentan al 100 %. Las pendientes utilizan la probabilidad indicada.</p>':'')+'<form id="editor"><div class="fields">'+fieldsFor(d).map(f=>formField(f,d)).join('')+'<label class="wide">Motivo del cambio<input name="reason" placeholder="Ej. Confirmación tras la reunión"></label></div>'+
   (d.sourceUrl?'<p class="sub"><a target="_blank" rel="noopener" href="'+esc(d.sourceUrl)+'">Abrir archivo de origen ↗</a></p>':'')+
-  '<p id="form-error" class="error" role="alert"></p><div class="dialog-foot">'+(row?button('history','Ver historial','data-id="'+esc(d.id)+'"'):'')+'<button type="submit" class="primary">Guardar</button></div></form><div id="history"></div></div>';
+  '<p id="form-error" class="error" role="alert"></p><div class="dialog-foot">'+(row?button('history','Ver historial','data-id="'+esc(d.id)+'"'):'')+
+  (row&&['client','opportunity','license'].includes(d.kind)?button('activity','＋ Actividad','data-id="'+esc(d.id)+'"'):'')+
+  (row&&d.kind==='license'?licensePeriodButton(d):'')+'<button type="submit" class="primary">Guardar</button></div></form>'+(row?activityTimeline(d):'')+'<div id="history"></div></div>';
   if(!$('modal').open)$('modal').showModal();
   $('modal').scrollTop=0;
 }
@@ -283,6 +298,8 @@ document.addEventListener('submit',async e=>{
       }
     }
     if(d.kind==='license'){
+      if(d.payerType!=='Otra entidad')d.payerName='';
+      if(d.payerType==='Otra entidad'&&!d.payerName)throw Error('Indica la entidad que paga la licencia.');
       if(d.licenseStatus==='Renovado'){
         d.renewalStage='Cierre ganado';
       }else if(d.licenseStatus==='Finalizada'){
@@ -309,6 +326,10 @@ document.addEventListener('input',e=>{
 });
 document.addEventListener('change',e=>{
   const el=e.target;
+  if(el.name==='payerType'&&el.closest('form')){
+    const name=el.closest('form').elements.payerName;
+    if(name){name.disabled=el.value!=='Otra entidad';if(name.disabled)name.value='';}
+  }
   if(el.name==='channelType'&&el.closest('#editor')){
     const partner=el.closest('form').elements.channelPartner;
     if(partner){
@@ -359,12 +380,14 @@ document.addEventListener('click',async e=>{
   if(action==='new-license')showEditor(null,'license');
   if(action==='goal'||action==='review')showEditor(null,action);
   if(action==='open'&&row)showEditor(row);
+  if(action==='activity'&&row)showActivity(row);
+  if(action==='renew-license'&&row)showRenewal(row);
   if(action==='close')$('modal').close();
   if(action==='history')await history(id);
   if(action==='done'&&row){
     el.disabled=true;
     try{
-      const data={...row.data,next:'',nextDate:'',actionDoneAt:today()};
+      const data={...row.data,next:'',nextDate:'',actionDoneAt:today(),responseStatus:row.data.responseStatus==='Pendiente de respuesta'?'Respondido':row.data.responseStatus};
       await save(data,row.version,'Acción completada: '+row.data.next);await load();toast('Acción completada y guardada en el historial');
     }catch(err){if(err.status===409)await load();el.disabled=false;toast(err.message);}
   }
@@ -382,7 +405,7 @@ document.addEventListener('click',async e=>{
 addEventListener('hashchange',route);
 addEventListener('crm-ready',()=>load());
 addEventListener('crm-locked',()=>{
-  rows=[];editor=null;error='';
+  rows=[];editor=null;operation=null;error='';
   $('page').textContent='Inicia sesión para consultar el CRM.';
   $('modal-content').textContent='';
 });
@@ -406,7 +429,7 @@ function exportRecords(){
 
 const clientFields=[
   ['name','Cliente','text',true],['project','Proyecto',projects,true],...channelFields,
-  ['clientStatus','Situación',['Actual','En pausa','Baja']],
+  ['clientStatus','Situación',['Actual','En pausa','Baja']],...ownerFields,...responseFields,
   ['sector','Sector'],['country','País','country'],['region','Región','region'],
   ['contacts','Contactos','contacts'],
   ['next','Próxima acción','textarea'],['nextDate','Fecha de seguimiento','date'],
@@ -422,7 +445,11 @@ const licenseFields=[
   ['users','Usuarios contratados'],['amount','Importe del periodo','amount'],
   ['currency','Moneda',['EUR','USD','GBP','MXN','CLP']],
   ['renewalTerms','Condiciones de renovación','textarea'],
-  ['renewalAmount','Importe previsto de la renovación','amount'],
+  ...ownerFields,...responseFields,
+  ['payerType','Quién paga',['Por confirmar','Cliente','Distribuidor / colaborador','Otra entidad']],
+  ['payerName','Nombre del pagador (si difiere del cliente o partner)'],
+  ...quoteFields,
+  ['renewalAmount','Importe presupuesto de renovación sin IVA','amount'],
   ['renewalProbability','Probabilidad de renovación (%)','prob'],
   ['renewalCloseDate','Fecha prevista / efectiva de cierre de renovación','date'],
   ['next','Próxima acción','textarea'],['nextDate','Fecha de seguimiento','date'],
@@ -453,7 +480,7 @@ function customerData(){
     (!customerChannel||channelDetails(d).channelType===customerChannel)&&
     (!customerPartner||channelDetails(d).channelPartner===customerPartner)&&
     (kind!=='license'||renewalStateFilter==='all'||renewalStatus(d)===renewalStateFilter)&&
-    (!customerQuery||normalize([d.name,d.contact,d.next,get(d.clientId)?.data.name,channelDetails(d).channelPartner].join(' ')).includes(normalize(customerQuery)))&&
+    (!customerQuery||normalize([d.name,d.contact,d.next,get(d.clientId)?.data.name,channelDetails(d).channelPartner,commercialOwner(d).commercialOwnerName].join(' ')).includes(normalize(customerQuery)))&&
     (kind!=='license'||licenseFilter==='all'||licenseTiming(d).key===licenseFilter)
   ).sort((a,b)=>kind==='license'?(a.endDate||'z').localeCompare(b.endDate||'z'):a.name.localeCompare(b.name,'es'));
 }
@@ -462,14 +489,14 @@ function customerResults(){
   if(!data.length)return blank('No hay registros en esta vista.');
   const licenses=clientTab==='licenses';
   const columns=licenses
-    ? '<th>Estado</th><th>Vencimiento</th><th>Seguimiento de renovación</th>'
+    ? '<th>Estado</th><th>Quién paga</th><th>Vencimiento</th><th>Seguimiento de renovación</th>'
     : '<th>Nombre del contacto</th><th>Email</th><th>Teléfono</th><th>Licencias</th>';
   const body=data.map(d=>{
     let details;
     if(licenses){
       const status=renewalStatus(d);
       const notice=renewalAlert(d);
-      details='<td>'+tag(status,status==='Renovado'?'green':status==='Finalizada'?'neutral':'warm')+'</td>'+
+      details='<td>'+tag(status,status==='Renovado'?'green':status==='Finalizada'?'neutral':'warm')+'</td><td>'+esc(payerDisplay(d))+'</td>'+
         '<td>'+esc(short(d.endDate))+'</td>'+
         '<td>'+esc(notice?.label||'Sin seguimiento pendiente')+'</td>';
     }else{
@@ -482,7 +509,7 @@ function customerResults(){
         '<td>'+contactColumn('phone')+'</td><td>'+count+'</td>';
     }
     return '<tr><td>'+openBtn(d,d.name,licenses?(get(d.clientId)?.data.name||'Cliente por revisar')+' · '+d.project:d.project)+'</td>'+
-      '<td>'+esc(channelDetails(d).channelType)+'</td><td>'+esc(channelDetails(d).channelPartner||'—')+'</td>'+details+'<td>'+esc(d.next||'—')+
+      '<td>'+esc(channelDetails(d).channelType)+'</td><td>'+esc(channelDetails(d).channelPartner||'—')+ownerMeta(d)+'</td>'+details+'<td>'+esc(d.next||'—')+
       (d.nextDate?'<div class="meta">'+esc(short(d.nextDate))+'</div>':'')+'</td></tr>';
   }).join('');
   return '<div class="scroll"><table><thead><tr><th>'+(licenses?'Licencia':'Cliente')+'</th>'+
@@ -515,6 +542,7 @@ function renewalOpportunities(){
     return Boolean(d.endDate||d.renewalNotice||d.renewalStage||d.renewalCloseDate);
   }).map(d=>{
     const client=get(d.clientId)?.data;
+    const successor=successorLicense(d)?.data;
     const stage=renewalStatus(d)==='Renovado'?'Cierre ganado':renewalStatus(d)==='Finalizada'?'Cierre perdido':d.renewalStage||'Renovación';
     const closed=['Cierre ganado','Cierre perdido'].includes(stage);
     const manualAction=Boolean(d.next);
@@ -528,6 +556,9 @@ function renewalOpportunities(){
       sector:client?.sector||d.sector||'',
       contact:client?.contact||'',
       ...channelDetails(d),
+      ...commercialOwner(d),
+      payerType:successor?(successor.payerType||'Por confirmar'):d.payerType,
+      payerName:successor?(successor.payerName||''):d.payerName,
       stage,type:'Renovación',
       priority:d.priority||(nextDate&&nextDate<=today()?'Alta':'Media'),
       amount:d.renewalAmount??'',probability:d.renewalProbability??'',
@@ -647,6 +678,223 @@ function channelSummary(record){
 function knownPartners(){
   return [...new Set(['SATARA SEGURIDAD',...rows.filter(r=>['client','opportunity'].includes(r.data.kind)).map(r=>channelDetails(r.data).channelPartner).filter(Boolean)])]
     .sort((a,b)=>a.localeCompare(b,'es'));
+}
+
+
+function commercialOwner(record){
+  const hasOwnOwner=Boolean(record.commercialOwnerName||record.commercialOwnerEmail||record.commercialOwnerPhone);
+  const source=record.kind==='license'&&!hasOwnOwner?get(record.clientId)?.data:record;
+  return {
+    commercialOwnerName:source?.commercialOwnerName||'',
+    commercialOwnerEmail:source?.commercialOwnerEmail||'',
+    commercialOwnerPhone:source?.commercialOwnerPhone||''
+  };
+}
+
+function ownerMeta(record){
+  const owner=commercialOwner(record);
+  return owner.commercialOwnerName?'<div class="meta">Responsable · '+esc(owner.commercialOwnerName)+'</div>':'';
+}
+
+function payerDisplay(record){
+  if(record.payerType==='Cliente')return get(record.clientId)?.data.name||record.organisation||record.name;
+  if(record.payerType==='Distribuidor / colaborador')return channelDetails(record).channelPartner||'Partner por indicar';
+  if(record.payerType==='Otra entidad')return record.payerName||'Entidad por indicar';
+  return 'Por confirmar';
+}
+
+function followupItems(){
+  const sales=opportunities();
+  const projected=new Set(sales.filter(d=>d.kind==='license').map(d=>d.id));
+  return [
+    ...sales.filter(active),
+    ...entries('client').map(r=>r.data).filter(d=>!['Baja','En pausa'].includes(d.clientStatus)),
+    ...entries('license').map(r=>r.data).filter(d=>!projected.has(d.id)&&licenseTiming(d).key!=='closed')
+  ].filter(d=>d.next||d.responseStatus==='Pendiente de respuesta');
+}
+
+function todayContactsPanel(){
+  const data=followupItems().filter(d=>!d.nextDate||d.nextDate<=today()).sort((a,b)=>{
+    const dateOrder=(a.nextDate||'9999').localeCompare(b.nextDate||'9999');
+    return dateOrder||priorities.indexOf(a.priority||'Por revisar')-priorities.indexOf(b.priority||'Por revisar');
+  });
+  const body=data.map(d=>{
+    const client=d.kind==='license'?get(d.clientId)?.data:d;
+    const person=readContacts(client||{}).find(c=>c.name||c.email);
+    const reason=d.responseStatus==='Pendiente de respuesta'?'Respuesta pendiente':d.kind==='license'?'Renovación':'Seguimiento';
+    return '<tr><td>'+openBtn(d,d.name,person?[person.name,person.email,person.phone].filter(Boolean).join(' · '):d.project)+'</td>'+
+      '<td>'+tag(reason,d.nextDate&&d.nextDate<today()?'warm':'neutral')+'</td>'+
+      '<td>'+esc(commercialOwner(d).commercialOwnerName||'Por asignar')+'</td>'+
+      '<td>'+esc(d.next||'Solicitar respuesta')+'<div class="meta">'+esc(short(d.nextDate))+'</div></td>'+
+      '<td>'+button('activity','＋ Actividad','data-id="'+esc(d.id)+'"')+'</td></tr>';
+  }).join('');
+  return '<section class="card license-summary">'+cardHead('A quién contactar hoy',data.length+' seguimientos vencidos, previstos para hoy o pendientes de programar.')+
+    (data.length?'<div class="scroll"><table><thead><tr><th>Cuenta y contacto</th><th>Motivo</th><th>Responsable</th><th>Próximo paso</th><th></th></tr></thead><tbody>'+body+'</tbody></table></div>':blank('No hay seguimientos pendientes para hoy.'))+'</section>';
+}
+
+function forecastReadiness(data){
+  const pending=data.filter(d=>active(d)||d.stage==='Cierre ganado').map(d=>{
+    const missing=[];
+    if(!value(d.amount))missing.push('importe');
+    if(d.stage!=='Cierre ganado'&&!value(d.probability))missing.push('probabilidad');
+    if(!d.closeDate)missing.push('fecha de cierre');
+    if(d.stage!=='Cierre ganado'&&!['Enviado','Aceptado'].includes(d.quoteStatus))missing.push(d.quoteStatus==='Rechazado'?'presupuesto rechazado':'confirmar o enviar presupuesto');
+    if(d.stage!=='Cierre ganado'&&['Enviado','Aceptado'].includes(d.quoteStatus)&&!d.quoteDate)missing.push('fecha de envío');
+    if(d.kind==='license'&&(!d.payerType||d.payerType==='Por confirmar'))missing.push('quién paga');
+    return {data:d,missing};
+  }).filter(x=>x.missing.length);
+  return '<section class="card license-summary">'+cardHead('Datos pendientes para completar el forecast',pending.length+' operaciones para revisar.')+
+    (pending.length?pending.map(({data,missing})=>'<div class="record">'+openBtn(data,data.name,missing.join(' · '))+'</div>').join(''):blank('Las operaciones tienen los datos necesarios para la previsión.'))+'</section>';
+}
+
+function successorLicense(record){
+  return entries('license').find(r=>r.data.previousLicenseId===record.id||r.record_id===record.nextLicenseId);
+}
+
+function licensePeriodButton(record){
+  const next=successorLicense(record);
+  return next?button('open','Ver periodo siguiente','data-id="'+esc(next.record_id)+'"'):
+    button('renew-license','Renovar y crear periodo','data-id="'+esc(record.id)+'"');
+}
+
+function activityTimeline(record){
+  if(!['client','license','opportunity'].includes(record.kind))return '';
+  const linked=new Set([record.id]);
+  if(record.kind==='client')entries('license').filter(r=>r.data.clientId===record.id).forEach(r=>linked.add(r.record_id));
+  const activities=entries('activity').filter(r=>linked.has(r.data.parentId))
+    .sort((a,b)=>String(b.data.date||b.timestamp).localeCompare(String(a.data.date||a.timestamp))||String(b.timestamp).localeCompare(String(a.timestamp)));
+  return '<section class="activity-timeline"><h3>Actividad</h3>'+
+    (activities.length?activities.map(row=>'<article class="version"><strong>'+esc(row.data.type)+' · '+esc(short(row.data.date))+'</strong>'+
+      '<div class="meta">'+esc(get(row.data.parentId)?.data.name||'Ficha asociada')+'</div>'+
+      '<p class="activity-detail">'+esc(row.data.description)+'</p>'+
+      (row.data.responseStatus?tag(row.data.responseStatus,'neutral'):'')+'</article>').join(''):blank('Todavía no hay actividad registrada.'))+'</section>';
+}
+
+function showOperation(title,body){
+  editor=null;
+  $('modal-content').innerHTML='<header class="dialog-head"><h2>'+esc(title)+'</h2>'+
+    button('close','✕','aria-label="Cerrar"')+'</header><div class="dialog-body">'+body+'</div>';
+  if(!$('modal').open)$('modal').showModal();
+}
+
+function showActivity(row){
+  operation={mode:'activity',row,requestId:crypto.randomUUID()};
+  const d=row.data;
+  const inputs=[
+    ['type','Actividad',['Llamada','Email','Reunión','Demo','Nota'],true],
+    ['date','Fecha','date',true],
+    ['description','Qué ha ocurrido','textarea',true],
+    ['responseStatus','Resultado',['Pendiente de respuesta','Respondido','No requiere respuesta']],
+    ['next','Próximo paso','textarea'],
+    ['nextDate','Fecha del siguiente seguimiento','date']
+  ];
+  showOperation('Registrar actividad · '+d.name,'<form id="activity-form"><div class="fields">'+
+    inputs.map(field=>formField(field,{type:'Llamada',date:today(),next:d.next||'',nextDate:d.nextDate||'',responseStatus:d.responseStatus||''})).join('')+
+    '</div><p id="operation-error" class="error" role="alert"></p><div class="dialog-foot">'+
+    '<button type="submit" class="primary">Guardar actividad y seguimiento</button></div></form>');
+}
+
+function showRenewal(row){
+  const next=successorLicense(row.data);
+  if(next){showEditor(next);return;}
+  operation={mode:'renewal',row,requestId:crypto.randomUUID()};
+  const d=row.data;
+  const inputs=[
+    ['startDate','Inicio del nuevo periodo','date',true],
+    ['endDate','Vencimiento del nuevo periodo','date',true],
+    ['amount','Importe acordado sin IVA','amount',true],
+    ['currency','Moneda',['EUR','USD','GBP','MXN','CLP','BRL','COP','PEN'],true],
+    ['closeDate','Fecha de cierre de la renovación','date',true],
+    ['payerType','Quién paga',['Por confirmar','Cliente','Distribuidor / colaborador','Otra entidad'],true],
+    ['payerName','Nombre del pagador (si es otra entidad)'],
+    ['users','Usuarios contratados'],
+    ['renewalTerms','Condiciones del nuevo periodo','textarea'],
+    ['notes','Notas del nuevo periodo','textarea']
+  ];
+  showOperation('Renovar licencia','<p>'+esc(get(d.clientId)?.data.name||d.name)+'</p>'+
+    '<p class="sub">Confirma las fechas y el importe del nuevo periodo. El anterior quedará renovado y conservará su histórico. El aviso del siguiente periodo se programará 90 días antes de vencer.</p>'+
+    '<form id="renewal-form"><div class="fields">'+inputs.map(field=>formField(field,{
+      amount:d.renewalAmount||'',currency:d.currency||'EUR',closeDate:today(),
+      payerType:d.payerType||'Por confirmar',payerName:d.payerName||'',users:d.users||'',renewalTerms:d.renewalTerms||''
+    })).join('')+'</div><p id="operation-error" class="error" role="alert"></p>'+
+    '<div class="dialog-foot"><button type="submit" class="primary">Confirmar renovación y crear periodo</button></div></form>');
+}
+
+async function operationRpc(name,payload){
+  try{
+    return await crmConnection.request('rpc/'+name,{method:'POST',body:JSON.stringify(payload)});
+  }catch(error){
+    if(['PGRST202','PGRST203'].includes(error.code))throw Error('Ejecuta primero la consulta 06 en Supabase y vuelve a intentarlo.');
+    throw error;
+  }
+}
+
+function renewalPayload(old,form,id){
+  const startDate=String(form.get('startDate')||'');
+  const endDate=String(form.get('endDate')||'');
+  const amount=String(form.get('amount')||'').trim();
+  if(!startDate||!endDate||endDate<startDate)throw Error('Revisa las fechas del nuevo periodo.');
+  if(old.endDate&&startDate<old.endDate)throw Error('El nuevo periodo debe comenzar al terminar el anterior.');
+  if(!amount||!Number.isFinite(Number(amount))||Number(amount)<0)throw Error('Indica el importe acordado.');
+  const payerType=String(form.get('payerType')||'Por confirmar');
+  const payerName=payerType==='Otra entidad'?String(form.get('payerName')||'').trim():'';
+  if(payerType==='Otra entidad'&&!payerName)throw Error('Indica el nombre de la entidad que paga.');
+  return {
+    name:(get(old.clientId)?.data.name||old.name)+' · '+startDate+' — '+endDate,
+    id,project:old.project,kind:'license',clientId:old.clientId,startDate,endDate,amount,
+    currency:String(form.get('currency')||old.currency||'EUR'),payerType,payerName,
+    users:String(form.get('users')||'').trim(),
+    renewalTerms:String(form.get('renewalTerms')||'').trim(),
+    notes:String(form.get('notes')||'').trim(),
+    commercialOwnerName:old.commercialOwnerName||'',
+    commercialOwnerEmail:old.commercialOwnerEmail||'',
+    commercialOwnerPhone:old.commercialOwnerPhone||''
+  };
+}
+
+document.addEventListener('submit',async event=>{
+  const form=event.target;
+  if(!['activity-form','renewal-form'].includes(form.id))return;
+  event.preventDefault();
+  const current=operation;
+  if(!current)return;
+  const submit=form.querySelector('[type=submit]');
+  submit.disabled=true;
+  const errorNode=$('operation-error');
+  errorNode.textContent='';
+  try{
+    const values=new FormData(form);
+    let result;
+    if(form.id==='activity-form'){
+      const activity={type:String(values.get('type')||''),date:String(values.get('date')||''),description:String(values.get('description')||'').trim(),responseStatus:String(values.get('responseStatus')||'')};
+      if(!activity.description)throw Error('Escribe qué ha ocurrido.');
+      result=await operationRpc('crm_log_activity',{
+        p_parent_id:current.row.record_id,p_expected_version:current.row.version,p_activity_id:current.requestId,
+        p_activity:activity,p_next:String(values.get('next')||'').trim(),
+        p_next_date:String(values.get('nextDate')||'')||null,p_response_status:activity.responseStatus
+      });
+    }else{
+      const data=renewalPayload(current.row.data,values,current.requestId);
+      result=await operationRpc('crm_renew_license',{
+        p_license_id:current.row.record_id,p_expected_version:current.row.version,
+        p_new_id:current.requestId,p_new_data:data,p_close_date:String(values.get('closeDate')||'')
+      });
+    }
+    $('modal').close();
+    await load();
+    const target=get(result?.new_id||current.row.record_id);
+    if(target)showEditor(target);
+    toast(form.id==='activity-form'?'Actividad y seguimiento guardados':'Renovación guardada y nuevo periodo creado');
+  }catch(error){
+    errorNode.textContent=error.message;
+    submit.disabled=false;
+  }
+});
+
+
+function quoteMeta(record){
+  return '<div class="meta">'+esc(record.quoteStatus||'Presupuesto por confirmar')+
+    (record.quoteDate?' · '+esc(short(record.quoteDate)):'')+'</div>';
 }
 
 route();

@@ -226,3 +226,8 @@ textarea{min-height:67px;resize:vertical}
 .contact-edit-row .text-button{justify-self:start}
 .contact-line{min-height:1.7em;white-space:nowrap}
 @media(max-width:480px){.contact-edit-row{grid-template-columns:1fr}}
+
+.activity-timeline{margin-top:24px;border-top:1px solid var(--line);padding-top:12px}
+.activity-timeline h3{font-size:1rem}
+.activity-detail{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.85rem;line-height:1.55}
+.dialog-foot{flex-wrap:wrap}

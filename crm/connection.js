@@ -64,10 +64,10 @@ window.crmConnection = (() => {
     }
     const result = await response.json().catch(() => null);
     if (!response.ok) {
-      const message = response.status === 403
+      const message = result?.code === 'P0001' ? result.message : response.status === 403
         ? 'Tu usuario no tiene permiso para acceder al CRM.'
         : 'No se pudo guardar o consultar la información. Comprueba la conexión y vuelve a intentarlo.';
-      throw Object.assign(Error(message), { status: response.status });
+      throw Object.assign(Error(message), { status: response.status, code: result?.code });
     }
     return result;
   }
