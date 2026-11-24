@@ -138,9 +138,20 @@ function dashboardSection(key,title,count,content,description=''){
 
 function home(){
   const [start,end]=week();
+  const open=opportunities().filter(active);
+  const sales=open.filter(d=>d.kind!=='license');
+  const renewals=open.length-sales.length;
+  const pending=followupItems().filter(d=>d.nextDate&&d.nextDate<=end);
+  const high=open.filter(d=>d.priority==='Alta');
+  const eur=open.filter(d=>d.currency==='EUR'&&d.quoteStatus!=='Rechazado'&&value(d.amount));
   return '<section class="hero"><h1>Esta semana</h1><span class="hero-date">'+
     esc(short(start)+' — '+dateLong.format(new Date(end+'T12:00Z')))+'</span></section>'+
-    todayContactsPanel()+renewalAlertPanel()+commercialSummary();
+    '<div class="grid metrics">'+
+      metric('Pipeline abierto',open.length,sales.length+' oportunidades · '+renewals+' renovaciones')+
+      metric('Acciones pendientes',pending.length,'Esta semana y vencidas')+
+      metric('Prioridad alta',high.length,'Marcadas como alta en la ficha')+
+      metric('Valor estimado en EUR',eur.length?money(eur.reduce((sum,d)=>sum+Number(d.amount),0)):'—',eur.length+' fichas con importe')+
+    '</div>'+todayContactsPanel()+renewalAlertPanel();
 }
 function scoped(){
   return opportunities().filter(d=>{
@@ -761,27 +772,6 @@ function todayContactsPanel(){
     (data.length?'<div class="scroll"><table><thead><tr><th>Cuenta y contacto</th><th>Motivo</th><th>Responsable</th><th>Próximo paso</th><th></th></tr></thead><tbody>'+body+'</tbody></table></div>':blank('No hay seguimientos en este periodo.')));
 }
 
-function commercialSummary(){
-  const sales=entries('opportunity').map(r=>r.data).filter(active);
-  const renewals=renewalOpportunities().filter(active);
-  const expired=entries('license').filter(r=>renewalStatus(r.data)==='Por renovar'&&r.data.endDate&&r.data.endDate<today()).length;
-  const summaryRow=(label,data)=>{
-    const priced=data.filter(d=>d.quoteStatus!=='Rechazado'&&value(d.amount));
-    const totals=new Map();
-    for(const record of priced){
-      const currency=record.currency||'EUR';
-      totals.set(currency,(totals.get(currency)||0)+Number(record.amount));
-    }
-    const amounts=totals.size?[...totals.entries()].map(([currency,amount])=>money(amount,currency)).join(' · '):'Por completar';
-    return '<tr><td>'+esc(label)+'</td><td>'+data.length+'</td><td>'+priced.length+'</td><td>'+esc(amounts)+'</td></tr>';
-  };
-  const content='<div class="scroll"><table><thead><tr><th>Tipo</th><th>Abiertas</th><th>Con importe</th><th>Importe estimado sin ponderar</th></tr></thead><tbody>'+
-    summaryRow('Nuevas oportunidades',sales)+summaryRow('Renovaciones pendientes',renewals)+'</tbody></table></div>'+
-    (expired?'<p class="sub">'+expired+' periodos vencidos requieren confirmar si se renovaron.</p>':'')+
-    '<div class="weekly-links">'+button('nav','Ver pipeline','data-view="pipeline"')+
-      button('nav','Ver forecast','data-view="forecast"')+'</div>';
-  return dashboardSection('commercial-summary','Resumen comercial',null,content);
-}
 function forecastReadiness(data){
   const pending=data.filter(d=>active(d)||d.stage==='Cierre ganado').map(d=>{
     const missing=[];
