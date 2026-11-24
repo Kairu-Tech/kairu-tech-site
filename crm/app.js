@@ -249,12 +249,41 @@ function formField([key,label,typ='text',required=false],data){
   return '<label'+(typ==='textarea'?' class="wide"':'')+'>'+esc(label)+control+'</label>';
 }
 const fieldsFor=d=>d.kind==='client'?clientFields:d.kind==='license'?licenseFields:d.kind==='opportunity'?fields:d.kind==='goal'?goalFields:reviewFields;
+function editorFields(d){
+  const all=fieldsFor(d);
+  if(!['license','opportunity','client'].includes(d.kind))return '<div class="fields">'+all.map(f=>formField(f,d)).join('')+'</div>';
+  const essential=d.kind==='license'
+    ?['name','project','clientId','licenseStatus','priority','endDate','renewalAmount','currency','renewalCloseDate','next','nextDate']
+    :d.kind==='client'
+    ?['name','project','clientStatus','contacts','priority','next','nextDate']
+    :['name','project','stage','priority','contacts','amount','currency','closeDate','next','nextDate'];
+  const groups=[
+    ['Canal, responsable y respuesta',['channelType','channelPartner','commercialOwnerName','commercialOwnerEmail','commercialOwnerPhone','responseStatus','payerType','payerName']],
+    ['Presupuesto y previsión',['quoteStatus','quoteReference','quoteDate','probability','renewalProbability']],
+    ['Datos del contrato',['startDate','renewalNotice','users','amount','renewalTerms']],
+    ['Contexto comercial',['organisation','type','sector','country','region','territory','need','proposal','risk','relevantDate']],
+    ['Notas y comunicaciones',['meetings','demos','emails','objections','source','notes']]
+  ];
+  const used=new Set(essential);
+  let html='<div class="fields">'+all.filter(f=>used.has(f[0])).map(f=>formField(f,d)).join('')+'</div>';
+  for(const [title,keys] of groups){
+    const selected=all.filter(f=>keys.includes(f[0])&&!used.has(f[0]));
+    selected.forEach(f=>used.add(f[0]));
+    if(selected.length)html+='<details class="editor-section"><summary>'+esc(title)+'</summary><div class="fields">'+selected.map(f=>formField(f,d)).join('')+'</div></details>';
+  }
+  const rest=all.filter(f=>!used.has(f[0]));
+  if(rest.length)html+='<details class="editor-section"><summary>Otros detalles</summary><div class="fields">'+rest.map(f=>formField(f,d)).join('')+'</div></details>';
+  return html+'<details class="editor-section"><summary>Motivo del cambio (opcional)</summary><div class="fields"><label class="wide">Motivo del cambio<input name="reason" placeholder="Ej. Confirmación tras la reunión"></label></div></details>';
+}
+document.addEventListener('invalid',e=>{
+  for(let section=e.target.closest('details');section;section=section.parentElement.closest('details'))section.open=true;
+},true);
 function showEditor(row,kind='opportunity'){
   const d=row?.data||{licenseStatus:'Por renovar',id:crypto.randomUUID(),kind,project:view==='project'?project:kind==='goal'?fProject:'',stage:'Prospección',priority:'Por revisar',currency:'EUR',quarter:fQuarter,reviewDate:today()};
   editor={row,data:d};
   const title=row?d.name:kind==='client'?'Nuevo cliente':kind==='license'?'Nueva licencia':kind==='goal'?'Nuevo objetivo':kind==='review'?'Registrar revisión semanal':'Nueva oportunidad';
   $('modal-content').innerHTML='<header class="dialog-head"><h2>'+esc(title)+'</h2>'+button('close','✕','aria-label="Cerrar ficha"')+'</header>'+
-  '<div class="dialog-body">'+(d.kind==='license'?'<p class="sub">'+esc(channelSummary(d))+' (canal del cliente) · Pagador: '+esc(payerDisplay(d))+' · Responsable: '+esc(commercialOwner(d).commercialOwnerName||'Por asignar')+'. Los campos de responsable de esta licencia permiten indicar una persona distinta.</p><p class="sub">El importe del periodo corresponde a la licencia actual. Completa el importe y la fecha de cierre de la renovación para incluirla en el forecast. Las renovadas cuentan al 100 %. Las pendientes utilizan la probabilidad indicada.</p>':'')+'<form id="editor"><div class="fields">'+fieldsFor(d).map(f=>formField(f,d)).join('')+'<label class="wide">Motivo del cambio<input name="reason" placeholder="Ej. Confirmación tras la reunión"></label></div>'+
+  '<div class="dialog-body">'+(d.kind==='license'?'<p class="sub">'+esc(channelSummary(d))+' (canal del cliente) · Pagador: '+esc(payerDisplay(d))+' · Responsable: '+esc(commercialOwner(d).commercialOwnerName||'Por asignar')+'.</p>':'')+'<form id="editor">'+editorFields(d)+
   (d.sourceUrl?'<p class="sub"><a target="_blank" rel="noopener" href="'+esc(d.sourceUrl)+'">Abrir archivo de origen ↗</a></p>':'')+
   '<p id="form-error" class="error" role="alert"></p><div class="dialog-foot">'+(row?button('history','Ver historial','data-id="'+esc(d.id)+'"'):'')+
   (row&&['client','opportunity','license'].includes(d.kind)?button('activity','＋ Actividad','data-id="'+esc(d.id)+'"'):'')+
@@ -456,6 +485,7 @@ const licenseFields=[
   ['name','Licencia / contrato','text',true],['project','Proyecto',projects,true],
   ['clientId','Cliente','client',true],
   ['licenseStatus','Estado de renovación',['Por renovar','Renovado','Finalizada'],true],
+  ['priority','Prioridad',priorities],
   ['startDate','Fecha de inicio','date'],['endDate','Fecha de vencimiento','date'],
   ['renewalNotice','Fecha de aviso de renovación','date'],
   ['users','Usuarios contratados'],['amount','Importe del periodo','amount'],
