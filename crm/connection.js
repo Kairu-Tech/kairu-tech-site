@@ -73,7 +73,9 @@ window.crmConnection = (() => {
   }
 
   async function unlock() {
-    const projects = await request('crm_projects?select=id,name&order=name');
+    const projects = document.body.dataset.portal === 'true'
+      ? [await request('rpc/crm_portal_context', { method: 'POST', body: '{}' })]
+      : await request('crm_projects?select=id,name&order=name');
     if (!projects?.length) throw Error('Tu usuario todavía no tiene acceso. Revisa la consulta de usuario propietario.');
     document.getElementById('login').hidden = true;
     document.querySelector('.shell').hidden = false;
@@ -95,7 +97,7 @@ window.crmConnection = (() => {
       if (fragment.has('error')) {
         throw Error('El enlace ha caducado o ya se ha utilizado. Solicita un nuevo correo.');
       }
-      if (fragment.get('type') !== 'recovery' || !fragment.get('refresh_token')) {
+      if (!['recovery','invite'].includes(fragment.get('type')) || !fragment.get('refresh_token')) {
         throw Error('Solicita un nuevo enlace para cambiar la contraseña.');
       }
       const accessToken = fragment.get('access_token');

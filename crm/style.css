@@ -248,3 +248,11 @@ textarea{min-height:67px;resize:vertical}
 .weekly-links{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
 
 .editor-section{border-top:1px solid var(--line);margin-top:16px;padding-top:12px}.editor-section>summary{cursor:pointer;font-weight:650;color:var(--ink);padding:6px 0}.editor-section>.fields{margin-top:12px}
+.portal-admin-link,#portal-nav a{display:block;padding:12px;color:var(--accent);font-size:.95rem;text-decoration:none;border-radius:8px}
+body[data-portal] .card{padding:22px;margin-bottom:18px}
+.portal-records{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:18px}
+.portal-data{margin:0}.portal-data>div{padding:10px 0;border-bottom:1px solid var(--line)}
+.portal-data dt{font-weight:650;font-size:.95rem}.portal-data dd{margin:4px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.portal-filter{display:block;max-width:300px;margin-bottom:18px}
+.share-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin:16px 0}
+.share-fields label{display:flex;gap:10px;align-items:center;font-size:.95rem}.share-fields input{width:auto;margin:0}

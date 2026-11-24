@@ -124,7 +124,7 @@ function route(){
 }
 function jump(v,p=''){location.hash=v+(p?'/'+colors[projects.indexOf(p)]:'');}
 function render(){
-  $('nav').innerHTML='<div class="nav-label">Seguimiento</div>'+navItems.map(([v,i,l])=>button('nav','<span class="nav-icon" aria-hidden="true">'+i+'</span>'+l,'data-view="'+v+'"',view===v?'active':'')).join('')+'<div class="nav-label">Proyectos</div>'+projects.map(p=>button('project',dot(p)+p,'data-project="'+p+'"',view==='project'&&project===p?'active':'')).join('');
+  $('nav').innerHTML='<div class="nav-label">Seguimiento</div>'+navItems.map(([v,i,l])=>button('nav','<span class="nav-icon" aria-hidden="true">'+i+'</span>'+l,'data-view="'+v+'"',view===v?'active':'')).join('')+'<a class="portal-admin-link" href="./portal/?manage=1">Accesos de clientes</a><div class="nav-label">Proyectos</div>'+projects.map(p=>button('project',dot(p)+p,'data-project="'+p+'"',view==='project'&&project===p?'active':'')).join('');
   $('breadcrumb').textContent=view==='project'?project:(navItems.find(x=>x[0]===view)?.[2]||'Seguimiento comercial');
   $('page').innerHTML=error?'<div class="card"><p class="error">'+esc(error)+'</p>'+button('reload','Volver a cargar')+'</div>':({home,pipeline,project:pipeline,forecast,reviews,clients}[view]||home)();
 }
