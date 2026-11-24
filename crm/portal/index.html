@@ -1,1 +1,45 @@
-
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KairuTech · Portal privado</title>
+<meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://ypffaagjhrrgxsrxlluo.supabase.co; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="description" content="Panel privado de seguimiento comercial de KairuTech.">
+<link rel="stylesheet" href="../style.css?v=20261124-portal">
+<script defer src="../connection.js?v=20261124-portal"></script>
+<script defer src="./portal.js?v=20261124-portal"></script>
+</head>
+<body data-portal="true">
+<section id="login" class="login-wrap">
+<form id="login-form" class="login-card">
+<div class="brand"><svg class="brand-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.9l2.15 6.02h6.39l-5.17 3.76 1.98 6.02L12 15.01 6.65 18.7l1.98-6.02-5.17-3.76h6.39L12 2.9z"/></svg><span class="brand-word">Kairu <span class="brand-tech">Tech</span></span></div>
+<h1>Portal de clientes</h1>
+<p>Accede a la información que KairuTech comparte contigo.</p>
+<label>Email<input name="email" type="email" autocomplete="username" required></label>
+<label>Contraseña<input name="password" type="password" autocomplete="current-password" required></label>
+<p id="login-error" class="error" role="alert"></p>
+<button type="submit" class="primary">Entrar</button>
+<button type="button" id="forgot-password">He olvidado mi contraseña</button>
+</form>
+<form id="reset-form" class="login-card" hidden>
+<div class="brand"><svg class="brand-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.9l2.15 6.02h6.39l-5.17 3.76 1.98 6.02L12 15.01 6.65 18.7l1.98-6.02-5.17-3.76h6.39L12 2.9z"/></svg><span class="brand-word">Kairu <span class="brand-tech">Tech</span></span></div>
+<h1>Nueva contraseña</h1>
+<p>Escribe la contraseña que utilizarás para entrar al CRM.</p>
+<label>Nueva contraseña<input name="password" type="password" autocomplete="new-password" minlength="8" required></label>
+<label>Repetir contraseña<input name="confirmation" type="password" autocomplete="new-password" minlength="8" required></label>
+<p id="reset-error" class="error" role="alert"></p>
+<button type="submit" class="primary">Guardar contraseña</button>
+<button type="button" id="cancel-reset">Volver al acceso</button>
+</form></section>
+<div class="shell" hidden>
+<aside class="sidebar">
+<div class="brand"><svg class="brand-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.9l2.15 6.02h6.39l-5.17 3.76 1.98 6.02L12 15.01 6.65 18.7l1.98-6.02-5.17-3.76h6.39L12 2.9z"/></svg><div><span class="brand-word">Kairu <span class="brand-tech">Tech</span></span><small>Portal privado</small></div></div>
+<nav id="portal-nav" aria-label="Portal"><a href="./">Mi información</a></nav></aside>
+<main>
+<header class="top"><span>Portal privado</span><div class="top-actions"><button id="portal-refresh" type="button">Actualizar</button><button id="portal-logout" type="button">Salir</button></div></header><div id="page" class="page" aria-live="polite"><p>Cargando panel…</p></div>
+</main>
+</div>
+<dialog id="modal" aria-label="Ficha comercial"><div id="modal-content"></div></dialog>
+<div id="toast" role="status" hidden></div>
+</body></html>
