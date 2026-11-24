@@ -231,3 +231,14 @@ textarea{min-height:67px;resize:vertical}
 .activity-timeline h3{font-size:1rem}
 .activity-detail{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.85rem;line-height:1.55}
 .dialog-foot{flex-wrap:wrap}
+
+.dashboard-section{padding:0;margin-bottom:10px;overflow:hidden}
+.dashboard-section>summary{display:flex;align-items:center;gap:12px;cursor:pointer;list-style:none;padding:16px 19px;font-weight:650;font-size:.94rem;color:var(--ink)}
+.dashboard-section>summary::-webkit-details-marker{display:none}
+.dashboard-section>summary::after{content:'⌄';margin-left:auto;color:var(--accent);transition:transform .15s}
+.dashboard-section[open]>summary::after{transform:rotate(180deg)}
+.dashboard-section>summary:hover{background:var(--light)}
+.dashboard-section>summary:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}
+.dashboard-count{font-size:.75rem;font-weight:700;border-radius:20px;padding:3px 9px;background:var(--light);color:var(--accent)}
+.dashboard-content{padding:0 19px 17px;border-top:1px solid var(--line)}
+.dashboard-content>.sub{margin:12px 0}

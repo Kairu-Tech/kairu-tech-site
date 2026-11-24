@@ -18,6 +18,7 @@ const quoteFields=[
 ];
 const responseFields=[['responseStatus','Respuesta',['Pendiente de respuesta','Respondido','No requiere respuesta']]];
 let operation=null;
+const expandedDashboardSections=new Set();
 const priorities=['Alta','Media','Baja','Por revisar'];
 const countries=['España','Portugal','México','Chile','Reino Unido','Colombia','Brasil','Perú','Paraguay','Países Bajos','Grecia','Austria','Bélgica','Alemania','Italia','Chequia','Irlanda','EE. UU.'];
 const regions=['España','Portugal','Latinoamérica','Europa','Norteamérica'];
@@ -126,21 +127,59 @@ function render(){
   $('breadcrumb').textContent=view==='project'?project:(navItems.find(x=>x[0]===view)?.[2]||'Seguimiento comercial');
   $('page').innerHTML=error?'<div class="card"><p class="error">'+esc(error)+'</p>'+button('reload','Volver a cargar')+'</div>':({home,pipeline,project:pipeline,forecast,reviews,clients}[view]||home)();
 }
+function dashboardSection(key,title,count,content,description=''){
+  const opened=expandedDashboardSections.has(key)?' open':'';
+  const badge=count==null?'':'<span class="dashboard-count">'+esc(count)+'</span>';
+  return '<details class="card dashboard-section" data-dashboard-section="'+esc(key)+'"'+opened+'>'+
+    '<summary><span>'+esc(title)+'</span>'+badge+'</summary>'+
+    '<div class="dashboard-content">'+(description?'<p class="sub">'+esc(description)+'</p>':'')+content+'</div></details>';
+}
+
 function home(){
-  const all=opportunities(), open=all.filter(active), [start,end]=week();
-  const projected=new Set(all.filter(d=>d.kind==='license').map(d=>d.id));
-  const outstanding=[...all,...entries('client').map(r=>r.data),...entries('license').map(r=>r.data).filter(d=>!projected.has(d.id)&&licenseTiming(d).key!=='closed')].filter(hasAction);
-  const weekTasks=outstanding.filter(d=>d.nextDate&&d.nextDate<=end).sort((a,b)=>a.nextDate.localeCompare(b.nextDate));
-  const later=outstanding.filter(d=>!d.nextDate||d.nextDate>end).sort((a,b)=>(a.nextDate||'z').localeCompare(b.nextDate||'z'));
-  const eur=open.filter(d=>d.currency==='EUR'&&value(d.amount));const top=open.filter(d=>d.priority==='Alta');
-  const task=(d,done=false)=>'<div class="task">'+(done?button('done','✓','data-id="'+esc(d.id)+'" aria-label="Completar acción de '+esc(d.name)+'"','tick'):'')+openBtn(d,d.next,d.name+' · '+d.project)+'<span class="tag '+(d.nextDate&&d.nextDate<today()?'warm':'neutral')+'">'+esc(short(d.nextDate))+'</span></div>';
-  const max=Math.max(1,...stages.map(s=>all.filter(d=>d.stage===s).length));
-  return '<section class="hero"><div><p class="eyebrow">Semana comercial</p><h1>Seguimiento comercial</h1><p>Prioridades, oportunidades y próximos pasos de KairuTech.</p></div><span class="hero-date">'+esc(short(start)+' — '+dateLong.format(new Date(end+'T12:00Z')))+'</span></section>'+
-  '<div class="grid metrics">'+metric('Pipeline abierto',open.filter(d=>d.stage!=='Prospección').length,open.filter(d=>d.stage==='Prospección').length+' fichas en prospección')+metric('Acciones pendientes',weekTasks.length,'Esta semana y vencidas')+metric('Prioridad alta',top.length,'Oportunidades activas')+metric('Valor estimado en EUR',eur.length?money(eur.reduce((s,d)=>s+Number(d.amount),0)):'—',eur.length+' fichas con importe')+'</div>'+
-  todayContactsPanel()+renewalAlertPanel()+'<div class="grid split"><section class="card">'+cardHead('Tareas de esta semana','Incluye acciones pendientes de semanas anteriores.')+(weekTasks.length?weekTasks.map(d=>task(d,true)).join(''):blank('Sin tareas con fecha para esta semana.'))+'</section><section class="card">'+cardHead('Estado del pipeline','',button('nav','Ver pipeline →','data-view="pipeline"','text-button'))+stages.filter(s=>all.some(d=>d.stage===s)).map(s=>{const n=all.filter(d=>d.stage===s).length;return '<div class="bar-row"><span>'+esc(s)+'</span><progress aria-label="'+esc(s)+'" max="'+max+'" value="'+n+'"></progress><b>'+n+'</b></div>';}).join('')+'</section></div>'+
-  '<div class="grid split"><section class="card">'+cardHead('Próximas acciones','Acciones futuras y pendientes de programar.')+(later.length?later.map(d=>task(d,true)).join(''):blank('Sin próximas acciones registradas.'))+'</section>'+
-  '<section class="card">'+cardHead('Revisión semanal','Registra decisiones y consulta revisiones anteriores.')+button('nav','Ir a revisión semanal →','data-view="reviews"','text-button')+'</section></div>'+
-  licenseSummary()+'<section class="card">'+cardHead('Proyectos')+'<div class="grid projects">'+projects.map(p=>button('project',dot(p)+esc(p)+'<small>'+open.filter(d=>d.project===p).length+' activas</small>','data-project="'+p+'"','project-card')).join('')+'</div></section>';
+  const all=opportunities(),open=all.filter(active),[start,end]=week();
+  const outstanding=followupItems();
+  const weekTasks=outstanding.filter(d=>d.nextDate&&d.nextDate<=end)
+    .sort((a,b)=>a.nextDate.localeCompare(b.nextDate));
+  const later=outstanding.filter(d=>!d.nextDate||d.nextDate>end)
+    .sort((a,b)=>(a.nextDate||'z').localeCompare(b.nextDate||'z'));
+  const eur=open.filter(d=>d.currency==='EUR'&&value(d.amount));
+  const top=open.filter(d=>d.priority==='Alta');
+  const task=d=>'<div class="task">'+
+    button('done','✓','data-id="'+esc(d.id)+'" aria-label="Completar acción de '+esc(d.name)+'"','tick')+
+    openBtn(d,d.next||'Solicitar respuesta',d.name+' · '+d.project)+
+    '<span class="tag '+(d.nextDate&&d.nextDate<today()?'warm':'neutral')+'">'+esc(short(d.nextDate))+'</span></div>';
+  const max=Math.max(1,...stages.map(stage=>all.filter(d=>d.stage===stage).length));
+  const stageBars=stages.filter(stage=>all.some(d=>d.stage===stage)).map(stage=>{
+    const count=all.filter(d=>d.stage===stage).length;
+    return '<div class="bar-row"><span>'+esc(stage)+'</span>'+
+      '<progress aria-label="'+esc(stage)+'" max="'+max+'" value="'+count+'"></progress><b>'+count+'</b></div>';
+  }).join('');
+  const projectButtons='<div class="grid projects">'+projects.map(project=>
+    button('project',dot(project)+esc(project)+'<small>'+open.filter(d=>d.project===project).length+' activas</small>',
+      'data-project="'+project+'"','project-card')).join('')+'</div>';
+  return '<section class="hero"><div><p class="eyebrow">Semana comercial</p><h1>Seguimiento comercial</h1>'+
+    '<p>Prioridades, oportunidades y próximos pasos de KairuTech.</p></div>'+
+    '<span class="hero-date">'+esc(short(start)+' — '+dateLong.format(new Date(end+'T12:00Z')))+'</span></section>'+
+    '<div class="grid metrics">'+
+      metric('Pipeline abierto',open.filter(d=>d.stage!=='Prospección').length,open.filter(d=>d.stage==='Prospección').length+' fichas en prospección')+
+      metric('Acciones pendientes',weekTasks.length,'Esta semana y vencidas')+
+      metric('Prioridad alta',top.length,'Oportunidades activas')+
+      metric('Valor estimado en EUR',eur.length?money(eur.reduce((sum,d)=>sum+Number(d.amount),0)):'—',eur.length+' fichas con importe')+
+    '</div>'+
+    todayContactsPanel()+
+    renewalAlertPanel()+
+    dashboardSection('week-tasks','Tareas de esta semana',weekTasks.length,
+      weekTasks.length?weekTasks.map(task).join(''):blank('Sin tareas con fecha para esta semana.'),
+      'Incluye acciones pendientes de semanas anteriores.')+
+    dashboardSection('pipeline','Estado del pipeline',all.length,
+      button('nav','Ver pipeline →','data-view="pipeline"','text-button')+stageBars)+
+    dashboardSection('next-actions','Próximas acciones',later.length,
+      later.length?later.map(task).join(''):blank('Sin próximas acciones registradas.'),
+      'Acciones futuras y pendientes de programar.')+
+    dashboardSection('weekly-review','Revisión semanal',null,
+      button('nav','Ir a revisión semanal →','data-view="reviews"','text-button'),
+      'Registra decisiones y consulta revisiones anteriores.')+
+    dashboardSection('projects','Proyectos',projects.length,projectButtons);
 }
 function scoped(){
   return opportunities().filter(d=>{
@@ -466,12 +505,6 @@ function licenseTiming(d){
   if(days<=90)return {key:'90',label:'Vence en '+days+' días',color:''};
   return {key:'later',label:'En plazo según fechas',color:'green'};
 }
-function licenseSummary(){
-  const data=entries('license').map(r=>r.data).filter(d=>['past','30','60','90'].includes(licenseTiming(d).key))
-    .sort((a,b)=>a.endDate.localeCompare(b.endDate));
-  return '<section class="card license-summary">'+cardHead('Licencias y renovaciones',data.length+' periodos para revisar.',button('nav','Ver clientes →','data-view="clients"','text-button'))+
-    (data.length?data.slice(0,5).map(d=>'<div class="record">'+openBtn(d,d.name,short(d.endDate))+tag(licenseTiming(d).label,licenseTiming(d).color)+'</div>').join(''):blank('Sin licencias próximas a vencer ni periodos vencidos pendientes.'))+'</section>';
-}
 function customerData(){
   const kind=clientTab==='licenses'?'license':'client';
   const normalize=s=>String(s??'').normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase();
@@ -585,11 +618,11 @@ function renewalAlertPanel(){
   const alerts=entries('license').map(row=>({data:row.data,alert:renewalAlert(row.data)})).filter(x=>x.alert)
     .sort((a,b)=>a.alert.date.localeCompare(b.alert.date));
   const pending=alerts.filter(x=>x.alert.date<=week()[1]);
-  if(!alerts.length)return '';
-  return '<section class="card license-summary">'+cardHead('Seguimientos de renovación',pending.length+' seguimientos pendientes o previstos esta semana.')+
-    '<div class="scroll"><table><thead><tr><th>Cliente / licencia</th><th>Aviso</th><th>Vencimiento</th><th></th></tr></thead><tbody>'+
+  const content=alerts.length?'<div class="scroll"><table><thead><tr><th>Cliente / licencia</th><th>Aviso</th><th>Vencimiento</th><th></th></tr></thead><tbody>'+
     alerts.map(({data,alert})=>'<tr><td>'+openBtn(data,get(data.clientId)?.data.name||data.name,data.project)+'</td><td>'+tag(alert.label,alert.color)+'</td><td>'+esc(short(data.endDate))+'</td><td>'+
-      button('open','Ver y programar seguimiento','data-id="'+esc(data.id)+'"')+'</td></tr>').join('')+'</tbody></table></div></section>';
+      button('open','Ver y programar seguimiento','data-id="'+esc(data.id)+'"')+'</td></tr>').join('')+'</tbody></table></div>':blank('Sin seguimientos de renovación pendientes.');
+  return dashboardSection('renewal-followups','Seguimientos de renovación',pending.length,content,
+    pending.length+' pendientes o previstos esta semana. '+alerts.length+' seguimientos en total.');
 }
 
 function monthLabel(month){
@@ -728,8 +761,9 @@ function todayContactsPanel(){
       '<td>'+esc(d.next||'Solicitar respuesta')+'<div class="meta">'+esc(short(d.nextDate))+'</div></td>'+
       '<td>'+button('activity','＋ Actividad','data-id="'+esc(d.id)+'"')+'</td></tr>';
   }).join('');
-  return '<section class="card license-summary">'+cardHead('A quién contactar hoy',data.length+' seguimientos vencidos, previstos para hoy o pendientes de programar.')+
-    (data.length?'<div class="scroll"><table><thead><tr><th>Cuenta y contacto</th><th>Motivo</th><th>Responsable</th><th>Próximo paso</th><th></th></tr></thead><tbody>'+body+'</tbody></table></div>':blank('No hay seguimientos pendientes para hoy.'))+'</section>';
+  return dashboardSection('today-contacts','A quién contactar hoy',data.length,
+    data.length?'<div class="scroll"><table><thead><tr><th>Cuenta y contacto</th><th>Motivo</th><th>Responsable</th><th>Próximo paso</th><th></th></tr></thead><tbody>'+body+'</tbody></table></div>':blank('No hay seguimientos pendientes para hoy.'),
+    'Seguimientos vencidos, previstos para hoy o pendientes de programar.');
 }
 
 function forecastReadiness(data){
@@ -896,5 +930,14 @@ function quoteMeta(record){
   return '<div class="meta">'+esc(record.quoteStatus||'Presupuesto por confirmar')+
     (record.quoteDate?' · '+esc(short(record.quoteDate)):'')+'</div>';
 }
+
+
+document.addEventListener('toggle',event=>{
+  const section=event.target;
+  if(!section.matches?.('details[data-dashboard-section]')||!section.isConnected)return;
+  const key=section.dataset.dashboardSection;
+  if(section.open)expandedDashboardSections.add(key);
+  else expandedDashboardSections.delete(key);
+},true);
 
 route();
