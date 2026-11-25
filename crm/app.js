@@ -317,7 +317,7 @@ function showEditor(row,kind='opportunity'){
 async function save(d,version,reason){
   return api('/'+d.id,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:d,version,reason})});
 }
-async function history(id){
+async function showRecordHistory(id){
   const target=$('history');target.textContent='Cargando historial…';
   try{
     const versions=await api('/'+id);
@@ -454,7 +454,7 @@ document.addEventListener('click',async e=>{
   if(action==='activity'&&row)showActivity(row);
   if(action==='renew-license'&&row)showRenewal(row);
   if(action==='close')$('modal').close();
-  if(action==='history')await history(id);
+  if(action==='history')await showRecordHistory(id);
   if(action==='done'&&row){
     el.disabled=true;
     try{
