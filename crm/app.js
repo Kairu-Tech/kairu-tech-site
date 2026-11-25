@@ -5,6 +5,17 @@ const projects=['Zentynel','Flowity','Metadology'];
 const colors=['zentynel','flowity','metadology'];
 const stages=['Prospección','Contacto inicial','Cualificación','Reunión / demo','Propuesta','Negociación','Cierre ganado','Cierre perdido','Renovación','Seguimiento','En pausa'];
 const channelTypes=['Venta directa','Distribuidor','Colaborador'];
+const accountRoles=['Cliente final','Partner','Distribuidor','Proveedor','Por clasificar'];
+function accountRole(d){
+  if(d.kind==='license')return accountRole(get(d.clientId)?.data||{});
+  if(accountRoles.includes(d.accountRole))return d.accountRole;
+  if(d.type==='Partner')return 'Partner';
+  if(d.type==='Proveedor')return 'Proveedor';
+  if(d.type==='Cliente directo')return 'Cliente final';
+  if(d.kind==='client'&&String(d.sourceUrl||'').includes('file_id=libfile_01fab3fd7c5c819181dff525e6a09787'))return 'Cliente final';
+  return 'Por clasificar';
+}
+
 const channelFields=[['channelType','Canal comercial',channelTypes,true],['channelPartner','Distribuidor / colaborador','partner']];
 const ownerFields=[
   ['commercialOwnerName','Responsable comercial — nombre'],
@@ -36,14 +47,14 @@ const quarterFor=d=>d?d.slice(0,4)+'-T'+Math.ceil(Number(d.slice(5,7))/3):'';
 const value=x=>x!==''&&x!=null;
 const active=d=>!['Cierre ganado','Cierre perdido','En pausa'].includes(d.stage);
 const hasAction=d=>!['Cierre perdido','En pausa'].includes(d.stage)&&d.next;
-const filterFields=[['project','Proyecto'],['country','País'],['region','Región'],['sector','Sector'],['priority','Prioridad'],['stage','Estado comercial'],['type','Tipo'],['commercialMonth','Mes cierre / renovación'],['channelType','Canal comercial'],['channelPartner','Distribuidor / colaborador'],['commercialOwnerName','Responsable comercial']];
-const navItems=[['home','▦','Esta semana'],['pipeline','☷','Pipeline'],['clients','▤','Clientes y licencias'],['forecast','◴','Forecast trimestral'],['reviews','◷','Revisión semanal']];
+const filterFields=[['project','Proyecto'],['accountRole','Tipo de cuenta'],['country','País'],['region','Región'],['sector','Sector'],['priority','Prioridad'],['stage','Estado comercial'],['type','Tipo'],['commercialMonth','Mes cierre / renovación'],['channelType','Canal comercial'],['channelPartner','Distribuidor / colaborador'],['commercialOwnerName','Responsable comercial']];
+const navItems=[['home','▦','Esta semana'],['pipeline','☷','Pipeline'],['clients','▤','Cuentas y licencias'],['forecast','◴','Forecast trimestral'],['reviews','◷','Revisión semanal']];
 const subsets={
   Zentynel:[['','Todas'],['spain','España'],['portugal','Portugal'],['latam','Latinoamérica']],
   Flowity:[['','Todas'],['dip','Diputaciones'],['road','Carreteras']]
 };
 const fields=[
-  ['name','Cuenta / oportunidad','text',true],['project','Proyecto',projects,true],...channelFields,['stage','Estado comercial',stages,true],...ownerFields,...responseFields,
+  ['name','Cuenta / oportunidad','text',true],['project','Proyecto',projects,true],['accountRole','Tipo de cuenta',accountRoles],...channelFields,['stage','Estado comercial',stages,true],...ownerFields,...responseFields,
   ['organisation','Organismo, empresa, proveedor o partner'],['type','Tipo de oportunidad',types],['sector','Sector'],
   ['country','País','country'],['region','Región','region'],['territory','Comunidad / territorio'],
   ['priority','Prioridad',priorities],['risk','Riesgo'],['contacts','Contactos','contacts'],
@@ -53,11 +64,11 @@ const fields=[
   ['relevantDate','Fecha relevante','date'],['closeDate','Cierre previsto / efectivo','date'],['nextDate','Fecha de la próxima acción','date'],
   ['next','Próximo paso','textarea'],['notes','Notas','textarea']
 ];
-let clientTab='clients',customerQuery='',customerProject='',licenseFilter='all',renewalStateFilter='all',customerChannel='',customerPartner='';
+let clientTab='clients',customerRole='',customerQuery='',customerProject='',licenseFilter='all',renewalStateFilter='all',customerChannel='',customerPartner='';
 let rows=[],error='',view='home',project='',subset='',filters={},query='',layout='list',fQuarter=quarterFor(today()),fProject='',fChannel='',fPartner='',editor=null,toastTimer;
 const entries=kind=>rows.filter(x=>x.data.kind===kind);
 const opportunities=()=>[
-  ...entries('opportunity').map(x=>({...x.data,...channelDetails(x.data),commercialMonth:(x.data.closeDate||'').slice(0,7)})),
+  ...entries('opportunity').map(x=>({...x.data,accountRole:accountRole(x.data),...channelDetails(x.data),commercialMonth:(x.data.closeDate||'').slice(0,7)})),
   ...renewalOpportunities()
 ];
 const get=id=>rows.find(r=>r.record_id===id);
@@ -182,7 +193,7 @@ function resultTable(){
   if(!data.length)return blank('No hay oportunidades en esta vista. Puedes crear una desde el botón superior.');
   const count='<p class="sub">'+data.length+' '+(data.length===1?'oportunidad':'oportunidades')+'</p>';
   if(layout==='board')return count+'<div class="board">'+stages.map(s=>'<section class="lane"><h3>'+esc(s)+' · '+data.filter(d=>d.stage===s).length+'</h3>'+data.filter(d=>d.stage===s).map(d=>openBtn(d,d.name,d.project+' · '+channelSummary(d)+' · '+(d.priority||'Por revisar'))).join('')+'</section>').join('')+'</div>';
-  return count+'<div class="scroll"><table><thead><tr><th>Cuenta / oportunidad</th><th>Canal</th><th>Distribuidor / colaborador</th><th>Estado comercial</th><th>Prioridad</th><th>Importe</th><th>Próxima acción</th></tr></thead><tbody>'+data.map(d=>'<tr><td>'+openBtn(d,d.name,d.project+(d.country?' · '+d.country:'')+' · '+(d.type||'Por cualificar')+(d.commercialMonth?' · '+monthLabel(d.commercialMonth):''))+'</td><td>'+esc(channelDetails(d).channelType)+'</td><td>'+esc(channelDetails(d).channelPartner||'—')+ownerMeta(d)+'</td><td>'+tag(d.kind==='license'?renewalStatus(get(d.id).data):d.stage||'Prospección',d.stage==='Cierre ganado'?'green':'neutral')+'</td><td>'+priority(d)+'</td><td class="nobr">'+(value(d.amount)?esc(money(Number(d.amount),d.currency)):'—')+quoteMeta(d)+'</td><td>'+esc(d.next||'—')+(d.nextDate?'<div class="meta">'+esc(short(d.nextDate))+'</div>':'')+(d.kind==='license'?'<div class="meta">'+esc((renewalAlert(get(d.id).data)?.label||'Sin revisión pendiente'))+'</div>':'')+'</td></tr>').join('')+'</tbody></table></div>';
+  return count+'<div class="scroll"><table><thead><tr><th>Cuenta / oportunidad</th><th>Tipo de cuenta</th><th>Canal de origen</th><th>Distribuidor / colaborador de origen</th><th>Estado comercial</th><th>Prioridad</th><th>Importe</th><th>Próxima acción</th></tr></thead><tbody>'+data.map(d=>'<tr><td>'+openBtn(d,d.name,d.project+(d.country?' · '+d.country:'')+' · '+(d.type||'Por cualificar')+(d.commercialMonth?' · '+monthLabel(d.commercialMonth):''))+'</td><td>'+esc(accountRole(d))+'</td><td>'+esc(channelDetails(d).channelType)+'</td><td>'+esc(channelDetails(d).channelPartner||'—')+ownerMeta(d)+'</td><td>'+tag(d.kind==='license'?renewalStatus(get(d.id).data):d.stage||'Prospección',d.stage==='Cierre ganado'?'green':'neutral')+'</td><td>'+priority(d)+'</td><td class="nobr">'+(value(d.amount)?esc(money(Number(d.amount),d.currency)):'—')+quoteMeta(d)+'</td><td>'+esc(d.next||'—')+(d.nextDate?'<div class="meta">'+esc(short(d.nextDate))+'</div>':'')+(d.kind==='license'?'<div class="meta">'+esc((renewalAlert(get(d.id).data)?.label||'Sin revisión pendiente'))+'</div>':'')+'</td></tr>').join('')+'</tbody></table></div>';
 }
 const goalFields=[['name','Objetivo','text',true],['project','Proyecto',projects,true],['quarter','Trimestre (AAAA-T1 a AAAA-T4)','quarter',true],['currency','Moneda',['EUR','USD','GBP','MXN','CLP','BRL','COP','PEN'],true],['conservative','Conservador','amount'],['base','Base','amount'],['upside','Optimista','amount'],['linked','Sustituir por una oportunidad','link'],['notes','Notas y supuestos','textarea']];
 const reviewFields=[['name','Título','text',true],['reviewDate','Fecha de revisión','date',true],['project','Proyecto',projects],['reviewNext','Próxima revisión','date'],['notes','Decisiones, cambios de prioridad y próximos pasos','textarea',true]];
@@ -236,7 +247,7 @@ function formField([key,label,typ='text',required=false],data){
     return '<label>Distribuidor / colaborador<input name="channelPartner" list="channel-partners" value="'+esc(direct?'':data.channelPartner||'')+'"'+(direct?' disabled':'')+'><datalist id="channel-partners">'+
       knownPartners().map(name=>'<option value="'+esc(name)+'"></option>').join('')+'</datalist></label>';
   }
-  const v=data[key]??'', name=' name="'+key+'"'+(required?' required':'');
+  const v=key==='accountRole'?accountRole(data):data[key]??'', name=' name="'+key+'"'+(required?' required':'');
   const list=typ==='client'?entries('client').map(r=>r.data).filter(d=>d.project===data.project||d.id===v).map(d=>[d.id,d.name]):Array.isArray(typ)?typ:typ==='country'?[...new Set([...countries,...opportunities().map(x=>x.country).filter(Boolean)])].sort((a,b)=>a.localeCompare(b,'es')):typ==='region'?[...new Set([...regions,...opportunities().map(x=>x.region).filter(Boolean)])]:typ==='link'?opportunities().filter(d=>(d.project===data.project||d.id===v)&&(quarterFor(d.closeDate)===data.quarter||d.id===v)).map(d=>[d.id,d.name]):null;
   let control;
   if(list)control='<select'+name+'>'+opts(list,v,'Seleccionar')+'</select>';
@@ -255,8 +266,8 @@ function editorFields(d){
   const essential=d.kind==='license'
     ?['name','project','clientId','licenseStatus','priority','endDate','renewalAmount','currency','renewalCloseDate','next','nextDate']
     :d.kind==='client'
-    ?['name','project','clientStatus','contacts','priority','next','nextDate']
-    :['name','project','stage','priority','contacts','amount','currency','closeDate','next','nextDate'];
+    ?['name','project','accountRole','clientStatus','contacts','priority','next','nextDate']
+    :['name','project','accountRole','stage','priority','contacts','amount','currency','closeDate','next','nextDate'];
   const groups=[
     ['Canal, responsable y respuesta',['channelType','channelPartner','commercialOwnerName','commercialOwnerEmail','commercialOwnerPhone','responseStatus','payerType','payerName']],
     ['Presupuesto y previsión',['quoteStatus','quoteReference','quoteDate','probability','renewalProbability']],
@@ -284,11 +295,11 @@ function importOriginDetails(d){
   return '<details class="editor-section"><summary>Datos originales importados</summary><p>'+esc(source.file)+' · '+esc(source.sheet)+' · Fila '+esc(source.row)+'</p><dl>'+source.headers.map((header,i)=>'<dt>'+esc(header)+'</dt><dd>'+esc(source.cells[i]??'')+'</dd>').join('')+'</dl></details>';
 }
 function showEditor(row,kind='opportunity'){
-  const d=row?.data||{licenseStatus:'Por renovar',id:crypto.randomUUID(),kind,project:view==='project'?project:kind==='goal'?fProject:'',stage:'Prospección',priority:'Por revisar',currency:'EUR',quarter:fQuarter,reviewDate:today()};
+  const d=row?.data||{licenseStatus:'Por renovar',id:crypto.randomUUID(),kind,project:view==='project'?project:kind==='goal'?fProject:'',stage:'Prospección',priority:'Por revisar',accountRole:'Por clasificar',currency:'EUR',quarter:fQuarter,reviewDate:today()};
   editor={row,data:d};
-  const title=row?d.name:kind==='client'?'Nuevo cliente':kind==='license'?'Nueva licencia':kind==='goal'?'Nuevo objetivo':kind==='review'?'Registrar revisión semanal':'Nueva oportunidad';
+  const title=row?d.name:kind==='client'?'Nueva cuenta':kind==='license'?'Nueva licencia':kind==='goal'?'Nuevo objetivo':kind==='review'?'Registrar revisión semanal':'Nueva oportunidad';
   $('modal-content').innerHTML='<header class="dialog-head"><h2>'+esc(title)+'</h2>'+button('close','✕','aria-label="Cerrar ficha"')+'</header>'+
-  '<div class="dialog-body">'+(d.kind==='license'?'<p class="sub">'+esc(channelSummary(d))+' (canal del cliente) · Pagador: '+esc(payerDisplay(d))+' · Responsable: '+esc(commercialOwner(d).commercialOwnerName||'Por asignar')+'.</p>':'')+'<form id="editor">'+editorFields(d)+
+  '<div class="dialog-body">'+(d.kind==='license'?'<p class="sub">'+esc(accountRole(d))+' · '+esc(channelSummary(d))+' (canal de origen) · Pagador: '+esc(payerDisplay(d))+' · Responsable: '+esc(commercialOwner(d).commercialOwnerName||'Por asignar')+'.</p>':['client','opportunity'].includes(d.kind)?'<p class="sub">El tipo de cuenta indica quién es la entidad. El canal indica cómo llega la oportunidad: por ejemplo, cliente final a través de SATARA SEGURIDAD.</p>':'')+'<form id="editor">'+editorFields(d)+
   (d.sourceUrl?'<p class="sub"><a target="_blank" rel="noopener" href="'+esc(d.sourceUrl)+'">Abrir archivo de origen ↗</a></p>':'')+
   '<p id="form-error" class="error" role="alert"></p><div class="dialog-foot">'+(row?button('history','Ver historial','data-id="'+esc(d.id)+'"'):'')+
   (row&&['client','opportunity','license'].includes(d.kind)?button('activity','＋ Actividad','data-id="'+esc(d.id)+'"'):'')+
@@ -387,6 +398,7 @@ document.addEventListener('change',e=>{
       if(partner.disabled)partner.value='';
     }
   }
+  if(el.id==='customer-role'){customerRole=el.value;render();}
   if(el.id==='customer-channel'){customerChannel=el.value;customerPartner='';render();}
   if(el.id==='customer-partner'){customerPartner=el.value;render();}
   if(el.id==='forecast-channel'){fChannel=el.value;fPartner='';render();}
@@ -420,7 +432,8 @@ document.addEventListener('click',async e=>{
   if(action==='logout')await crmConnection.logout();
   if(action==='export')exportRecords();
   if(action==='new')showEditor(null);
-  if(action==='client-tab'){clientTab=key;render();}
+  if(action==='client-tab'){clientTab=key;customerRole='';render();}
+  if(action==='account-view'){clientTab='clients';customerRole=key;render();}
   if(action==='add-contact'){
     const list=$('contact-editor-list');
     list.insertAdjacentHTML('beforeend',contactEditorRow({}));
@@ -468,7 +481,7 @@ function exportRecords(){
   const data=view==='clients'?customerData():(view==='pipeline'||view==='project')?filtered():opportunities();
   const columns=(view==='clients'?(clientTab==='licenses'?licenseFields:clientFields):fields).flatMap(([key,label])=>key==='contacts'?
     [['_contactName','Nombre del contacto'],['_contactEmail','Email'],['_contactPhone','Teléfono'],['_contactRole','Cargo']]:[[key,label]]);
-  if(view==='clients'&&clientTab==='licenses')columns.splice(2,0,['channelType','Canal comercial'],['channelPartner','Distribuidor / colaborador']);
+  if(view==='clients'&&clientTab==='licenses')columns.splice(2,0,['accountRole','Tipo de cuenta'],['channelType','Canal comercial'],['channelPartner','Distribuidor / colaborador']);
   const csvCell=value=>'"'+String(value??'').replace(/^[=+@\t\r-]/,"'$&").replace(/"/g,'""')+'"';
   const csv=[columns.map(([,label])=>csvCell(label)).join(';'),...data.map(row=>columns.map(([key])=>csvCell(exportValue(row,key))).join(';'))].join('\r\n');
   const url=URL.createObjectURL(new Blob(['\ufeff',csv],{type:'text/csv;charset=utf-8'}));
@@ -478,7 +491,7 @@ function exportRecords(){
 }
 
 const clientFields=[
-  ['name','Cliente','text',true],['project','Proyecto',projects,true],...channelFields,
+  ['name','Cuenta / entidad','text',true],['project','Proyecto',projects,true],['accountRole','Tipo de cuenta',accountRoles],...channelFields,
   ['clientStatus','Situación',['Actual','En pausa','Baja']],...ownerFields,...responseFields,
   ['sector','Sector'],['country','País','country'],['region','Región','region'],
   ['contacts','Contactos','contacts'],
@@ -488,7 +501,7 @@ const clientFields=[
 ];
 const licenseFields=[
   ['name','Licencia / contrato','text',true],['project','Proyecto',projects,true],
-  ['clientId','Cliente','client',true],
+  ['clientId','Cuenta titular de la licencia','client',true],
   ['licenseStatus','Estado de renovación',['Por renovar','Renovado','Finalizada'],true],
   ['priority','Prioridad',priorities],
   ['startDate','Fecha de inicio','date'],['endDate','Fecha de vencimiento','date'],
@@ -522,6 +535,7 @@ function customerData(){
   const normalize=s=>String(s??'').normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase();
   return entries(kind).map(r=>r.data).filter(d=>
     (!customerProject||d.project===customerProject)&&
+    (!customerRole||accountRole(d)===customerRole)&&
     (!customerChannel||channelDetails(d).channelType===customerChannel)&&
     (!customerPartner||channelDetails(d).channelPartner===customerPartner)&&
     (kind!=='license'||renewalStateFilter==='all'||renewalStatus(d)===renewalStateFilter)&&
@@ -554,20 +568,21 @@ function customerResults(){
         '<td>'+contactColumn('phone')+'</td><td>'+count+'</td>';
     }
     return '<tr><td>'+openBtn(d,d.name,licenses?(get(d.clientId)?.data.name||'Cliente por revisar')+' · '+d.project:d.project)+'</td>'+
-      '<td>'+esc(channelDetails(d).channelType)+'</td><td>'+esc(channelDetails(d).channelPartner||'—')+ownerMeta(d)+'</td>'+details+'<td>'+esc(d.next||'—')+
+      '<td>'+esc(accountRole(d))+'</td><td>'+esc(channelDetails(d).channelType)+'</td><td>'+esc(channelDetails(d).channelPartner||'—')+ownerMeta(d)+'</td>'+details+'<td>'+esc(d.next||'—')+
       (d.nextDate?'<div class="meta">'+esc(short(d.nextDate))+'</div>':'')+'</td></tr>';
   }).join('');
   return '<div class="scroll"><table><thead><tr><th>'+(licenses?'Licencia':'Cliente')+'</th>'+
-    '<th>Canal</th><th>Distribuidor / colaborador</th>'+columns+'<th>Próximo paso</th></tr></thead><tbody>'+body+'</tbody></table></div>';
+    '<th>Tipo de cuenta</th><th>Canal de origen</th><th>Distribuidor / colaborador de origen</th>'+columns+'<th>Próximo paso</th></tr></thead><tbody>'+body+'</tbody></table></div>';
 }
 function clients(){
-  return head('Clientes y licencias','Clientes actuales, periodos contratados y seguimiento de renovaciones.',
-    '<div class="top-actions">'+button('new-client','＋ Cliente')+button('new-license','＋ Licencia','','primary')+'</div>')+
-    '<div class="chips">'+button('client-tab','Clientes','data-key="clients"',clientTab==='clients'?'selected':'')+
+  return head('Cuentas y licencias','Clientes finales, partners y distribuidores separados. El canal indica de dónde procede la relación.',
+    '<div class="top-actions">'+button('new-client','＋ Cuenta')+button('new-license','＋ Licencia','','primary')+'</div>')+
+    '<div class="chips">'+[['','Todas las cuentas'],['Cliente final','Clientes finales'],['Partner','Partners'],['Distribuidor','Distribuidores']].map(([role,label])=>button('account-view',label,'data-key="'+role+'"',clientTab==='clients'&&customerRole===role?'selected':'')).join('')+
     button('client-tab','Licencias','data-key="licenses"',clientTab==='licenses'?'selected':'')+'</div>'+
     '<section class="card"><div class="filters"><label class="filter-search">Buscar<input id="customer-query" type="search" value="'+esc(customerQuery)+'" placeholder="Cliente, contacto o acción"></label>'+
     '<label>Proyecto<select id="customer-project">'+opts(projects,customerProject,'Todos')+'</select></label>'+
-    '<label>Canal<select id="customer-channel">'+opts(channelTypes,customerChannel,'Todos')+'</select></label>'+
+    '<label>Tipo de cuenta<select id="customer-role">'+opts(accountRoles,customerRole,'Todos')+'</select></label>'+
+    '<label>Canal de origen<select id="customer-channel">'+opts(channelTypes,customerChannel,'Todos')+'</select></label>'+
     '<label>Distribuidor / colaborador<select id="customer-partner">'+opts(knownPartners(),customerPartner,'Todos')+'</select></label>'+
     (clientTab==='licenses'?'<label>Estado<select id="renewal-state-filter">'+opts([['all','Todos'],['Por renovar','Por renovar'],['Renovado','Renovado'],['Finalizada','Finalizada']],renewalStateFilter)+'</select></label><label>Vencimiento<select id="license-filter">'+opts([['all','Todos'],['past','Periodo vencido'],['30','Hasta 30 días'],['60','De 31 a 60 días'],['90','De 61 a 90 días'],['later','Más de 90 días'],['closed','Renovadas / finalizadas'],['unknown','Sin fecha']],licenseFilter)+'</select></label>':'')+
     '</div><div id="customer-results">'+customerResults()+'</div></section>';
@@ -594,6 +609,7 @@ function renewalOpportunities(){
     const nextDate=d.nextDate||(!d.actionDoneAt?renewalStart(d):'');
     return {
       ...d,
+      accountRole:accountRole(d),
       name:'Renovación · '+(client?.name||d.name),
       organisation:client?.name||d.name,
       country:client?.country||d.country||'',
@@ -700,6 +716,7 @@ function contactsEditor(contacts){
 }
 
 function exportValue(row,key){
+  if(key==='accountRole')return accountRole(row);
   if(key==='channelType'||key==='channelPartner')return channelDetails(row)[key];
   const fields={_contactName:'name',_contactEmail:'email',_contactPhone:'phone',_contactRole:'role'};
   if(fields[key])return readContacts(row).map(c=>c[fields[key]]||'').join('\n');
@@ -729,7 +746,7 @@ function channelSummary(record){
 }
 
 function knownPartners(){
-  return [...new Set(['SATARA SEGURIDAD',...rows.filter(r=>['client','opportunity'].includes(r.data.kind)).map(r=>channelDetails(r.data).channelPartner).filter(Boolean)])]
+  return [...new Set(['SATARA SEGURIDAD',...rows.filter(r=>r.data.kind==='client'&&['Partner','Distribuidor'].includes(accountRole(r.data))).map(r=>canonicalPartner(r.data.name)),...rows.filter(r=>['client','opportunity'].includes(r.data.kind)).map(r=>channelDetails(r.data).channelPartner).filter(Boolean)])]
     .sort((a,b)=>a.localeCompare(b,'es'));
 }
 

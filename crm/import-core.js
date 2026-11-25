@@ -5,6 +5,7 @@
  const columns=[
   ['name','Cuenta / oportunidad',['cuenta','oportunidad','nombre','empresa','cliente']],
   ['project','Proyecto',['project','producto']],
+  ['accountRole','Tipo de cuenta',['tipo cuenta','cliente final partner distribuidor','rol de cuenta']],
   ['channelType','Canal comercial',['canal','origen comercial']],
   ['channelPartner','Distribuidor / colaborador',['distribuidor','colaborador','partner']],
   ['stage','Estado comercial',['estado','fase','etapa','stage']],
@@ -21,7 +22,7 @@
   ['commercialOwnerName','Responsable comercial',['responsable']],['commercialOwnerEmail','Email del responsable',[]],['commercialOwnerPhone','Teléfono del responsable',[]],
   ['quoteStatus','Estado del presupuesto',[]],['quoteReference','Referencia del presupuesto',[]],['quoteDate','Fecha de envío del presupuesto',[]]
  ];
- const enums={project:['Zentynel','Flowity','Metadology'],channelType:['Venta directa','Distribuidor','Colaborador'],stage:['Prospección','Contacto inicial','Cualificación','Reunión / demo','Propuesta','Negociación','Cierre ganado','Cierre perdido','Renovación','Seguimiento','En pausa'],priority:['Alta','Media','Baja','Por revisar'],currency:['EUR','USD','GBP','MXN','CLP','BRL','COP','PEN'],type:['Cliente directo','Partner','Proveedor','Piloto','Licitación','Renovación','Por cualificar'],quoteStatus:['Por confirmar','Pendiente de enviar','Enviado','Aceptado','Rechazado']};
+ const enums={accountRole:['Cliente final','Partner','Distribuidor','Proveedor','Por clasificar'],project:['Zentynel','Flowity','Metadology'],channelType:['Venta directa','Distribuidor','Colaborador'],stage:['Prospección','Contacto inicial','Cualificación','Reunión / demo','Propuesta','Negociación','Cierre ganado','Cierre perdido','Renovación','Seguimiento','En pausa'],priority:['Alta','Media','Baja','Por revisar'],currency:['EUR','USD','GBP','MXN','CLP','BRL','COP','PEN'],type:['Cliente directo','Partner','Proveedor','Piloto','Licitación','Renovación','Por cualificar'],quoteStatus:['Por confirmar','Pendiente de enviar','Enviado','Aceptado','Rechazado']};
  function enumValue(key,input){
   const aliases={project:{metaology:'Metadology'},channelType:{directa:'Venta directa',directo:'Venta directa','cliente directo':'Venta directa',distribucion:'Distribuidor'},stage:{ganada:'Cierre ganado',ganado:'Cierre ganado',perdida:'Cierre perdido',perdido:'Cierre perdido',demo:'Reunión / demo',reunion:'Reunión / demo'},currency:{euro:'EUR',euros:'EUR',dolares:'USD'}};
   return enums[key].find(x=>normalize(x)===normalize(input))||aliases[key]?.[normalize(input)]||null;
@@ -90,7 +91,7 @@
   const indexes=mapped.map(([,i])=>Number(i));if(new Set(indexes).size!==indexes.length)throw Error('Cada columna del archivo debe asignarse a un solo campo.');
   if(mapping.name==null||mapping.name==='')throw Error('Asigna la columna Cuenta / oportunidad.');
   return table.data.map(record=>{
-   const errors=[],warnings=[],data={kind:'opportunity',stage:'Prospección',priority:'Por revisar',type:'Por cualificar',currency:'EUR',channelType:'',project:'',...defaults};
+   const errors=[],warnings=[],data={kind:'opportunity',stage:'Prospección',priority:'Por revisar',type:'Por cualificar',currency:'EUR',accountRole:'Por clasificar',channelType:'',project:'',...defaults};
    for(const [key,index] of mapped){const v=String(record.cells[index]??'').trim();if(v)data[key]=v;}
    for(const key of Object.keys(enums)){
     if(!data[key])continue;
