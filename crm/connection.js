@@ -12,7 +12,32 @@ window.crmConnection = (() => {
     else sessionStorage.removeItem(storageKey);
   }
 
+  let qrUrl = null;
+  function clearMfaQr() {
+    const img = document.getElementById('mfa-qr');
+    if (img) { img.hidden = true; img.removeAttribute('src'); }
+    if (qrUrl) URL.revokeObjectURL(qrUrl);
+    qrUrl = null;
+    const secret = document.getElementById('mfa-secret');
+    if (secret) { secret.textContent = ''; secret.hidden = true; }
+  }
+  function showMfaQr(value) {
+    if (typeof value !== 'string') return;
+    const prefix = 'data:image/svg+xml;utf-8,';
+    let svg = value;
+    if (svg.startsWith(prefix)) {
+      svg = svg.slice(prefix.length);
+      if (!svg.trim().startsWith('<')) svg = decodeURIComponent(svg);
+    }
+    if (!svg.trim().startsWith('<svg') && !svg.trim().startsWith('<?xml')) return;
+    const img = document.getElementById('mfa-qr');
+    if (!img) return;
+    qrUrl = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+    img.src = qrUrl;
+    img.hidden = false;
+  }
   function showLogin(message = '') {
+    clearMfaQr();
     document.getElementById('mfa-form')?.setAttribute('hidden', '');
     storeSession(null);
     sessionStorage.removeItem(storageKey + '-recovery');
@@ -105,6 +130,7 @@ window.crmConnection = (() => {
     document.getElementById('login').hidden = false;
     form.hidden = false;
     form.reset();
+    clearMfaQr();
     const secret = document.getElementById('mfa-secret');
     secret.textContent = '';
     secret.hidden = true;
@@ -114,9 +140,10 @@ window.crmConnection = (() => {
         await authMfa('factors/' + encodeURIComponent(pending.id), 'DELETE');
       }
       factor = await authMfa('factors', 'POST', { factor_type: 'totp', friendly_name: 'KairuTech' });
+      try { showMfaQr(factor.totp.qr_code); } catch { /* Manual fallback */ }
       secret.textContent = factor.totp.secret;
       secret.hidden = false;
-      document.getElementById('mfa-help').textContent = 'En Microsoft Authenticator añade una cuenta de otro tipo y elige introducir la clave manualmente. Usa la clave siguiente y después introduce el código de seis dígitos. No compartas esta clave.';
+      document.getElementById('mfa-help').textContent = 'En Microsoft Authenticator añade una cuenta de otro tipo y escanea el QR. Si no aparece o no puedes escanearlo, utiliza la clave manual de abajo. Introduce el código de seis dígitos. No compartas el QR ni la clave.';
     }
     form.onsubmit = async event => {
       event.preventDefault();
@@ -130,7 +157,7 @@ window.crmConnection = (() => {
         const data = await authMfa(path + '/verify', 'POST', { challenge_id: challenge.id, code: form.elements.code.value.trim() });
         storeSession({ ...session, ...data, expires_at: data.expires_at || Math.floor(Date.now()/1000) + data.expires_in });
         if (assurance() !== 'aal2') throw Error('No se confirmó el segundo factor.');
-        secret.textContent = '';
+        clearMfaQr();
         form.reset();
         form.hidden = true;
         await unlock();
@@ -254,7 +281,7 @@ window.crmConnection = (() => {
         submit.disabled = false;
       }
     });
-    document.getElementById('cancel-mfa')?.addEventListener('click', () => { document.getElementById('mfa-secret').textContent = ''; logout(); });
+    document.getElementById('cancel-mfa')?.addEventListener('click', () => { clearMfaQr(); logout(); });
     document.getElementById('cancel-reset').addEventListener('click', () => logout());
     document.getElementById('login-form').addEventListener('submit', async event => {
       event.preventDefault();
