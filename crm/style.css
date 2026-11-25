@@ -260,3 +260,7 @@ body[data-portal] .card{padding:22px;margin-bottom:18px}
 .portal-dashboard{margin:24px 0 32px}.portal-dashboard>h2{font-size:1.4rem}.portal-dashboard .metric .label,.portal-dashboard .metric small{font-size:.9rem}.portal-dashboard th,.portal-dashboard td{font-size:.95rem}#project-access-form textarea{min-height:100px}
 
 .import-table{max-height:460px;overflow:auto}.import-table input[type=checkbox]{width:20px;height:20px}.import-table td{vertical-align:top;min-width:110px}.import-table th{position:sticky;top:0;background:var(--side)}.import-table p{margin:2px 0}.top-actions{flex-wrap:wrap}
+
+.import-blocked{border:1px solid #f59e0b;background:#fffbeb;padding:16px;border-radius:10px;margin:16px 0}.import-blocked li{margin:5px 0}.import-table td:first-child{min-width:210px;max-width:300px}.import-table td:first-child button{margin:8px 0}
+
+.crm-list .open{display:block;text-align:left}.crm-list td{vertical-align:middle}.crm-list td:first-child{min-width:210px}.crm-list th{white-space:nowrap}

@@ -66,6 +66,8 @@ const fields=[
   ['next','Próximo paso','textarea'],['notes','Notas','textarea']
 ];
 let clientTab='clients',customerRole='',customerQuery='',customerProject='',licenseFilter='all',renewalStateFilter='all',customerChannel='',customerPartner='';
+let pipelineBucket='open';
+const pipelineMatches=(d,bucket=pipelineBucket)=>bucket==='all'||(bucket==='closed'?['Cierre ganado','Cierre perdido'].includes(d.stage):bucket==='paused'?d.stage==='En pausa':active(d));
 let rows=[],error='',view='home',project='',subset='',filters={},query='',layout='list',fQuarter=quarterFor(today()),fProject='',fChannel='',fPartner='',editor=null,toastTimer;
 const entries=kind=>rows.filter(x=>x.data.kind===kind);
 const opportunities=()=>[
@@ -132,7 +134,7 @@ function route(){
   const [next,p]=location.hash.slice(1).split('/');
   view=navItems.some(x=>x[0]===next)||next==='project'?next:'home';
   project=projects.find((_,i)=>colors[i]===p)||'';
-  filters={};query='';subset='';render();
+  filters={};query='';subset='';pipelineBucket='open';render();
 }
 function jump(v,p=''){location.hash=v+(p?'/'+colors[projects.indexOf(p)]:'');}
 function render(){
@@ -178,14 +180,15 @@ function scoped(){
 }
 function filtered(){
   const normalize=s=>String(s??'').normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase();
-  return scoped().filter(d=>filterFields.every(([k])=>!filters[k]||d[k]===filters[k])&&(!query||normalize([d.name,d.organisation,d.contact,d.next,d.sector,d.channelPartner,commercialOwner(d).commercialOwnerName].join(' ')).includes(normalize(query))));
+  return scoped().filter(d=>pipelineMatches(d)&&filterFields.every(([k])=>!filters[k]||d[k]===filters[k])&&(!query||normalize([d.name,d.organisation,d.contact,d.next,d.sector,d.channelPartner,commercialOwner(d).commercialOwnerName].join(' ')).includes(normalize(query))));
 }
 function pipeline(){
-  const scope=scoped(), title=view==='project'?project:'Pipeline comercial';
+  const all=scoped(),scope=all.filter(d=>pipelineMatches(d)),title=view==='project'?project:'Pipeline comercial';
   const specialized=view==='project'&&subsets[project];
   const filter=filterFields.filter(([k])=>view!=='project'||k!=='project').map(([k,l])=>'<label>'+l+'<select data-filter="'+k+'">'+opts([...new Set(scope.map(d=>d[k]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es')).map(v=>k==='commercialMonth'?[v,monthLabel(v)]:v),filters[k],'Todos')+'</select></label>').join('');
   return head(title,view==='project'?'Oportunidades y seguimiento del proyecto.':'Prospección, cierre, renovación y seguimiento en una sola vista.')+
     (specialized?'<div class="chips">'+specialized.map(([k,l])=>button('subset',l,'data-key="'+k+'"',k===subset?'selected':'')).join('')+'</div>':'')+
+    '<div class="chips">'+[['open','Abiertas'],['closed','Cerradas'],['paused','En pausa'],['all','Todas']].map(([bucket,label])=>button('pipeline-bucket',label+' ('+all.filter(d=>pipelineMatches(d,bucket)).length+')','data-key="'+bucket+'"',pipelineBucket===bucket?'selected':'')).join('')+'</div>'+
     '<div class="card"><div class="filters"><label class="filter-search">Buscar<input type="search" id="query" value="'+esc(query)+'" placeholder="Cuenta, contacto o próximo paso"></label>'+filter+'</div>'+
     '<div class="chips">'+button('layout','Lista','data-key="list"',layout==='list'?'selected':'')+button('layout','Por etapa','data-key="board"',layout==='board'?'selected':'')+button('clear','Limpiar filtros')+'</div><div id="results">'+resultTable()+'</div></div>';
 }
@@ -193,8 +196,11 @@ function resultTable(){
   const data=filtered().sort((a,b)=>(priorities.indexOf(a.priority||'Por revisar')-priorities.indexOf(b.priority||'Por revisar'))||a.name.localeCompare(b.name,'es'));
   if(!data.length)return blank('No hay oportunidades en esta vista. Puedes crear una desde el botón superior.');
   const count='<p class="sub">'+data.length+' '+(data.length===1?'oportunidad':'oportunidades')+'</p>';
-  if(layout==='board')return count+'<div class="board">'+stages.map(s=>'<section class="lane"><h3>'+esc(s)+' · '+data.filter(d=>d.stage===s).length+'</h3>'+data.filter(d=>d.stage===s).map(d=>openBtn(d,d.name,d.project+' · '+channelSummary(d)+' · '+(d.priority||'Por revisar'))).join('')+'</section>').join('')+'</div>';
-  return count+'<div class="scroll"><table><thead><tr><th>Cuenta / oportunidad</th><th>Tipo de cuenta</th><th>Canal de origen</th><th>Partner / distribuidor de origen</th><th>Estado comercial</th><th>Prioridad</th><th>Importe</th><th>Próxima acción</th></tr></thead><tbody>'+data.map(d=>'<tr><td>'+openBtn(d,d.name,d.project+(d.country?' · '+d.country:'')+' · '+(d.type||'Por cualificar')+(d.commercialMonth?' · '+monthLabel(d.commercialMonth):''))+'</td><td>'+esc(accountRole(d))+'</td><td>'+esc(channelDetails(d).channelType)+'</td><td>'+esc(channelDetails(d).channelPartner||'—')+ownerMeta(d)+'</td><td>'+tag(d.kind==='license'?renewalStatus(get(d.id).data):d.stage||'Prospección',d.stage==='Cierre ganado'?'green':'neutral')+'</td><td>'+priority(d)+'</td><td class="nobr">'+(value(d.amount)?esc(money(Number(d.amount),d.currency)):'—')+quoteMeta(d)+'</td><td>'+esc(d.next||'—')+(d.nextDate?'<div class="meta">'+esc(short(d.nextDate))+'</div>':'')+(d.kind==='license'?'<div class="meta">'+esc((renewalAlert(get(d.id).data)?.label||'Sin revisión pendiente'))+'</div>':'')+'</td></tr>').join('')+'</tbody></table></div>';
+  if(layout==='board')return count+'<div class="board">'+stages.filter(stage=>pipelineMatches({stage})).map(s=>'<section class="lane"><h3>'+esc(s)+' · '+data.filter(d=>d.stage===s).length+'</h3>'+data.filter(d=>d.stage===s).map(d=>openBtn(d,d.name)).join('')+'</section>').join('')+'</div>';
+  const showProject=view!=='project';
+  const dateCell=d=>d.nextDate?new Intl.DateTimeFormat('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',timeZone:'Europe/Madrid'}).format(new Date(d.nextDate+'T12:00Z')):'—';
+  const origin=d=>{const channel=channelDetails(d);return channel.channelType==='Venta directa'?'Venta directa':channel.channelPartner||channel.channelType;};
+  return count+'<div class="scroll"><table class="crm-list"><thead><tr><th>Cuenta</th>'+(showProject?'<th>Proyecto</th>':'')+'<th>Tipo</th><th>Origen</th><th>Estado</th><th>Prioridad</th><th>Importe</th><th>Próxima acción</th><th>Fecha</th></tr></thead><tbody>'+data.map(d=>'<tr><td>'+openBtn(d,d.name)+'</td>'+(showProject?'<td>'+esc(d.project)+'</td>':'')+'<td>'+esc(accountRole(d))+'</td><td>'+esc(origin(d))+'</td><td>'+tag(d.kind==='license'?renewalStatus(get(d.id).data):d.stage||'Prospección',d.stage==='Cierre ganado'?'green':'neutral')+'</td><td>'+priority(d)+'</td><td class="nobr">'+(value(d.amount)?esc(money(Number(d.amount),d.currency)):'—')+'</td><td>'+esc(d.next||'—')+'</td><td class="nobr">'+esc(dateCell(d))+'</td></tr>').join('')+'</tbody></table></div>';
 }
 const goalFields=[['name','Objetivo','text',true],['project','Proyecto',projects,true],['quarter','Trimestre (AAAA-T1 a AAAA-T4)','quarter',true],['currency','Moneda',['EUR','USD','GBP','MXN','CLP','BRL','COP','PEN'],true],['conservative','Conservador','amount'],['base','Base','amount'],['upside','Optimista','amount'],['linked','Sustituir por una oportunidad','link'],['notes','Notas y supuestos','textarea']];
 const reviewFields=[['name','Título','text',true],['reviewDate','Fecha de revisión','date',true],['project','Proyecto',projects],['reviewNext','Próxima revisión','date'],['notes','Decisiones, cambios de prioridad y próximos pasos','textarea',true]];
@@ -428,6 +434,7 @@ document.addEventListener('click',async e=>{
   if(action==='project')jump('project',p);
   if(action==='subset'){subset=key;filters={};query='';render();}
   if(action==='layout'){layout=key;render();}
+  if(action==='pipeline-bucket'&&['open','closed','paused','all'].includes(key)){pipelineBucket=key;delete filters.stage;render();}
   if(action==='clear'){filters={};query='';render();}
   if(action==='reload')await load();
   if(action==='logout')await crmConnection.logout();
@@ -547,34 +554,24 @@ function customerData(){
 function customerResults(){
   const data=customerData();
   if(!data.length)return blank('No hay registros en esta vista.');
-  const licenses=clientTab==='licenses';
-  const columns=licenses
-    ? '<th>Estado</th><th>Quién paga</th><th>Vencimiento</th><th>Seguimiento de renovación</th>'
-    : '<th>Nombre del contacto</th><th>Email</th><th>Teléfono</th><th>Licencias</th>';
+  const licenses=clientTab==='licenses',showProject=!customerProject;
+  const date=d=>d?new Intl.DateTimeFormat('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',timeZone:'Europe/Madrid'}).format(new Date(d+'T12:00Z')):'—';
+  const origin=d=>{const channel=channelDetails(d);return channel.channelType==='Venta directa'?'Venta directa':channel.channelPartner||channel.channelType;};
+  const columns=licenses?'<th>Cuenta titular</th><th>Origen</th><th>Estado</th><th>Vencimiento</th>':'<th>Tipo</th><th>Origen</th><th>Contacto</th><th>Email</th><th>Teléfono</th>';
   const body=data.map(d=>{
     let details;
     if(licenses){
       const status=renewalStatus(d);
-      const notice=renewalAlert(d);
-      details='<td>'+tag(status,status==='Renovado'?'green':status==='Finalizada'?'neutral':'warm')+'</td><td>'+esc(payerDisplay(d))+'</td>'+
-        '<td>'+esc(short(d.endDate))+'</td>'+
-        '<td>'+esc(notice?.label||'Sin seguimiento pendiente')+'</td>';
+      details='<td>'+esc(get(d.clientId)?.data.name||'—')+'</td><td>'+esc(origin(d))+'</td><td>'+tag(status,status==='Renovado'?'green':status==='Finalizada'?'neutral':'warm')+'</td><td class="nobr">'+esc(date(d.endDate))+'</td>';
     }else{
-      const contacts=readContacts(d);
-      const contactColumn=key=>contacts.length
-        ? contacts.map(c=>'<div class="contact-line">'+esc(c[key]||'—')+'</div>').join('')
-        : '—';
-      const count=entries('license').filter(r=>r.data.clientId===d.id).length;
-      details='<td>'+contactColumn('name')+'</td><td>'+contactColumn('email')+'</td>'+
-        '<td>'+contactColumn('phone')+'</td><td>'+count+'</td>';
+      const contacts=readContacts(d),cell=key=>contacts.length?contacts.map(c=>'<div class="contact-line">'+esc(c[key]||'—')+'</div>').join(''):'—';
+      details='<td>'+esc(accountRole(d))+'</td><td>'+esc(origin(d))+'</td><td>'+cell('name')+'</td><td>'+cell('email')+'</td><td>'+cell('phone')+'</td>';
     }
-    return '<tr><td>'+openBtn(d,d.name,licenses?(get(d.clientId)?.data.name||'Cliente por revisar')+' · '+d.project:d.project)+'</td>'+
-      '<td>'+esc(accountRole(d))+'</td><td>'+esc(channelDetails(d).channelType)+'</td><td>'+esc(channelDetails(d).channelPartner||'—')+ownerMeta(d)+'</td>'+details+'<td>'+esc(d.next||'—')+
-      (d.nextDate?'<div class="meta">'+esc(short(d.nextDate))+'</div>':'')+'</td></tr>';
+    return '<tr><td>'+openBtn(d,d.name)+'</td>'+(showProject?'<td>'+esc(d.project)+'</td>':'')+details+'<td>'+esc(d.next||'—')+'</td><td class="nobr">'+esc(date(d.nextDate))+'</td></tr>';
   }).join('');
-  return '<div class="scroll"><table><thead><tr><th>'+(licenses?'Licencia':'Cliente')+'</th>'+
-    '<th>Tipo de cuenta</th><th>Canal de origen</th><th>Partner / distribuidor de origen</th>'+columns+'<th>Próximo paso</th></tr></thead><tbody>'+body+'</tbody></table></div>';
+  return '<div class="scroll"><table class="crm-list"><thead><tr><th>'+(licenses?'Licencia':'Cuenta')+'</th>'+(showProject?'<th>Proyecto</th>':'')+columns+'<th>Próxima acción</th><th>Fecha</th></tr></thead><tbody>'+body+'</tbody></table></div>';
 }
+
 function clients(){
   return head('Cuentas y licencias','Clientes finales y partners / distribuidores. El canal indica de dónde procede la relación.',
     '<div class="top-actions">'+button('new-client','＋ Cuenta')+button('new-license','＋ Licencia','','primary')+'</div>')+
@@ -598,7 +595,7 @@ function renewalStart(d){
 function renewalOpportunities(){
   return entries('license').map(row=>row.data).filter(d=>{
     if(['Renovado','Finalizada'].includes(renewalStatus(d))){
-      return ['Cierre ganado','Cierre perdido'].includes(d.renewalStage);
+      return true;
     }
     return Boolean(d.endDate||d.renewalNotice||d.renewalStage||d.renewalCloseDate);
   }).map(d=>{

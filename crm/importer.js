@@ -30,7 +30,7 @@
   s.table=core.grid(sheet.rows);s.table.data.forEach(r=>{r.originalCells=sheet.original?.[r.row-1];});
   const chars=JSON.stringify(s.table.data).length;
   if(chars>1000000)throw Error('El contenido es demasiado grande. Divide el archivo en varios lotes.');
-  s.mapping=core.guess(s.table.headers);s.plan=null;render();
+  s.mapping=core.guess(s.table.headers);s.plan=null;s.editing=null;render();
  }
  function value(cell){
   const v=cell.value;
@@ -78,10 +78,28 @@
    state.fileName=file.name;state.sheets=sheets;state.sheet=0;applySheet();
   }catch(error){if(ticket!==serial||!state)return;state.error=error.message;state.sheets=[];state.table=null;state.plan=null;render();}
  }
+ function rowEditor(){
+  const row=state.plan[state.editing],data={...row.data,contactName:row.data.contacts[0]?.name||'',contactEmail:row.data.contacts[0]?.email||'',contactPhone:row.data.contacts[0]?.phone||'',contactRole:row.data.contacts[0]?.role||''};
+  const primary=new Set(['name','project','accountRole','channelType','channelPartner','stage','contactName','contactEmail','contactPhone','amount','currency','probability','next','nextDate','closeDate']);
+  const control=([key,label])=>{
+   const current=data[key]||'';
+   const choices=core.enums[key];
+   let input;
+   if(choices){const values=[['','Seleccionar'],...choices.map(x=>[x,x])];if(current&&!choices.includes(current))values.push([current,'Revisar: '+current]);input='<select name="'+key+'">'+select(values,current)+'</select>';}
+   else input='<textarea name="'+key+'" rows="2">'+escape(current)+'</textarea>';
+   return '<label>'+escape(label)+input+'</label>';
+  };
+  $('import-preview').innerHTML='<section class="card"><h3>Corregir fila '+row.row+'</h3><p>Completa o corrige los datos. Se conserva la fila original del archivo y el identificador de esta oportunidad.</p><form id="import-row-editor"><div class="fields">'+core.columns.filter(([key])=>primary.has(key)).map(control).join('')+'</div><details class="editor-section"><summary>Más datos de esta fila</summary><div class="fields">'+core.columns.filter(([key])=>!primary.has(key)).map(control).join('')+'</div></details><div id="import-row-error" class="error" role="alert">'+row.errors.map(x=>'<p>'+escape(x)+'</p>').join('')+'</div><p><button type="submit" class="primary">Aplicar corrección y volver</button> '+action('cancel-edit','Volver sin cambios')+'</p></form></section>';
+  $('import-preview').scrollIntoView({block:'start'});
+ }
  function preview(){
   if(!state?.plan)return;
+  if(state.editing!=null){rowEditor();return;}
   const plan=state.plan,selected=plan.filter(r=>r.selected&&!r.errors.length),errors=plan.filter(r=>r.errors.length).length,duplicates=plan.filter(r=>r.duplicate).length;
-  $('import-preview').innerHTML='<h3>Vista previa</h3><p>'+selected.length+' seleccionadas · '+errors+' con errores · '+duplicates+' posibles duplicados.</p><p>Las coincidencias se desmarcan. Solo márcalas si representan una oportunidad distinta. Los importes están sin IVA y las probabilidades se expresan de 0 a 100.</p><div class="scroll import-table"><table><thead><tr><th>Importar</th><th>Fila</th><th>Cuenta / proyecto</th><th>Tipo de cuenta</th><th>Canal de origen</th><th>Estado</th><th>Contacto</th><th>Importe</th><th>Cierre / probabilidad</th><th>Seguimiento</th><th>Revisión</th></tr></thead><tbody>'+plan.map((r,i)=>'<tr><td><input type="checkbox" aria-label="Importar fila '+r.row+'" data-import-row="'+i+'"'+(r.selected?' checked':'')+(r.errors.length||state.attempted||state.saving?' disabled':'')+'></td><td>'+r.row+'</td><td>'+escape(r.data.name)+'<div class="meta">'+escape(r.data.project)+'</div></td><td>'+escape(r.data.accountRole)+'</td><td>'+escape(r.data.channelType)+'<div class="meta">'+escape(r.data.channelPartner)+'</div></td><td>'+escape(r.data.stage)+'</td><td>'+escape(r.data.contact)+'</td><td>'+escape(r.data.amount||'Sin importe')+' '+escape(r.data.currency)+'</td><td>'+escape(r.data.closeDate||'Sin fecha')+'<div class="meta">'+escape(r.data.probability||'Sin probabilidad')+'</div></td><td>'+escape((r.data.next||'').slice(0,160))+'<div class="meta">'+escape(r.data.nextDate)+'</div></td><td>'+r.errors.map(x=>'<p class="error">'+escape(x)+'</p>').join('')+r.warnings.map(x=>'<p class="sub">'+escape(x)+'</p>').join('')+'</td></tr>').join('')+'</tbody></table></div><p><button type="button" class="primary" data-import-action="save"'+(!selected.length||state.saving?' disabled':'')+'>'+(state.attempted?'Reintentar la misma importación':'Importar '+selected.length+' oportunidades')+'</button></p>'+(state.attempted?'<p class="sub">El reintento utiliza los mismos identificadores para evitar volver a crear las oportunidades de este lote.</p>':'');
+  const reasons=[...new Set(plan.flatMap(r=>r.errors))];
+  const blocked=errors?'<div class="import-blocked" role="status"><strong>'+errors+' filas necesitan corrección antes de poder marcarlas.</strong><ul>'+reasons.map(x=>'<li>'+escape(x)+'</li>').join('')+'</ul><p>Pulsa «Corregir fila» junto a la casilla, o completa los valores comunes de proyecto y canal y vuelve a revisar.</p></div>':'';
+  const controls=state.attempted?'':action('select-valid','Seleccionar todas las válidas (sin duplicados)',state.saving?'disabled':'')+' '+action('select-none','Desmarcar todas',state.saving?'disabled':'');
+  $('import-preview').innerHTML='<h3>Vista previa</h3><p>'+selected.length+' seleccionadas · '+errors+' con errores · '+duplicates+' posibles duplicados.</p>'+blocked+'<p>'+controls+'</p><p>Las coincidencias se desmarcan. Solo márcalas si representan una oportunidad distinta. Los importes están sin IVA y las probabilidades se expresan de 0 a 100.</p><div class="scroll import-table"><table><thead><tr><th>Importar</th><th>Fila</th><th>Cuenta / proyecto</th><th>Tipo de cuenta</th><th>Canal de origen</th><th>Estado</th><th>Contacto</th><th>Importe</th><th>Cierre / probabilidad</th><th>Seguimiento</th><th>Revisión</th></tr></thead><tbody>'+plan.map((r,i)=>'<tr><td><input type="checkbox" aria-label="Importar fila '+r.row+'" data-import-row="'+i+'"'+(r.selected?' checked':'')+(r.errors.length||state.attempted||state.saving?' disabled':'')+'>'+(!state.attempted?'<div>'+action('edit-row','Corregir fila','data-import-index="'+i+'"'+(state.saving?' disabled':''))+'</div>':'')+r.errors.map(x=>'<p class="error">'+escape(x)+'</p>').join('')+'</td><td>'+r.row+'</td><td>'+escape(r.data.name)+'<div class="meta">'+escape(r.data.project)+'</div></td><td>'+escape(r.data.accountRole)+'</td><td>'+escape(r.data.channelType)+'<div class="meta">'+escape(r.data.channelPartner)+'</div></td><td>'+escape(r.data.stage)+'</td><td>'+escape(r.data.contact)+'</td><td>'+escape(r.data.amount||'Sin importe')+' '+escape(r.data.currency)+'</td><td>'+escape(r.data.closeDate||'Sin fecha')+'<div class="meta">'+escape(r.data.probability||'Sin probabilidad')+'</div></td><td>'+escape((r.data.next||'').slice(0,160))+'<div class="meta">'+escape(r.data.nextDate)+'</div></td><td>'+r.errors.map(x=>'<p class="error">'+escape(x)+'</p>').join('')+r.warnings.map(x=>'<p class="sub">'+escape(x)+'</p>').join('')+'</td></tr>').join('')+'</tbody></table></div>'+(!selected.length?'<p class="error">'+(errors?'Corrige los errores para habilitar las casillas.':'Marca al menos una fila para habilitar la importación.')+'</p>':'')+'<p><button type="button" class="primary" data-import-action="save"'+(!selected.length||state.saving?' disabled':'')+'>'+(state.attempted?'Reintentar la misma importación':'Importar '+selected.length+' oportunidades')+'</button></p>'+(state.attempted?'<p class="sub">El reintento utiliza los mismos identificadores para evitar volver a crear las oportunidades de este lote.</p>':'');
  }
  function freeze(){
   for(const control of $('modal-content').querySelectorAll('#import-map input,#import-map select,#import-map button,#import-sheet,#import-file,[data-import-row]'))control.disabled=true;
@@ -124,6 +142,10 @@
   const key=el.dataset.importAction;
   if(key==='save'){await commit();return;}
   if(state?.saving)return;
+  if(key==='edit-row'&&!state.attempted){state.editing=Number(el.dataset.importIndex);preview();return;}
+  if(key==='cancel-edit'){state.editing=null;preview();return;}
+  if(key==='select-valid'&&!state.attempted){state.plan.forEach(r=>r.selected=!r.errors.length&&!r.duplicate);preview();return;}
+  if(key==='select-none'&&!state.attempted){state.plan.forEach(r=>r.selected=false);preview();return;}
   if(key==='template'){try{await template();}catch(error){$('import-error').textContent=error.message;}}
   if(key==='close'||key==='pipeline'){
    if(state?.attempted&&$('import-preview')&&!confirm('Puede haberse guardado el lote. Comprueba el pipeline antes de volver a cargar el archivo. ¿Cerrar?'))return;
@@ -140,11 +162,25 @@
   if(e.target.closest('#import-map')){state.plan=null;$('import-preview').textContent='Vuelve a pulsar Revisar oportunidades para aplicar los cambios.';}
  });
  document.addEventListener('submit',e=>{
+  if(e.target.id==='import-row-editor'&&state?.editing!=null){
+   e.preventDefault();const previous=state.plan[state.editing],form=new FormData(e.target);
+   const original={...previous.data,contactName:previous.data.contacts[0]?.name||'',contactEmail:previous.data.contacts[0]?.email||'',contactPhone:previous.data.contacts[0]?.phone||'',contactRole:previous.data.contacts[0]?.role||''};
+   const cells=core.columns.map(([key])=>String(form.get(key)??'').trim());
+   const mapping=Object.fromEntries(core.columns.map(([key],i)=>[key,i]));
+   const candidate=core.makePlan({headers:core.columns.map(([,label])=>label),data:[{cells,row:previous.row}]},mapping,{},[...rows.filter(r=>['client','license','opportunity'].includes(r.data.kind)).map(r=>r.data),...state.plan.filter((_,i)=>i!==state.editing).map(r=>r.data)],()=>crypto.randomUUID())[0];
+   if(candidate.errors.length){$('import-row-error').innerHTML=candidate.errors.map(x=>'<p>'+escape(x)+'</p>').join('');$('import-row-error').scrollIntoView({block:'center'});return;}
+   candidate.data.id=previous.data.id;
+   const corrections={...(previous.data.importOriginal.corrections||{})};
+   core.columns.forEach(([key],i)=>{if(String(original[key]??'')!==cells[i])corrections[key]=cells[i];});
+   candidate.data.importOriginal={...previous.data.importOriginal,corrections};
+   state.plan[state.editing]=candidate;state.editing=null;preview();return;
+  }
   if(e.target.id!=='import-map'||!state)return;e.preventDefault();
   const form=e.target;
   state.defaults={project:form.elements.defaultProject.value,accountRole:form.elements.defaultRole.value,channelType:form.elements.defaultChannel.value,channelPartner:form.elements.defaultPartner.value};
   state.mapping=Object.fromEntries([...form.querySelectorAll('[data-import-map]')].filter(el=>el.value!=='').map(el=>[el.dataset.importMap,Number(el.value)]));
   try{
+   state.editing=null;
    state.plan=core.makePlan(state.table,state.mapping,{...state.defaults,fileName:state.fileName,sheetName:state.sheets[state.sheet].name},rows.filter(r=>['opportunity','client','license'].includes(r.data.kind)).map(r=>r.data),()=>crypto.randomUUID());
    $('import-error').textContent='';preview();$('import-preview').scrollIntoView({block:'start'});
   }catch(error){$('import-error').textContent=error.message;}
