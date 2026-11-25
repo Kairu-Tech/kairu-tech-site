@@ -4,10 +4,10 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>KairuTech · Portal privado</title>
 <meta name="robots" content="noindex,nofollow">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://ypffaagjhrrgxsrxlluo.supabase.co; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' blob:; connect-src 'self' https://ypffaagjhrrgxsrxlluo.supabase.co; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="description" content="Panel privado de seguimiento comercial de KairuTech.">
 <link rel="stylesheet" href="../style.css?v=20261125-unified-partners">
-<script defer src="../connection.js?v=20261125-mfa-test1"></script>
+<script defer src="../connection.js?v=20261125-mfa-qr2"></script>
 <script defer src="./portal.js?v=20261125-unified-partners"></script>
 </head>
 <body data-portal="true">
@@ -33,7 +33,7 @@
 <button type="button" id="cancel-reset">Volver al acceso</button>
 </form><form id="mfa-form" class="login-card" hidden>
 <h1>Verificación de seguridad</h1>
-<p id="mfa-help"></p><p id="mfa-secret" hidden></p>
+<p id="mfa-help"></p><img id="mfa-qr" width="240" height="240" alt="Código QR para configurar el autenticador" hidden><p id="mfa-secret" hidden></p>
 <label>Código de seis dígitos<input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required></label>
 <p id="mfa-error" class="error" role="alert"></p>
 <button type="submit" class="primary">Verificar</button>
