@@ -256,3 +256,7 @@ body[data-portal] .card{padding:22px;margin-bottom:18px}
 .portal-filter{display:block;max-width:300px;margin-bottom:18px}
 .share-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin:16px 0}
 .share-fields label{display:flex;gap:10px;align-items:center;font-size:.95rem}.share-fields input{width:auto;margin:0}
+
+.portal-dashboard{margin:24px 0 32px}.portal-dashboard>h2{font-size:1.4rem}.portal-dashboard .metric .label,.portal-dashboard .metric small{font-size:.9rem}.portal-dashboard th,.portal-dashboard td{font-size:.95rem}#project-access-form textarea{min-height:100px}
+
+.import-table{max-height:460px;overflow:auto}.import-table input[type=checkbox]{width:20px;height:20px}.import-table td{vertical-align:top;min-width:110px}.import-table th{position:sticky;top:0;background:var(--side)}.import-table p{margin:2px 0}.top-actions{flex-wrap:wrap}

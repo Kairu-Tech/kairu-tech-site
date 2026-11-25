@@ -6,9 +6,12 @@
 <meta name="robots" content="noindex,nofollow">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://ypffaagjhrrgxsrxlluo.supabase.co; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="description" content="Panel privado de seguimiento comercial de KairuTech.">
-<link rel="stylesheet" href="./style.css?v=20261124-portal">
-<script defer src="./connection.js?v=20261124-portal"></script>
-<script defer src="./app.js?v=20261124-portal"></script>
+<link rel="stylesheet" href="./style.css?v=20261125-import">
+<script defer src="./connection.js?v=20261125-import"></script>
+<script defer src="./app.js?v=20261125-import"></script>
+<script defer src="./vendor/exceljs.min.js?v=4.4.0"></script>
+<script defer src="./import-core.js?v=20261125-import"></script>
+<script defer src="./importer.js?v=20261125-import"></script>
 </head>
 <body>
 <section id="login" class="login-wrap">
@@ -39,7 +42,7 @@
 <div class="profile"><span class="avatar">AB</span><div><strong>Alex Barrena</strong><small>Espacio privado</small></div></div>
 </aside>
 <main>
-<header class="top"><span id="breadcrumb">Seguimiento comercial</span><div class="top-actions"><button type="button" data-action="export">Exportar CSV</button><button type="button" data-action="logout">Salir</button><button type="button" class="primary" data-action="new">＋ Nueva oportunidad</button></div></header>
+<header class="top"><span id="breadcrumb">Seguimiento comercial</span><div class="top-actions"><button type="button" data-action="import">Importar Excel/CSV</button><button type="button" data-action="export">Exportar CSV</button><button type="button" data-action="logout">Salir</button><button type="button" class="primary" data-action="new">＋ Nueva oportunidad</button></div></header>
 <div id="page" class="page" aria-live="polite"><p>Cargando panel…</p></div>
 </main>
 </div>

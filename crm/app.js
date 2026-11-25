@@ -278,6 +278,11 @@ function editorFields(d){
 document.addEventListener('invalid',e=>{
   for(let section=e.target.closest('details');section;section=section.parentElement.closest('details'))section.open=true;
 },true);
+function importOriginDetails(d){
+  const source=d.importOriginal;
+  if(!source)return '';
+  return '<details class="editor-section"><summary>Datos originales importados</summary><p>'+esc(source.file)+' · '+esc(source.sheet)+' · Fila '+esc(source.row)+'</p><dl>'+source.headers.map((header,i)=>'<dt>'+esc(header)+'</dt><dd>'+esc(source.cells[i]??'')+'</dd>').join('')+'</dl></details>';
+}
 function showEditor(row,kind='opportunity'){
   const d=row?.data||{licenseStatus:'Por renovar',id:crypto.randomUUID(),kind,project:view==='project'?project:kind==='goal'?fProject:'',stage:'Prospección',priority:'Por revisar',currency:'EUR',quarter:fQuarter,reviewDate:today()};
   editor={row,data:d};
@@ -287,7 +292,7 @@ function showEditor(row,kind='opportunity'){
   (d.sourceUrl?'<p class="sub"><a target="_blank" rel="noopener" href="'+esc(d.sourceUrl)+'">Abrir archivo de origen ↗</a></p>':'')+
   '<p id="form-error" class="error" role="alert"></p><div class="dialog-foot">'+(row?button('history','Ver historial','data-id="'+esc(d.id)+'"'):'')+
   (row&&['client','opportunity','license'].includes(d.kind)?button('activity','＋ Actividad','data-id="'+esc(d.id)+'"'):'')+
-  (row&&d.kind==='license'?licensePeriodButton(d):'')+'<button type="submit" class="primary">Guardar</button></div></form>'+(row?activityTimeline(d):'')+'<div id="history"></div></div>';
+  (row&&d.kind==='license'?licensePeriodButton(d):'')+'<button type="submit" class="primary">Guardar</button></div></form>'+importOriginDetails(d)+(row?activityTimeline(d):'')+'<div id="history"></div></div>';
   if(!$('modal').open)$('modal').showModal();
   $('modal').scrollTop=0;
 }
