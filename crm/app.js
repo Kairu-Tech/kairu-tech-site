@@ -4,19 +4,20 @@ const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const projects=['Zentynel','Flowity','Metadology'];
 const colors=['zentynel','flowity','metadology'];
 const stages=['Prospección','Contacto inicial','Cualificación','Reunión / demo','Propuesta','Negociación','Cierre ganado','Cierre perdido','Renovación','Seguimiento','En pausa'];
-const channelTypes=['Venta directa','Distribuidor','Colaborador'];
-const accountRoles=['Cliente final','Partner','Distribuidor','Proveedor','Por clasificar'];
+const channelTypes=['Venta directa','Partner / distribuidor'];
+const accountRoles=['Cliente final','Partner / distribuidor','Proveedor','Por clasificar'];
 function accountRole(d){
   if(d.kind==='license')return accountRole(get(d.clientId)?.data||{});
+  if(['Partner','Distribuidor','Colaborador'].includes(d.accountRole))return 'Partner / distribuidor';
   if(accountRoles.includes(d.accountRole))return d.accountRole;
-  if(d.type==='Partner')return 'Partner';
+  if(d.type==='Partner')return 'Partner / distribuidor';
   if(d.type==='Proveedor')return 'Proveedor';
   if(d.type==='Cliente directo')return 'Cliente final';
   if(d.kind==='client'&&String(d.sourceUrl||'').includes('file_id=libfile_01fab3fd7c5c819181dff525e6a09787'))return 'Cliente final';
   return 'Por clasificar';
 }
 
-const channelFields=[['channelType','Canal comercial',channelTypes,true],['channelPartner','Distribuidor / colaborador','partner']];
+const channelFields=[['channelType','Canal comercial',channelTypes,true],['channelPartner','Partner / distribuidor','partner']];
 const ownerFields=[
   ['commercialOwnerName','Responsable comercial — nombre'],
   ['commercialOwnerEmail','Responsable comercial — email','email'],
@@ -47,7 +48,7 @@ const quarterFor=d=>d?d.slice(0,4)+'-T'+Math.ceil(Number(d.slice(5,7))/3):'';
 const value=x=>x!==''&&x!=null;
 const active=d=>!['Cierre ganado','Cierre perdido','En pausa'].includes(d.stage);
 const hasAction=d=>!['Cierre perdido','En pausa'].includes(d.stage)&&d.next;
-const filterFields=[['project','Proyecto'],['accountRole','Tipo de cuenta'],['country','País'],['region','Región'],['sector','Sector'],['priority','Prioridad'],['stage','Estado comercial'],['type','Tipo'],['commercialMonth','Mes cierre / renovación'],['channelType','Canal comercial'],['channelPartner','Distribuidor / colaborador'],['commercialOwnerName','Responsable comercial']];
+const filterFields=[['project','Proyecto'],['accountRole','Tipo de cuenta'],['country','País'],['region','Región'],['sector','Sector'],['priority','Prioridad'],['stage','Estado comercial'],['type','Tipo'],['commercialMonth','Mes cierre / renovación'],['channelType','Canal comercial'],['channelPartner','Partner / distribuidor'],['commercialOwnerName','Responsable comercial']];
 const navItems=[['home','▦','Esta semana'],['pipeline','☷','Pipeline'],['clients','▤','Cuentas y licencias'],['forecast','◴','Forecast trimestral'],['reviews','◷','Revisión semanal']];
 const subsets={
   Zentynel:[['','Todas'],['spain','España'],['portugal','Portugal'],['latam','Latinoamérica']],
@@ -193,7 +194,7 @@ function resultTable(){
   if(!data.length)return blank('No hay oportunidades en esta vista. Puedes crear una desde el botón superior.');
   const count='<p class="sub">'+data.length+' '+(data.length===1?'oportunidad':'oportunidades')+'</p>';
   if(layout==='board')return count+'<div class="board">'+stages.map(s=>'<section class="lane"><h3>'+esc(s)+' · '+data.filter(d=>d.stage===s).length+'</h3>'+data.filter(d=>d.stage===s).map(d=>openBtn(d,d.name,d.project+' · '+channelSummary(d)+' · '+(d.priority||'Por revisar'))).join('')+'</section>').join('')+'</div>';
-  return count+'<div class="scroll"><table><thead><tr><th>Cuenta / oportunidad</th><th>Tipo de cuenta</th><th>Canal de origen</th><th>Distribuidor / colaborador de origen</th><th>Estado comercial</th><th>Prioridad</th><th>Importe</th><th>Próxima acción</th></tr></thead><tbody>'+data.map(d=>'<tr><td>'+openBtn(d,d.name,d.project+(d.country?' · '+d.country:'')+' · '+(d.type||'Por cualificar')+(d.commercialMonth?' · '+monthLabel(d.commercialMonth):''))+'</td><td>'+esc(accountRole(d))+'</td><td>'+esc(channelDetails(d).channelType)+'</td><td>'+esc(channelDetails(d).channelPartner||'—')+ownerMeta(d)+'</td><td>'+tag(d.kind==='license'?renewalStatus(get(d.id).data):d.stage||'Prospección',d.stage==='Cierre ganado'?'green':'neutral')+'</td><td>'+priority(d)+'</td><td class="nobr">'+(value(d.amount)?esc(money(Number(d.amount),d.currency)):'—')+quoteMeta(d)+'</td><td>'+esc(d.next||'—')+(d.nextDate?'<div class="meta">'+esc(short(d.nextDate))+'</div>':'')+(d.kind==='license'?'<div class="meta">'+esc((renewalAlert(get(d.id).data)?.label||'Sin revisión pendiente'))+'</div>':'')+'</td></tr>').join('')+'</tbody></table></div>';
+  return count+'<div class="scroll"><table><thead><tr><th>Cuenta / oportunidad</th><th>Tipo de cuenta</th><th>Canal de origen</th><th>Partner / distribuidor de origen</th><th>Estado comercial</th><th>Prioridad</th><th>Importe</th><th>Próxima acción</th></tr></thead><tbody>'+data.map(d=>'<tr><td>'+openBtn(d,d.name,d.project+(d.country?' · '+d.country:'')+' · '+(d.type||'Por cualificar')+(d.commercialMonth?' · '+monthLabel(d.commercialMonth):''))+'</td><td>'+esc(accountRole(d))+'</td><td>'+esc(channelDetails(d).channelType)+'</td><td>'+esc(channelDetails(d).channelPartner||'—')+ownerMeta(d)+'</td><td>'+tag(d.kind==='license'?renewalStatus(get(d.id).data):d.stage||'Prospección',d.stage==='Cierre ganado'?'green':'neutral')+'</td><td>'+priority(d)+'</td><td class="nobr">'+(value(d.amount)?esc(money(Number(d.amount),d.currency)):'—')+quoteMeta(d)+'</td><td>'+esc(d.next||'—')+(d.nextDate?'<div class="meta">'+esc(short(d.nextDate))+'</div>':'')+(d.kind==='license'?'<div class="meta">'+esc((renewalAlert(get(d.id).data)?.label||'Sin revisión pendiente'))+'</div>':'')+'</td></tr>').join('')+'</tbody></table></div>';
 }
 const goalFields=[['name','Objetivo','text',true],['project','Proyecto',projects,true],['quarter','Trimestre (AAAA-T1 a AAAA-T4)','quarter',true],['currency','Moneda',['EUR','USD','GBP','MXN','CLP','BRL','COP','PEN'],true],['conservative','Conservador','amount'],['base','Base','amount'],['upside','Optimista','amount'],['linked','Sustituir por una oportunidad','link'],['notes','Notas y supuestos','textarea']];
 const reviewFields=[['name','Título','text',true],['reviewDate','Fecha de revisión','date',true],['project','Proyecto',projects],['reviewNext','Próxima revisión','date'],['notes','Decisiones, cambios de prioridad y próximos pasos','textarea',true]];
@@ -220,7 +221,7 @@ function forecast(){
   const year=Number(fQuarter.slice(0,4));
   const periods=[...new Set([year-1,year,year+1,Number(today().slice(0,4)),...entries('goal').map(x=>Number(x.data.quarter?.slice(0,4))).filter(Boolean),...all.map(x=>Number(x.closeDate?.slice(0,4))).filter(Boolean)])].sort((a,b)=>a-b).flatMap(y=>[1,2,3,4].map(q=>y+'-T'+q));
   return head('Forecast trimestral','Oportunidades y renovaciones por trimestre. Para renovaciones sin cierre previsto se usa el vencimiento futuro como referencia.',button('goal','＋ Objetivo','','primary'))+
-  '<div class="forecast-controls"><label class="sub" for="quarter">Trimestre</label><select id="quarter">'+opts(periods,fQuarter)+'</select><label class="sub" for="forecast-project">Proyecto</label><select id="forecast-project">'+opts(projects,fProject,'Todos los proyectos')+'</select><label class="sub" for="forecast-channel">Canal</label><select id="forecast-channel">'+opts(channelTypes,fChannel,'Todos')+'</select><label class="sub" for="forecast-partner">Distribuidor / colaborador</label><select id="forecast-partner">'+opts(knownPartners(),fPartner,'Todos')+'</select></div>'+
+  '<div class="forecast-controls"><label class="sub" for="quarter">Trimestre</label><select id="quarter">'+opts(periods,fQuarter)+'</select><label class="sub" for="forecast-project">Proyecto</label><select id="forecast-project">'+opts(projects,fProject,'Todos los proyectos')+'</select><label class="sub" for="forecast-channel">Canal</label><select id="forecast-channel">'+opts(channelTypes,fChannel,'Todos')+'</select><label class="sub" for="forecast-partner">Partner / distribuidor</label><select id="forecast-partner">'+opts(knownPartners(),fPartner,'Todos')+'</select></div>'+
   '<div class="grid metrics forecast-metrics">'+metric('Conservador',format(0),'Probabilidad −20 puntos')+metric('Base',format(1),'Probabilidad de la ficha')+metric('Optimista',format(2),'Probabilidad +20 puntos')+'</div>'+
   '<div class="grid split"><section class="card">'+cardHead('Oportunidades del trimestre',missing?missing+' con datos pendientes para la previsión.':'Las ganadas computan al 100 %.')+
   (candidates.length?candidates.map(d=>'<div class="record">'+openBtn(d,d.name,d.project+' · '+(d.type||'Cliente directo')+' · '+short(d.closeDate))+'</div>').join(''):blank('Añade una fecha de cierre a una oportunidad para incluirla aquí.'))+'</section>'+
@@ -244,10 +245,10 @@ function formField([key,label,typ='text',required=false],data){
   if(key==='payerName')return '<label>Nombre de otra entidad<input name="payerName" value="'+esc(data.payerName||'')+'"'+(data.payerType==='Otra entidad'?'':' disabled')+'></label>';
   if(typ==='partner'){
     const direct=data.channelType==='Venta directa';
-    return '<label>Distribuidor / colaborador<input name="channelPartner" list="channel-partners" value="'+esc(direct?'':data.channelPartner||'')+'"'+(direct?' disabled':'')+'><datalist id="channel-partners">'+
+    return '<label>Partner / distribuidor<input name="channelPartner" list="channel-partners" value="'+esc(direct?'':data.channelPartner||'')+'"'+(direct?' disabled':'')+'><datalist id="channel-partners">'+
       knownPartners().map(name=>'<option value="'+esc(name)+'"></option>').join('')+'</datalist></label>';
   }
-  const v=key==='accountRole'?accountRole(data):data[key]??'', name=' name="'+key+'"'+(required?' required':'');
+  const v=key==='accountRole'?accountRole(data):key==='channelType'?channelDetails(data).channelType:data[key]??'', name=' name="'+key+'"'+(required?' required':'');
   const list=typ==='client'?entries('client').map(r=>r.data).filter(d=>d.project===data.project||d.id===v).map(d=>[d.id,d.name]):Array.isArray(typ)?typ:typ==='country'?[...new Set([...countries,...opportunities().map(x=>x.country).filter(Boolean)])].sort((a,b)=>a.localeCompare(b,'es')):typ==='region'?[...new Set([...regions,...opportunities().map(x=>x.region).filter(Boolean)])]:typ==='link'?opportunities().filter(d=>(d.project===data.project||d.id===v)&&(quarterFor(d.closeDate)===data.quarter||d.id===v)).map(d=>[d.id,d.name]):null;
   let control;
   if(list)control='<select'+name+'>'+opts(list,v,'Seleccionar')+'</select>';
@@ -299,7 +300,7 @@ function showEditor(row,kind='opportunity'){
   editor={row,data:d};
   const title=row?d.name:kind==='client'?'Nueva cuenta':kind==='license'?'Nueva licencia':kind==='goal'?'Nuevo objetivo':kind==='review'?'Registrar revisión semanal':'Nueva oportunidad';
   $('modal-content').innerHTML='<header class="dialog-head"><h2>'+esc(title)+'</h2>'+button('close','✕','aria-label="Cerrar ficha"')+'</header>'+
-  '<div class="dialog-body">'+(d.kind==='license'?'<p class="sub">'+esc(accountRole(d))+' · '+esc(channelSummary(d))+' (canal de origen) · Pagador: '+esc(payerDisplay(d))+' · Responsable: '+esc(commercialOwner(d).commercialOwnerName||'Por asignar')+'.</p>':['client','opportunity'].includes(d.kind)?'<p class="sub">El tipo de cuenta indica quién es la entidad. El canal indica cómo llega la oportunidad: por ejemplo, cliente final a través de SATARA SEGURIDAD.</p>':'')+'<form id="editor">'+editorFields(d)+
+  '<div class="dialog-body">'+(d.kind==='license'?'<p class="sub">'+esc(accountRole(d))+' · '+esc(channelSummary(d))+' (canal de origen) · Pagador: '+esc(payerDisplay(d))+' · Responsable: '+esc(commercialOwner(d).commercialOwnerName||'Por asignar')+'.</p>':['client','opportunity'].includes(d.kind)?'<p class="sub">El tipo de cuenta indica quién es la entidad. El canal indica cómo llega la oportunidad: por ejemplo, cliente final a través del partner SATARA SEGURIDAD.</p>':'')+'<form id="editor">'+editorFields(d)+
   (d.sourceUrl?'<p class="sub"><a target="_blank" rel="noopener" href="'+esc(d.sourceUrl)+'">Abrir archivo de origen ↗</a></p>':'')+
   '<p id="form-error" class="error" role="alert"></p><div class="dialog-foot">'+(row?button('history','Ver historial','data-id="'+esc(d.id)+'"'):'')+
   (row&&['client','opportunity','license'].includes(d.kind)?button('activity','＋ Actividad','data-id="'+esc(d.id)+'"'):'')+
@@ -481,7 +482,7 @@ function exportRecords(){
   const data=view==='clients'?customerData():(view==='pipeline'||view==='project')?filtered():opportunities();
   const columns=(view==='clients'?(clientTab==='licenses'?licenseFields:clientFields):fields).flatMap(([key,label])=>key==='contacts'?
     [['_contactName','Nombre del contacto'],['_contactEmail','Email'],['_contactPhone','Teléfono'],['_contactRole','Cargo']]:[[key,label]]);
-  if(view==='clients'&&clientTab==='licenses')columns.splice(2,0,['accountRole','Tipo de cuenta'],['channelType','Canal comercial'],['channelPartner','Distribuidor / colaborador']);
+  if(view==='clients'&&clientTab==='licenses')columns.splice(2,0,['accountRole','Tipo de cuenta'],['channelType','Canal comercial'],['channelPartner','Partner / distribuidor']);
   const csvCell=value=>'"'+String(value??'').replace(/^[=+@\t\r-]/,"'$&").replace(/"/g,'""')+'"';
   const csv=[columns.map(([,label])=>csvCell(label)).join(';'),...data.map(row=>columns.map(([key])=>csvCell(exportValue(row,key))).join(';'))].join('\r\n');
   const url=URL.createObjectURL(new Blob(['\ufeff',csv],{type:'text/csv;charset=utf-8'}));
@@ -510,7 +511,7 @@ const licenseFields=[
   ['currency','Moneda',['EUR','USD','GBP','MXN','CLP']],
   ['renewalTerms','Condiciones de renovación','textarea'],
   ...ownerFields,...responseFields,
-  ['payerType','Quién paga',['Por confirmar','Cliente','Distribuidor / colaborador','Otra entidad']],
+  ['payerType','Quién paga',['Por confirmar','Cliente','Partner / distribuidor','Otra entidad']],
   ['payerName','Nombre del pagador (si difiere del cliente o partner)'],
   ...quoteFields,
   ['renewalAmount','Importe presupuesto de renovación sin IVA','amount'],
@@ -572,18 +573,18 @@ function customerResults(){
       (d.nextDate?'<div class="meta">'+esc(short(d.nextDate))+'</div>':'')+'</td></tr>';
   }).join('');
   return '<div class="scroll"><table><thead><tr><th>'+(licenses?'Licencia':'Cliente')+'</th>'+
-    '<th>Tipo de cuenta</th><th>Canal de origen</th><th>Distribuidor / colaborador de origen</th>'+columns+'<th>Próximo paso</th></tr></thead><tbody>'+body+'</tbody></table></div>';
+    '<th>Tipo de cuenta</th><th>Canal de origen</th><th>Partner / distribuidor de origen</th>'+columns+'<th>Próximo paso</th></tr></thead><tbody>'+body+'</tbody></table></div>';
 }
 function clients(){
-  return head('Cuentas y licencias','Clientes finales, partners y distribuidores separados. El canal indica de dónde procede la relación.',
+  return head('Cuentas y licencias','Clientes finales y partners / distribuidores. El canal indica de dónde procede la relación.',
     '<div class="top-actions">'+button('new-client','＋ Cuenta')+button('new-license','＋ Licencia','','primary')+'</div>')+
-    '<div class="chips">'+[['','Todas las cuentas'],['Cliente final','Clientes finales'],['Partner','Partners'],['Distribuidor','Distribuidores']].map(([role,label])=>button('account-view',label,'data-key="'+role+'"',clientTab==='clients'&&customerRole===role?'selected':'')).join('')+
+    '<div class="chips">'+[['','Todas las cuentas'],['Cliente final','Clientes finales'],['Partner / distribuidor','Partners / distribuidores']].map(([role,label])=>button('account-view',label,'data-key="'+role+'"',clientTab==='clients'&&customerRole===role?'selected':'')).join('')+
     button('client-tab','Licencias','data-key="licenses"',clientTab==='licenses'?'selected':'')+'</div>'+
     '<section class="card"><div class="filters"><label class="filter-search">Buscar<input id="customer-query" type="search" value="'+esc(customerQuery)+'" placeholder="Cliente, contacto o acción"></label>'+
     '<label>Proyecto<select id="customer-project">'+opts(projects,customerProject,'Todos')+'</select></label>'+
     '<label>Tipo de cuenta<select id="customer-role">'+opts(accountRoles,customerRole,'Todos')+'</select></label>'+
     '<label>Canal de origen<select id="customer-channel">'+opts(channelTypes,customerChannel,'Todos')+'</select></label>'+
-    '<label>Distribuidor / colaborador<select id="customer-partner">'+opts(knownPartners(),customerPartner,'Todos')+'</select></label>'+
+    '<label>Partner / distribuidor<select id="customer-partner">'+opts(knownPartners(),customerPartner,'Todos')+'</select></label>'+
     (clientTab==='licenses'?'<label>Estado<select id="renewal-state-filter">'+opts([['all','Todos'],['Por renovar','Por renovar'],['Renovado','Renovado'],['Finalizada','Finalizada']],renewalStateFilter)+'</select></label><label>Vencimiento<select id="license-filter">'+opts([['all','Todos'],['past','Periodo vencido'],['30','Hasta 30 días'],['60','De 31 a 60 días'],['90','De 61 a 90 días'],['later','Más de 90 días'],['closed','Renovadas / finalizadas'],['unknown','Sin fecha']],licenseFilter)+'</select></label>':'')+
     '</div><div id="customer-results">'+customerResults()+'</div></section>';
 }
@@ -733,7 +734,8 @@ function canonicalPartner(value){
 
 function channelDetails(record){
   const source=record.kind==='license'?get(record.clientId)?.data:record;
-  const channelType=source?.channelType||'Por clasificar';
+  const original=source?.channelType;
+  const channelType=['Distribuidor','Colaborador','Partner'].includes(original)?'Partner / distribuidor':original||'Por clasificar';
   return {
     channelType,
     channelPartner:channelType==='Venta directa'?'':canonicalPartner(source?.channelPartner)
@@ -746,7 +748,7 @@ function channelSummary(record){
 }
 
 function knownPartners(){
-  return [...new Set(['SATARA SEGURIDAD',...rows.filter(r=>r.data.kind==='client'&&['Partner','Distribuidor'].includes(accountRole(r.data))).map(r=>canonicalPartner(r.data.name)),...rows.filter(r=>['client','opportunity'].includes(r.data.kind)).map(r=>channelDetails(r.data).channelPartner).filter(Boolean)])]
+  return [...new Set(['SATARA SEGURIDAD',...rows.filter(r=>r.data.kind==='client'&&accountRole(r.data)==='Partner / distribuidor').map(r=>canonicalPartner(r.data.name)),...rows.filter(r=>['client','opportunity'].includes(r.data.kind)).map(r=>channelDetails(r.data).channelPartner).filter(Boolean)])]
     .sort((a,b)=>a.localeCompare(b,'es'));
 }
 
@@ -768,7 +770,7 @@ function ownerMeta(record){
 
 function payerDisplay(record){
   if(record.payerType==='Cliente')return get(record.clientId)?.data.name||record.organisation||record.name;
-  if(record.payerType==='Distribuidor / colaborador')return channelDetails(record).channelPartner||'Partner por indicar';
+  if(record.payerType==='Partner / distribuidor')return channelDetails(record).channelPartner||'Partner por indicar';
   if(record.payerType==='Otra entidad')return record.payerName||'Entidad por indicar';
   return 'Por confirmar';
 }
@@ -897,7 +899,7 @@ function showRenewal(row){
     ['amount','Importe acordado sin IVA','amount',true],
     ['currency','Moneda',['EUR','USD','GBP','MXN','CLP','BRL','COP','PEN'],true],
     ['closeDate','Fecha de cierre de la renovación','date',true],
-    ['payerType','Quién paga',['Por confirmar','Cliente','Distribuidor / colaborador','Otra entidad'],true],
+    ['payerType','Quién paga',['Por confirmar','Cliente','Partner / distribuidor','Otra entidad'],true],
     ['payerName','Nombre del pagador (si es otra entidad)'],
     ['users','Usuarios contratados'],
     ['renewalTerms','Condiciones del nuevo periodo','textarea'],

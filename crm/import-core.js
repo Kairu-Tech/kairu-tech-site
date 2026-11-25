@@ -7,7 +7,7 @@
   ['project','Proyecto',['project','producto']],
   ['accountRole','Tipo de cuenta',['tipo cuenta','cliente final partner distribuidor','rol de cuenta']],
   ['channelType','Canal comercial',['canal','origen comercial']],
-  ['channelPartner','Distribuidor / colaborador',['distribuidor','colaborador','partner']],
+  ['channelPartner','Partner / distribuidor',['distribuidor','colaborador','partner','distribuidor colaborador']],
   ['stage','Estado comercial',['estado','fase','etapa','stage']],
   ['contactName','Nombre del contacto',['contacto','nombre contacto','contact name']],
   ['contactEmail','Email del contacto',['email','correo','correo electronico']],
@@ -22,9 +22,9 @@
   ['commercialOwnerName','Responsable comercial',['responsable']],['commercialOwnerEmail','Email del responsable',[]],['commercialOwnerPhone','Teléfono del responsable',[]],
   ['quoteStatus','Estado del presupuesto',[]],['quoteReference','Referencia del presupuesto',[]],['quoteDate','Fecha de envío del presupuesto',[]]
  ];
- const enums={accountRole:['Cliente final','Partner','Distribuidor','Proveedor','Por clasificar'],project:['Zentynel','Flowity','Metadology'],channelType:['Venta directa','Distribuidor','Colaborador'],stage:['Prospección','Contacto inicial','Cualificación','Reunión / demo','Propuesta','Negociación','Cierre ganado','Cierre perdido','Renovación','Seguimiento','En pausa'],priority:['Alta','Media','Baja','Por revisar'],currency:['EUR','USD','GBP','MXN','CLP','BRL','COP','PEN'],type:['Cliente directo','Partner','Proveedor','Piloto','Licitación','Renovación','Por cualificar'],quoteStatus:['Por confirmar','Pendiente de enviar','Enviado','Aceptado','Rechazado']};
+ const enums={accountRole:['Cliente final','Partner / distribuidor','Proveedor','Por clasificar'],project:['Zentynel','Flowity','Metadology'],channelType:['Venta directa','Partner / distribuidor'],stage:['Prospección','Contacto inicial','Cualificación','Reunión / demo','Propuesta','Negociación','Cierre ganado','Cierre perdido','Renovación','Seguimiento','En pausa'],priority:['Alta','Media','Baja','Por revisar'],currency:['EUR','USD','GBP','MXN','CLP','BRL','COP','PEN'],type:['Cliente directo','Partner','Proveedor','Piloto','Licitación','Renovación','Por cualificar'],quoteStatus:['Por confirmar','Pendiente de enviar','Enviado','Aceptado','Rechazado']};
  function enumValue(key,input){
-  const aliases={project:{metaology:'Metadology'},channelType:{directa:'Venta directa',directo:'Venta directa','cliente directo':'Venta directa',distribucion:'Distribuidor'},stage:{ganada:'Cierre ganado',ganado:'Cierre ganado',perdida:'Cierre perdido',perdido:'Cierre perdido',demo:'Reunión / demo',reunion:'Reunión / demo'},currency:{euro:'EUR',euros:'EUR',dolares:'USD'}};
+  const aliases={accountRole:{partner:'Partner / distribuidor',distribuidor:'Partner / distribuidor',colaborador:'Partner / distribuidor'},project:{metaology:'Metadology'},channelType:{directa:'Venta directa',directo:'Venta directa','cliente directo':'Venta directa',distribucion:'Partner / distribuidor',distribuidor:'Partner / distribuidor',colaborador:'Partner / distribuidor',partner:'Partner / distribuidor'},stage:{ganada:'Cierre ganado',ganado:'Cierre ganado',perdida:'Cierre perdido',perdido:'Cierre perdido',demo:'Reunión / demo',reunion:'Reunión / demo'},currency:{euro:'EUR',euros:'EUR',dolares:'USD'}};
   return enums[key].find(x=>normalize(x)===normalize(input))||aliases[key]?.[normalize(input)]||null;
  }
  function parseDelimited(text,delimiter){
