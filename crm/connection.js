@@ -13,6 +13,7 @@ window.crmConnection = (() => {
   }
 
   function showLogin(message = '') {
+    document.getElementById('mfa-form')?.setAttribute('hidden', '');
     storeSession(null);
     sessionStorage.removeItem(storageKey + '-recovery');
     document.getElementById('login-form').hidden = false;
@@ -72,7 +73,75 @@ window.crmConnection = (() => {
     return result;
   }
 
+  function assurance() {
+    try {
+      const part = session.access_token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.parse(atob(part)).aal;
+    } catch { return null; }
+  }
+
+  async function authMfa(path, method = 'GET', body) {
+    const response = await fetch(base + '/auth/v1/' + path, {
+      method, headers: { apikey: publicKey, Authorization: 'Bearer ' + await token(), 'Content-Type': 'application/json' },
+      ...(body === undefined ? {} : { body: JSON.stringify(body) })
+    });
+    if (!response.ok) throw Error('No se pudo completar la verificación. Comprueba el código o vuelve a iniciar sesión.');
+    return response.json().catch(() => null);
+  }
+
+  async function requireMfa() {
+    await token();
+    if (assurance() === 'aal2') return true;
+    const user = await authMfa('user');
+    const factors = (user.factors || []).filter(f => f.factor_type === 'totp');
+    let factor = factors.find(f => f.status === 'verified');
+    // Client portal remains unchanged unless the user has already enrolled MFA.
+    if (!factor && document.body.dataset.portal === 'true') return true;
+    const form = document.getElementById('mfa-form');
+    if (!form) throw Error('Actualiza la página para verificar tu identidad.');
+    document.getElementById('login-form').hidden = true;
+    document.getElementById('reset-form').hidden = true;
+    document.querySelector('.shell').hidden = true;
+    document.getElementById('login').hidden = false;
+    form.hidden = false;
+    form.reset();
+    const secret = document.getElementById('mfa-secret');
+    secret.textContent = '';
+    secret.hidden = true;
+    document.getElementById('mfa-help').textContent = 'Introduce el código de tu aplicación de autenticación.';
+    if (!factor) {
+      for (const pending of factors.filter(f => f.status === 'unverified')) {
+        await authMfa('factors/' + encodeURIComponent(pending.id), 'DELETE');
+      }
+      factor = await authMfa('factors', 'POST', { factor_type: 'totp', friendly_name: 'KairuTech' });
+      secret.textContent = factor.totp.secret;
+      secret.hidden = false;
+      document.getElementById('mfa-help').textContent = 'En Microsoft Authenticator añade una cuenta de otro tipo y elige introducir la clave manualmente. Usa la clave siguiente y después introduce el código de seis dígitos. No compartas esta clave.';
+    }
+    form.onsubmit = async event => {
+      event.preventDefault();
+      const button = form.querySelector('[type=submit]');
+      const error = document.getElementById('mfa-error');
+      button.disabled = true;
+      error.textContent = '';
+      try {
+        const path = 'factors/' + encodeURIComponent(factor.id);
+        const challenge = await authMfa(path + '/challenge', 'POST', {});
+        const data = await authMfa(path + '/verify', 'POST', { challenge_id: challenge.id, code: form.elements.code.value.trim() });
+        storeSession({ ...session, ...data, expires_at: data.expires_at || Math.floor(Date.now()/1000) + data.expires_in });
+        if (assurance() !== 'aal2') throw Error('No se confirmó el segundo factor.');
+        secret.textContent = '';
+        form.reset();
+        form.hidden = true;
+        await unlock();
+      } catch (e) { error.textContent = e.message; form.hidden = false; }
+      finally { button.disabled = false; }
+    };
+    return false;
+  }
+
   async function unlock() {
+    if (!await requireMfa()) return;
     const projects = document.body.dataset.portal === 'true'
       ? [await request('rpc/crm_portal_context', { method: 'POST', body: '{}' })]
       : await request('crm_projects?select=id,name&order=name');
@@ -185,6 +254,7 @@ window.crmConnection = (() => {
         submit.disabled = false;
       }
     });
+    document.getElementById('cancel-mfa')?.addEventListener('click', () => { document.getElementById('mfa-secret').textContent = ''; logout(); });
     document.getElementById('cancel-reset').addEventListener('click', () => logout());
     document.getElementById('login-form').addEventListener('submit', async event => {
       event.preventDefault();

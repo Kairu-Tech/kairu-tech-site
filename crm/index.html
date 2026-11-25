@@ -7,7 +7,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://ypffaagjhrrgxsrxlluo.supabase.co; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="description" content="Panel privado de seguimiento comercial de KairuTech.">
 <link rel="stylesheet" href="./style.css?v=20261125-simple-columns">
-<script defer src="./connection.js?v=20261125-simple-columns"></script>
+<script defer src="./connection.js?v=20261125-mfa-test1"></script>
 <script defer src="./app.js?v=20261125-simple-columns"></script>
 <script defer src="./vendor/exceljs.min.js?v=4.4.0"></script>
 <script defer src="./import-core.js?v=20261125-simple-columns"></script>
@@ -34,6 +34,13 @@
 <p id="reset-error" class="error" role="alert"></p>
 <button type="submit" class="primary">Guardar contraseña</button>
 <button type="button" id="cancel-reset">Volver al acceso</button>
+</form><form id="mfa-form" class="login-card" hidden>
+<h1>Verificación de seguridad</h1>
+<p id="mfa-help"></p><p id="mfa-secret" hidden></p>
+<label>Código de seis dígitos<input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required></label>
+<p id="mfa-error" class="error" role="alert"></p>
+<button type="submit" class="primary">Verificar</button>
+<button type="button" id="cancel-mfa">Cancelar y salir</button>
 </form></section>
 <div class="shell" hidden>
 <aside class="sidebar">
