@@ -21,7 +21,7 @@
  }
  function mappingForm(){
   const s=state,table=s.table;
-  const shown=new Set(['name','project','accountRole','channelType','channelPartner',...Object.keys(s.mapping)]);
+  const shown=new Set(['name','project','accountRole','marketSector','entityType','channelType','channelPartner',...Object.keys(s.mapping)]);
   const mappingControl=([key,label])=>'<label>'+escape(label)+'<select data-import-map="'+key+'">'+select([['','Sin columna'],...table.headers.map((h,i)=>[i,(i+1)+'. '+h])],s.mapping[key]??'')+'</select></label>';
   return '<p class="sub">Archivo: '+escape(s.fileName)+' · '+table.data.length+' filas. Los datos se revisan en este navegador; se envían a tu CRM al confirmar la importación.</p><form id="import-map"><h3>Valores para las filas que no los tengan</h3><div class="fields"><label>Proyecto<select name="defaultProject">'+select([['','Seleccionar'],...core.enums.project.map(x=>[x,x])],s.defaults.project)+'</select></label><label>Tipo de cuenta<select name="defaultRole">'+select(core.enums.accountRole.map(x=>[x,x]),s.defaults.accountRole||'Por clasificar')+'</select></label><label>Canal comercial<select name="defaultChannel">'+select([['','Seleccionar'],...core.enums.channelType.map(x=>[x,x])],s.defaults.channelType)+'</select></label><label>Partner / distribuidor<input name="defaultPartner" value="'+escape(s.defaults.channelPartner||'')+'" placeholder="Ej. SATARA SEGURIDAD"></label></div><details class="editor-section" open><summary>Relacionar columnas del archivo</summary><p class="sub">Comprueba las asignaciones automáticas. Las columnas sin asignar también se conservarán en los datos originales de cada oportunidad.</p><div class="fields">'+core.columns.filter(([key])=>shown.has(key)).map(mappingControl).join('')+'</div><details class="editor-section"><summary>Más columnas opcionales</summary><div class="fields">'+core.columns.filter(([key])=>!shown.has(key)).map(mappingControl).join('')+'</div></details></details><p><button type="submit" class="primary">Revisar oportunidades</button></p></form>';
  }
@@ -80,7 +80,7 @@
  }
  function rowEditor(){
   const row=state.plan[state.editing],data={...row.data,contactName:row.data.contacts[0]?.name||'',contactEmail:row.data.contacts[0]?.email||'',contactPhone:row.data.contacts[0]?.phone||'',contactRole:row.data.contacts[0]?.role||''};
-  const primary=new Set(['name','project','accountRole','channelType','channelPartner','stage','contactName','contactEmail','contactPhone','amount','currency','probability','next','nextDate','closeDate']);
+  const primary=new Set(['name','project','accountRole','marketSector','entityType','channelType','channelPartner','stage','contactName','contactEmail','contactPhone','amount','currency','probability','next','nextDate','closeDate']);
   const control=([key,label])=>{
    const current=data[key]||'';
    const choices=core.enums[key];
