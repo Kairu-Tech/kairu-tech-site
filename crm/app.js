@@ -318,12 +318,34 @@ function importOriginDetails(d){
   if(!source)return '';
   return '<details class="editor-section"><summary>Datos originales importados</summary><p>'+esc(source.file)+' · '+esc(source.sheet)+' · Fila '+esc(source.row)+'</p><dl>'+source.headers.map((header,i)=>'<dt>'+esc(header)+'</dt><dd>'+esc(source.cells[i]??'')+'</dd>').join('')+'</dl></details>';
 }
+function initialLicenseFields(){
+  return '<section class="initial-license editor-section"><label class="initial-license-check"><input type="checkbox" name="createInitialLicense" id="create-initial-license" checked> Crear licencia inicial vinculada</label><p class="sub">Se guardarán la cuenta y su licencia juntas. Después se abrirá la licencia para revisarla. Puedes desmarcarlo si no corresponde.</p><div id="initial-license-fields" class="fields"><label>Inicio (opcional)<input type="date" name="initialStart"></label><label>Vencimiento (opcional)<input type="date" name="initialEnd"></label><label>Importe del periodo sin IVA (opcional)<input type="number" name="initialAmount" min="0" step="0.01"></label><label>Moneda<select name="initialCurrency">'+opts(['EUR','USD','GBP','MXN','CLP','BRL','COP','PEN'],'EUR')+'</select></label></div><p class="sub">No se inventan fechas ni importes. Los datos que falten se completan en la licencia.</p></section>';
+}
+async function persistAccountLicense(entry){
+  if(entry.saving)return;
+  entry.saving=true;
+  const form=$('editor'),submit=form.querySelector('[type=submit]');
+  form.querySelectorAll('input,select,textarea,button').forEach(el=>el.disabled=true);
+  $('form-error').textContent='';
+  try{
+    await crmConnection.request('rpc/crm_create_account_license',{method:'POST',body:JSON.stringify(entry.creationPayload)});
+    entry.creationComplete=true;
+    if(editor!==entry)return;
+    $('modal').close();await load();
+    toast('Cuenta y licencia inicial creadas');
+    const license=get(entry.initialLicenseId);if(license)showEditor(license);
+  }catch(error){
+    if(editor!==entry||!$('form-error'))return;
+    $('form-error').textContent=error.code==='PGRST202'?'Activa primero la consulta 11 en Supabase. Puedes cerrar esta ventana y reintentar después.':error.message+' Reintenta desde esta ventana para conservar los mismos identificadores.';
+    submit.disabled=false;submit.textContent='Reintentar creación';
+  }finally{entry.saving=false;}
+}
 function showEditor(row,kind='opportunity'){
   const d=row?.data||{licenseStatus:'Por renovar',id:crypto.randomUUID(),kind,project:view==='project'?project:kind==='goal'?fProject:'',stage:'Prospección',priority:'Por revisar',accountRole:'Por clasificar',currency:'EUR',quarter:fQuarter,reviewDate:today()};
-  editor={row,data:d};
+  editor={row,data:d,...(!row&&kind==='client'?{initialLicenseId:crypto.randomUUID()}: {})};
   const title=row?d.name:kind==='client'?'Nueva cuenta':kind==='license'?'Nueva licencia':kind==='goal'?'Nuevo objetivo':kind==='review'?'Registrar revisión semanal':'Nueva oportunidad';
   $('modal-content').innerHTML='<header class="dialog-head"><h2>'+esc(title)+'</h2>'+button('close','✕','aria-label="Cerrar ficha"')+'</header>'+
-  '<div class="dialog-body">'+(d.kind==='license'?'<p class="sub">'+esc(accountRole(d))+' · '+esc(channelSummary(d))+' (canal de origen) · Pagador: '+esc(payerDisplay(d))+' · Responsable: '+esc(commercialOwner(d).commercialOwnerName||'Por asignar')+'.</p>':['client','opportunity'].includes(d.kind)?'<p class="sub">El tipo de cuenta indica quién es la entidad. El canal indica cómo llega la oportunidad: por ejemplo, cliente final a través del partner SATARA SEGURIDAD.</p>':'')+'<form id="editor">'+editorFields(d)+
+  '<div class="dialog-body">'+(d.kind==='license'?'<p class="sub">'+esc(accountRole(d))+' · '+esc(channelSummary(d))+' (canal de origen) · Pagador: '+esc(payerDisplay(d))+' · Responsable: '+esc(commercialOwner(d).commercialOwnerName||'Por asignar')+'.</p>':['client','opportunity'].includes(d.kind)?'<p class="sub">El tipo de cuenta indica quién es la entidad. El canal indica cómo llega la oportunidad: por ejemplo, cliente final a través del partner SATARA SEGURIDAD.</p>':'')+'<form id="editor">'+editorFields(d)+(!row&&d.kind==='client'?initialLicenseFields():'')+
   (d.sourceUrl?'<p class="sub"><a target="_blank" rel="noopener" href="'+esc(d.sourceUrl)+'">Abrir archivo de origen ↗</a></p>':'')+
   '<p id="form-error" class="error" role="alert"></p><div class="dialog-foot">'+(row?button('history','Ver historial','data-id="'+esc(d.id)+'"'):'')+
   (row&&['client','opportunity','license'].includes(d.kind)?button('activity','＋ Actividad','data-id="'+esc(d.id)+'"'):'')+
@@ -352,6 +374,7 @@ async function showRecordHistory(id){
 document.addEventListener('submit',async e=>{
   if(e.target.id!=='editor')return;
   e.preventDefault();
+  if(editor.creationPayload){await persistAccountLicense(editor);return;}
   const {row,data}=editor, form=new FormData(e.target);
   const d={...data};
   for(const [k,,type] of fieldsFor(data)){
@@ -396,6 +419,13 @@ document.addEventListener('submit',async e=>{
       if(!linked||linked.project!==d.project||quarterFor(linked.closeDate)!==d.quarter||!value(linked.amount)||!(linked.stage==='Cierre ganado'||(active(linked)&&value(linked.probability))))throw Error('La oportunidad vinculada debe tener importe, probabilidad (o estar ganada) y fecha de cierre en el mismo proyecto y trimestre.');
     }
     if(['opportunity','license','client'].includes(d.kind)&&data.next!==d.next&&data.actionDoneAt)delete d.actionDoneAt;
+    if(!row&&d.kind==='client'&&form.has('createInitialLicense')){
+      const start=String(form.get('initialStart')||''),end=String(form.get('initialEnd')||''),amount=String(form.get('initialAmount')||'');
+      if(start&&end&&end<start)throw Error('El vencimiento debe ser posterior o igual al inicio de la licencia');
+      if(amount!==''&&(!Number.isFinite(Number(amount))||Number(amount)<0))throw Error('Revisa el importe de la licencia');
+      editor.creationPayload={p_account_id:d.id,p_license_id:editor.initialLicenseId,p_project_id:projectIds[d.project],p_account_data:d,p_license_data:{startDate:start,endDate:end,amount,currency:String(form.get('initialCurrency')||'EUR')},p_reason:String(form.get('reason')||'')};
+      await persistAccountLicense(editor);return;
+    }
     await save(d,row?.version??-1,String(form.get('reason')??''));
     $('modal').close();await load();toast('Versión guardada');
   }catch(err){if(err.status===409)await load();$('form-error').textContent=err.message;submit.disabled=false;}
@@ -406,6 +436,7 @@ document.addEventListener('input',e=>{
 });
 document.addEventListener('change',e=>{
   const el=e.target;
+  if(el.id==='create-initial-license'){$('initial-license-fields').hidden=!el.checked;$('initial-license-fields').querySelectorAll('input,select').forEach(input=>input.disabled=!el.checked);}
   if(el.id==='weekly-contact-window'){
     weeklyContactWindow=el.value;
     expandedDashboardSections.add('contact-list');
@@ -473,7 +504,7 @@ document.addEventListener('click',async e=>{
   if(action==='open'&&row)showEditor(row);
   if(action==='activity'&&row)showActivity(row);
   if(action==='renew-license'&&row)showRenewal(row);
-  if(action==='close')$('modal').close();
+  if(action==='close'){if(editor?.creationPayload&&$('editor')&&!editor.creationComplete){if(editor.saving)return;if(!confirm('La solicitud puede haberse guardado. Comprueba la cuenta antes de volver a crearla. ¿Cerrar?'))return;}$('modal').close();}
   if(action==='history')await showRecordHistory(id);
   if(action==='done'&&row){
     el.disabled=true;
@@ -1024,3 +1055,5 @@ document.addEventListener('toggle',event=>{
 },true);
 
 route();
+
+$('modal').addEventListener('cancel',event=>{if(editor?.creationPayload&&$('editor')&&!editor.creationComplete){event.preventDefault();if(!editor.saving&&confirm('Comprueba la cuenta y sus licencias antes de crearla otra vez. ¿Cerrar?'))$('modal').close();}});
