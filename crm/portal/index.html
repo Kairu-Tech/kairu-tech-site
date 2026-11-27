@@ -6,9 +6,9 @@
 <meta name="robots" content="noindex,nofollow">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' blob:; connect-src 'self' https://ypffaagjhrrgxsrxlluo.supabase.co; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="description" content="Panel privado de seguimiento comercial de KairuTech.">
-<link rel="stylesheet" href="../style.css?v=20261127-security">
-<script defer src="../connection.js?v=20261127-security"></script>
-<script defer src="./portal.js?v=20261127-security"></script>
+<link rel="stylesheet" href="../style.css?v=20261127-compact-forecast">
+<script defer src="../connection.js?v=20261127-compact-forecast"></script>
+<script defer src="./portal.js?v=20261127-compact-forecast"></script>
 </head>
 <body data-portal="true">
 <section id="login" class="login-wrap">
@@ -40,11 +40,8 @@
 <button type="button" id="cancel-mfa">Cancelar y salir</button>
 </form></section>
 <div class="shell" hidden>
-<aside class="sidebar">
-<div class="brand"><svg class="brand-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.9l2.15 6.02h6.39l-5.17 3.76 1.98 6.02L12 15.01 6.65 18.7l1.98-6.02-5.17-3.76h6.39L12 2.9z"/></svg><div><span class="brand-word">Kairu <span class="brand-tech">Tech</span></span><small>Portal privado</small></div></div>
-<nav id="portal-nav" aria-label="Portal"><a href="./">Mi información</a></nav></aside>
-<main>
-<header class="top"><span>Portal privado</span><div class="top-actions"><button id="portal-refresh" type="button">Actualizar</button><button id="portal-logout" type="button">Salir</button></div></header><div id="page" class="page" aria-live="polite"><p>Cargando panel…</p></div>
+<header class="portal-bar"><div class="brand"><svg class="brand-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.9l2.15 6.02h6.39l-5.17 3.76 1.98 6.02L12 15.01 6.65 18.7l1.98-6.02-5.17-3.76h6.39L12 2.9z"/></svg><div><span class="brand-word">Kairu <span class="brand-tech">Tech</span></span><small>Portal de clientes</small></div></div>
+<nav id="portal-nav" aria-label="Portal"></nav><div class="top-actions"><button id="portal-refresh" type="button">Actualizar</button><button id="portal-logout" type="button">Salir</button></div></header><main><div id="page" class="page" aria-live="polite"><p>Cargando panel…</p></div>
 </main>
 </div>
 <dialog id="modal" aria-label="Ficha comercial"><div id="modal-content"></div></dialog>
