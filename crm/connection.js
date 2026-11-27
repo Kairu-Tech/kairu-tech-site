@@ -5,8 +5,12 @@ window.crmConnection = (() => {
   const storageKey = 'kairutech-crm-session';
   let session = null;
   let refreshPromise = null;
+  let sessionEpoch = 0;
+  const sessionChanged = epoch => epoch !== sessionEpoch;
+  const canceled = () => Error('La sesión ha cambiado. Vuelve a iniciar sesión.');
 
   function storeSession(value) {
+    if (!value) { sessionEpoch++; refreshPromise = null; }
     session = value;
     if (value) sessionStorage.setItem(storageKey, JSON.stringify(value));
     else sessionStorage.removeItem(storageKey);
@@ -38,7 +42,10 @@ window.crmConnection = (() => {
   }
   function showLogin(message = '') {
     clearMfaQr();
-    document.getElementById('mfa-form')?.setAttribute('hidden', '');
+    const mfaForm = document.getElementById('mfa-form');
+    if (mfaForm) { mfaForm.hidden = true; mfaForm.reset(); mfaForm.onsubmit = null; }
+    const mfaError = document.getElementById('mfa-error');
+    if (mfaError) mfaError.textContent = '';
     storeSession(null);
     sessionStorage.removeItem(storageKey + '-recovery');
     document.getElementById('login-form').hidden = false;
@@ -55,26 +62,33 @@ window.crmConnection = (() => {
     if (!session) throw Error('Inicia sesión para continuar.');
     if (session.expires_at * 1000 > Date.now() + 60000) return session.access_token;
     if (!refreshPromise) {
-      refreshPromise = (async () => {
+      const epoch = sessionEpoch;
+      const currentRefreshToken = session.refresh_token;
+      const pending = (async () => {
         const response = await fetch(base + '/auth/v1/token?grant_type=refresh_token', {
           method: 'POST',
           headers: { apikey: publicKey, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refresh_token: session.refresh_token })
+          body: JSON.stringify({ refresh_token: currentRefreshToken })
         });
+        if (sessionChanged(epoch)) throw canceled();
         if (!response.ok) {
           showLogin('Tu sesión ha caducado. Vuelve a entrar.');
           throw Error('Tu sesión ha caducado.');
         }
         const data = await response.json();
+        if (sessionChanged(epoch)) throw canceled();
         storeSession({ ...data, expires_at: data.expires_at || Math.floor(Date.now()/1000) + data.expires_in });
         return data.access_token;
-      })().finally(() => { refreshPromise = null; });
+      })().finally(() => { if (refreshPromise === pending) refreshPromise = null; });
+      refreshPromise = pending;
     }
     return refreshPromise;
   }
 
   async function request(path, options = {}) {
+    const epoch = sessionEpoch;
     const accessToken = await token();
+    if (sessionChanged(epoch)) throw canceled();
     const response = await fetch(base + '/rest/v1/' + path, {
       ...options,
       headers: {
@@ -84,11 +98,13 @@ window.crmConnection = (() => {
         ...options.headers
       }
     });
+    if (sessionChanged(epoch)) throw canceled();
     if (response.status === 401) {
       showLogin('Tu sesión ha caducado. Vuelve a entrar.');
       throw Error('Vuelve a iniciar sesión.');
     }
     const result = await response.json().catch(() => null);
+    if (sessionChanged(epoch)) throw canceled();
     if (!response.ok) {
       const message = result?.code === 'P0001' ? result.message : response.status === 403
         ? 'Tu usuario no tiene permiso para acceder al CRM.'
@@ -100,22 +116,29 @@ window.crmConnection = (() => {
 
   function assurance() {
     try {
-      const part = session.access_token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      let part = session.access_token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      part += '='.repeat((4-part.length%4)%4);
       return JSON.parse(atob(part)).aal;
     } catch { return null; }
   }
 
   async function authMfa(path, method = 'GET', body) {
+    const epoch = sessionEpoch;
     const response = await fetch(base + '/auth/v1/' + path, {
       method, headers: { apikey: publicKey, Authorization: 'Bearer ' + await token(), 'Content-Type': 'application/json' },
       ...(body === undefined ? {} : { body: JSON.stringify(body) })
     });
+    if (sessionChanged(epoch)) throw canceled();
     if (!response.ok) throw Error('No se pudo completar la verificación. Comprueba el código o vuelve a iniciar sesión.');
-    return response.json().catch(() => null);
+    const result = await response.json().catch(() => null);
+    if (sessionChanged(epoch)) throw canceled();
+    return result;
   }
 
   async function requireMfa() {
+    const epoch = sessionEpoch;
     await token();
+    if (sessionChanged(epoch)) throw canceled();
     if (assurance() === 'aal2') return true;
     const user = await authMfa('user');
     const factors = (user.factors || []).filter(f => f.factor_type === 'totp');
@@ -155,13 +178,14 @@ window.crmConnection = (() => {
         const path = 'factors/' + encodeURIComponent(factor.id);
         const challenge = await authMfa(path + '/challenge', 'POST', {});
         const data = await authMfa(path + '/verify', 'POST', { challenge_id: challenge.id, code: form.elements.code.value.trim() });
+        if (sessionChanged(epoch)) throw canceled();
         storeSession({ ...session, ...data, expires_at: data.expires_at || Math.floor(Date.now()/1000) + data.expires_in });
         if (assurance() !== 'aal2') throw Error('No se confirmó el segundo factor.');
         clearMfaQr();
         form.reset();
         form.hidden = true;
         await unlock();
-      } catch (e) { error.textContent = e.message; form.hidden = false; }
+      } catch (e) { if (!sessionChanged(epoch)) { error.textContent = e.message; form.hidden = false; } }
       finally { button.disabled = false; }
     };
     return false;
@@ -187,9 +211,10 @@ window.crmConnection = (() => {
   }
 
   async function restoreAccess() {
+    const epoch = sessionEpoch;
     const fragment = new URLSearchParams(location.hash.slice(1));
     if (fragment.has('access_token') || fragment.has('error')) {
-      history.replaceState(null, '', location.pathname + location.search);
+      window.history.replaceState(null, '', location.pathname + location.search);
       if (fragment.has('error')) {
         throw Error('El enlace ha caducado o ya se ha utilizado. Solicita un nuevo correo.');
       }
@@ -202,6 +227,7 @@ window.crmConnection = (() => {
       });
       if (!response.ok) throw Error('El enlace no es válido. Solicita un nuevo correo.');
       const user = await response.json();
+      if (sessionChanged(epoch)) throw canceled();
       storeSession({
         access_token: accessToken,
         refresh_token: fragment.get('refresh_token'),
@@ -285,6 +311,8 @@ window.crmConnection = (() => {
     document.getElementById('cancel-reset').addEventListener('click', () => logout());
     document.getElementById('login-form').addEventListener('submit', async event => {
       event.preventDefault();
+      storeSession(null);
+      const epoch = sessionEpoch;
       const form = event.target;
       const submit = form.querySelector('button');
       submit.disabled = true;
@@ -295,21 +323,24 @@ window.crmConnection = (() => {
           headers: { apikey: publicKey, 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: form.elements.email.value.trim(), password: form.elements.password.value })
         });
+        if (sessionChanged(epoch)) throw canceled();
         if (!response.ok) throw Error('No se pudo iniciar sesión. Comprueba tu email y contraseña.');
         const data = await response.json();
+        if (sessionChanged(epoch)) throw canceled();
         storeSession({ ...data, expires_at: data.expires_at || Math.floor(Date.now()/1000) + data.expires_in });
         form.elements.password.value = '';
         await unlock();
       } catch (error) {
-        showLogin(error.message);
+        if (!sessionChanged(epoch)) showLogin(error.message);
       } finally {
         submit.disabled = false;
       }
     });
+    const startupEpoch = sessionEpoch;
     try {
       await restoreAccess();
     } catch (error) {
-      showLogin(error.message);
+      if (!sessionChanged(startupEpoch)) showLogin(error.message);
     }
   }
 
