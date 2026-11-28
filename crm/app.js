@@ -268,7 +268,7 @@ function formField([key,label,typ='text',required=false],data){
   if(key==='payerName')return '<label>Nombre de otra entidad<input name="payerName" value="'+esc(data.payerName||'')+'"'+(data.payerType==='Otra entidad'?'':' disabled')+'></label>';
   if(typ==='partner'){
     const direct=data.channelType==='Venta directa';
-    return '<label>Partner / distribuidor<input name="channelPartner" list="channel-partners" value="'+esc(direct?'':data.channelPartner||'')+'"'+(direct?' disabled':'')+'><datalist id="channel-partners">'+
+    return '<label>Partner / distribuidor<input name="channelPartner" list="channel-partners" value="'+esc(direct?'':data.channelPartner||'')+'"'+(direct?' disabled':' required')+'><datalist id="channel-partners">'+
       knownPartners().map(name=>'<option value="'+esc(name)+'"></option>').join('')+'</datalist></label>';
   }
   if(typ==='entity')return '<label>'+esc(label)+'<input name="'+key+'" list="entity-types" value="'+esc(data[key]||'')+'" placeholder="Selecciona o escribe otro"><datalist id="entity-types">'+knownEntityTypes(false).map(name=>'<option value="'+esc(name)+'"></option>').join('')+'</datalist></label>';
@@ -287,7 +287,7 @@ function formField([key,label,typ='text',required=false],data){
 const fieldsFor=d=>d.kind==='client'?clientFields:d.kind==='license'?licenseFields:d.kind==='opportunity'?fields:d.kind==='goal'?goalFields:reviewFields;
 function editorFields(d){
   const all=fieldsFor(d);
-  if(!['license','opportunity','client'].includes(d.kind))return '<div class="fields">'+all.map(f=>formField(f,d)).join('')+'</div>';
+  if(!['license','opportunity','client'].includes(d.kind))return '<section class="editor-section"><h3>Datos obligatorios</h3><div id="required-fields" class="fields">'+all.filter(f=>f[3]).map(f=>formField(f,d)).join('')+'</div></section><div class="fields">'+all.filter(f=>!f[3]).map(f=>formField(f,d)).join('')+'</div>';
   const essential=d.kind==='license'
     ?['name','project','clientId','department','licenseStatus','priority','endDate','renewalAmount','currency','renewalCloseDate','next','nextDate']
     :d.kind==='client'
@@ -303,8 +303,9 @@ function editorFields(d){
     ['Contexto comercial',['organisation','type','sector','country','region','territory','need','proposal','risk','relevantDate']],
     ['Notas y comunicaciones',['meetings','demos','emails','objections','source','notes']]
   ];
-  const used=new Set(essential);
-  let html='<div class="fields">'+all.filter(f=>used.has(f[0])).map(f=>formField(f,d)).join('')+'</div>';
+  const required=all.filter(f=>f[3]||f[0]==='channelPartner');
+  const used=new Set([...essential,...required.map(f=>f[0])]);
+  let html='<section class="editor-section"><h3>Datos obligatorios</h3><div id="required-fields" class="fields">'+required.map(f=>formField(f,d)).join('')+'</div></section><h3>Seguimiento y datos opcionales</h3><div class="fields">'+all.filter(f=>essential.includes(f[0])&&!required.includes(f)).map(f=>formField(f,d)).join('')+'</div>';
   if(d.kind==='license')html+=licenseClassification(d);
   for(const [title,keys] of groups){
     const selected=all.filter(f=>keys.includes(f[0])&&!used.has(f[0]));
@@ -359,7 +360,7 @@ function showEditor(row,kind='opportunity'){
   '<p id="form-error" class="error" role="alert"></p><div class="dialog-foot">'+(row?button('history','Ver historial','data-id="'+esc(d.id)+'"'):'')+
   (row&&['client','opportunity','license'].includes(d.kind)?button('activity','＋ Actividad','data-id="'+esc(d.id)+'"'):'')+
   (row&&d.kind==='license'?licensePeriodButton(d):'')+'<button type="submit" class="primary">Guardar</button></div></form>'+importOriginDetails(d)+(row&&d.kind==='client'?accountPurchases(d):'')+(row?activityTimeline(d):'')+'<div id="history"></div></div>';
-  syncMunicipalityVisibility();
+  syncMunicipalityVisibility();syncConditionalRequired();
   if(!$('modal').open)$('modal').showModal();
   $('modal').scrollTop=0;
 }
@@ -462,11 +463,13 @@ document.addEventListener('submit',async e=>{
 document.addEventListener('input',e=>{
   if(e.target.id==='municipality-search'){municipalitySuggestions(e.target.value);const f=e.target.form;if(f?.elements.municipalityCode)f.elements.municipalityCode.value='';if($('municipality-location'))$('municipality-location').textContent='Selecciona un resultado para confirmar la ubicación.';updateMunicipalAccountName();}
 
+  if(e.target.name==='entityType'&&e.target.closest('#editor'))updateMunicipalAccountName();
   if(e.target.id==='customer-query'){customerQuery=e.target.value;$('customer-results').innerHTML=customerResults();}
   if(e.target.id==='query'){query=e.target.value;$('results').innerHTML=resultTable();}
 });
 document.addEventListener('change',e=>{
   const el=e.target;
+  if(['paymentStatus','renewalPaymentStatus','payerType'].includes(el.name)&&el.closest('#editor'))syncConditionalRequired();
   if(el.id==='municipality-search'){if(el.value.trim())selectMunicipality(el.value);else{for(const k of ['municipalityCode','municipality','province','autonomousCommunity'])if(el.form.elements[k])el.form.elements[k].value='';$('municipality-notice').textContent='';$('municipality-location').textContent='Sin municipio asignado';updateMunicipalAccountName();}}
   if(el.closest('#editor')&&['marketSector','country'].includes(el.name))syncMunicipalityVisibility();
   if(el.closest('#editor')&&el.name==='entityType')updateMunicipalAccountName();
@@ -489,7 +492,7 @@ document.addEventListener('change',e=>{
   if(el.name==='channelType'&&el.closest('#editor')){
     const partner=el.closest('form').elements.channelPartner;
     if(partner){
-      partner.disabled=el.value==='Venta directa';
+      partner.disabled=el.value==='Venta directa';partner.required=!partner.disabled;
       if(partner.disabled)partner.value='';
     }
   }
@@ -1171,7 +1174,7 @@ function municipalAccountName(m){return 'Ayuntamiento de '+m[1];}
 function publicLocation(d){const a=get(d.kind==='license'?d.clientId:d.accountId)?.data||d;return Object.fromEntries(['municipalityCode','municipality','province','autonomousCommunity'].map(k=>[k,d[k]||a[k]||'']));}
 function municipalityEditor(d){
  const m=municipalityByCode(d.municipalityCode),na=d.municipalityNotApplicable===true;
- return '<div class="wide" id="municipality-selector"><label class="initial-license-check"><input type="checkbox" name="municipalityNotApplicable" id="municipality-not-applicable"'+(na?' checked':'')+'> No corresponde · organismo autonómico o estatal</label><div id="municipality-search-area"'+(na?' hidden':'')+'><label>Buscar municipio<input id="municipality-search" name="municipalitySearch" list="municipality-options" value="'+esc(m?municipalityLabel(m):'')+'" placeholder="Escribe, por ejemplo, Jumi" autocomplete="off"><datalist id="municipality-options"></datalist></label><p class="sub" id="municipality-location">'+esc(m?m.slice(1).join(' · '):'Selecciona un resultado para completar la ubicación.')+'</p></div><input type="hidden" name="municipalityCode" value="'+esc(d.municipalityCode||'')+'"><div id="municipality-notice" role="status"></div>'+(d.kind==='client'?'<div id="municipality-name-suggestion"></div>':'')+'</div>';
+ return '<div class="wide" id="municipality-selector"><label class="initial-license-check"><input type="checkbox" name="municipalityNotApplicable" id="municipality-not-applicable"'+(na?' checked':'')+'> No corresponde · organismo autonómico o estatal</label><div id="municipality-search-area"'+(na?' hidden':'')+'><label>Buscar municipio<input id="municipality-search" name="municipalitySearch" list="municipality-options" value="'+esc(m?municipalityLabel(m):'')+'" placeholder="Escribe, por ejemplo, Jumi" autocomplete="off"><datalist id="municipality-options"></datalist></label><p class="sub" id="municipality-location">'+esc(m?m.slice(1).join(' · '):'Selecciona un resultado para completar la ubicación.')+'</p></div><input type="hidden" name="municipalityCode" value="'+esc(d.municipalityCode||'')+'"><div id="municipality-notice" role="status"></div>'+(['client','opportunity'].includes(d.kind)?'<div id="municipality-name-suggestion"></div>':'')+'</div>';
 }
 
 function municipalitySuggestions(input){
@@ -1204,12 +1207,31 @@ function showExpansion(row){
 }
 
 function updateMunicipalAccountName(force=false){
- const f=$('editor');if(!f||editor?.data.kind!=='client')return;
- const m=municipalityByCode(f.elements.municipalityCode?.value),eligible=f.elements.entityType?.value==='Ayuntamiento'&&f.elements.marketSector?.value==='Público'&&f.elements.country?.value==='España'&&!f.elements.municipalityNotApplicable?.checked;
+ const f=$('editor');if(!f||!['client','opportunity'].includes(editor?.data.kind))return;
+ const official=entityTypes.find(v=>normalizeMunicipality(v)===normalizeMunicipality(f.elements.entityType?.value));if(official)f.elements.entityType.value=official;
+ const m=municipalityByCode(f.elements.municipalityCode?.value),eligible=normalizeMunicipality(f.elements.entityType?.value)==='ayuntamiento'&&f.elements.marketSector?.value==='Público'&&f.elements.country?.value==='España'&&!f.elements.municipalityNotApplicable?.checked;
  const suggestion=eligible&&m?municipalAccountName(m):'';
  if(suggestion&&(force||!editor.row&&(!f.elements.name.value||f.elements.name.value===editor.autoMunicipalName))){f.elements.name.value=suggestion;editor.autoMunicipalName=suggestion;}
  else if(!suggestion&&!editor.row&&editor.autoMunicipalName&&f.elements.name.value===editor.autoMunicipalName){f.elements.name.value='';editor.autoMunicipalName='';}
  const box=$('municipality-name-suggestion');if(box)box.innerHTML=suggestion?'<p class="sub">Nombre sugerido: '+esc(suggestion)+'</p>'+button('municipal-name','Usar nombre sugerido'):'';
+}
+
+function prepareMunicipalName(){
+ const f=$('editor');if(!f)return;
+ const input=f.elements.municipalitySearch;if(input?.value&&municipalityMatch(input.value))selectMunicipality(input.value);
+ updateMunicipalAccountName();
+}
+// Run before the browser checks required inputs, including Enter submission.
+document.addEventListener('click',e=>{if(e.target.closest('#editor button[type="submit"]'))prepareMunicipalName();},true);
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.closest('#editor')&&!e.target.matches('textarea'))prepareMunicipalName();},true);
+function syncConditionalRequired(){
+ const f=$('editor'),top=$('required-fields');if(!f||!top)return;
+ const checks=[['payerName',f.elements.payerType?.value==='Otra entidad'],['paymentDate',f.elements.paymentStatus?.value==='Pagado'],['renewalPaymentDate',f.elements.renewalPaymentStatus?.value==='Pagado']];
+ for(const [key,needed] of checks){const input=f.elements[key];if(!input)continue;const label=input.closest('label');if(!label)continue;input.required=needed;
+  let marker=f.querySelector('[data-optional-home="'+key+'"]');
+  if(needed&&!top.contains(label)){if(!marker){marker=document.createElement('span');marker.dataset.optionalHome=key;marker.hidden=true;label.before(marker);}top.append(label);}
+  else if(!needed&&marker&&top.contains(label))marker.after(label);
+ }
 }
 
 route();
