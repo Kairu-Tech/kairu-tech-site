@@ -315,3 +315,7 @@ body[data-portal] .portal-dashboard{margin:0 0 18px}
 .initial-license-check{display:flex;align-items:center;gap:10px;font-weight:650}.initial-license-check input[type=checkbox]{width:20px;height:20px;margin:0}
 
 .crm-list .pipeline-account{display:flex;align-items:center;gap:8px}.crm-list .pipeline-account .open{flex:1;min-width:0}.crm-list .pipeline-account .tag{flex-shrink:0}
+
+.potential-amount{color:var(--blue,#2463ff);font-size:.875rem;white-space:normal}
+
+.amount-origin{display:block;font-size:.875rem;font-weight:400;white-space:normal;margin-top:3px;color:var(--muted,#64748b)}
