@@ -376,17 +376,40 @@ async function persistAccountLicense(entry){
     submit.disabled=false;submit.textContent='Reintentar creación';
   }finally{entry.saving=false;}
 }
+function saleCloseFields(d){
+ if(d.kind!=='opportunity'||d.closedAccountId)return '';
+ const accounts=entries('client').map(r=>r.data).filter(a=>a.project===d.project);
+ return '<section id="sale-close" class="editor-section editor-primary"'+(d.stage==='Cierre ganado'?'':' hidden')+'><h3>Guardar venta y vincular cliente</h3><p class="sub">La venta se registra una sola vez. La cuenta conserva sus compras anteriores. Para renovaciones, abre la licencia existente.</p><div class="fields"><label>Cuenta existente<select name="closeAccount">'+opts(accounts.map(a=>[a.id,a.name]),d.accountId||'','Crear o buscar por nombre')+'</select></label><label>Nombre de cuenta nueva<input name="closeAccountName" value="'+esc(d.organisation||d.name)+'"></label><label>Licencia de esta venta<select name="closeLicenseMode">'+opts([['none','Sin licencia'],['create','Crear licencia'],['update','Actualizar licencia existente']],'none')+'</select></label><label>Licencia existente<select name="closeLicense">'+opts(entries('license').filter(r=>r.data.project===d.project).map(r=>[r.data.id,r.data.name]),'','Seleccionar')+'</select></label><label>Inicio de licencia<input name="closeStart" type="date"></label><label>Vencimiento de licencia<input name="closeEnd" type="date"></label><label>Usuarios totales tras la venta<input name="closeUsers" type="number" min="1" step="1" value="'+esc(d.operationUsers||'')+'"></label><label>Departamento contratado<input name="closeDepartment" value="'+esc(d.department||'')+'"></label></div><p class="sub">Si es una ampliación, el importe de la oportunidad debe ser solo el adicional. Al actualizar una licencia, indica el alcance total resultante.</p></section>';
+}
+function syncSaleClose(){
+ const f=$('editor'),area=$('sale-close');if(!f||!area)return;
+ const active=f.elements.stage.value==='Cierre ganado';area.hidden=!active;if(active)$('required-fields')?.after(area);
+ const selected=f.elements.closeLicense.value,account=f.elements.closeAccount.value||f.elements.accountId.value;
+ f.elements.closeLicense.innerHTML=opts(entries('license').filter(r=>r.data.project===f.elements.project.value&&(!account||r.data.clientId===account)).map(r=>[r.data.id,r.data.name]),selected,'Seleccionar');
+ const mode=f.elements.closeLicenseMode.value;
+ for(const key of ['closeAccount','closeAccountName','closeLicenseMode','closeLicense','closeStart','closeEnd','closeUsers','closeDepartment']){
+  const input=f.elements[key];const enabled=active&&(!['closeLicense','closeStart','closeEnd','closeUsers','closeDepartment'].includes(key)||mode!=='none')&&(key!=='closeLicense'||mode==='update');
+  input.disabled=!enabled;input.closest('label').hidden=!enabled;input.required=enabled&&(['closeLicense','closeStart','closeEnd','closeUsers'].includes(key)||key==='closeAccountName'&&!f.elements.closeAccount.value);
+ }
+ if(f.elements.closeAccount.value)f.elements.closeAccountName.closest('label').hidden=true;
+}
+async function persistClosedSale(entry){
+ if(entry.saving)return;entry.saving=true;const f=$('editor');f.querySelectorAll('input,select,textarea,button').forEach(el=>el.disabled=true);
+ try{await crmConnection.request('rpc/crm_close_sale',{method:'POST',body:JSON.stringify(entry.salePayload)});$('modal').close();await load();toast('Venta guardada y cuenta vinculada');}
+ catch(error){if(editor===entry){$('form-error').textContent=(error.code==='PGRST202'?'Ejecuta primero la consulta 19 en Supabase.':error.message)+' Reintenta con la misma solicitud. Si necesitas corregir datos, cierra y revisa primero si la venta se guardó.';const submit=f.querySelector('[type=submit]');submit.disabled=false;submit.textContent='Reintentar guardado';}}
+ finally{entry.saving=false;}
+}
 function showEditor(row,kind='opportunity'){
   const d=row?.data||{licenseStatus:'Por renovar',id:crypto.randomUUID(),kind,project:view==='project'?project:kind==='goal'?fProject:'',stage:'Prospección',priority:'Por revisar',accountRole:'Por clasificar',currency:'EUR',quarter:fQuarter,reviewDate:today()};
   editor={row,data:d,...(!row&&kind==='client'?{initialLicenseId:crypto.randomUUID()}: {})};
   const title=row?d.name:kind==='client'?'Nueva cuenta':kind==='license'?'Nueva licencia':kind==='goal'?'Nuevo objetivo':kind==='review'?'Registrar revisión semanal':'Nueva oportunidad';
   $('modal-content').innerHTML='<header class="dialog-head"><div><span class="record-kind">'+esc(d.kind==='client'?'Cuenta':d.kind==='opportunity'?'Oportunidad':d.kind==='license'?'Licencia':'Ficha')+'</span><h2>'+esc(title)+'</h2></div>'+button('close','✕','aria-label="Cerrar ficha"')+'</header>'+
-  '<div class="dialog-body">'+(d.kind==='license'?'<p class="sub">'+esc(accountRole(d))+' · '+esc(channelSummary(d))+' (canal de origen) · Pagador: '+esc(payerDisplay(d))+' · Responsable: '+esc(commercialOwner(d).commercialOwnerName||'Por asignar')+'.</p>':['client','opportunity'].includes(d.kind)?'<p class="editor-intro">'+(d.kind==='client'?'Cuenta · contactos, seguimiento y compras':'Oportunidad · próximos pasos, valor y cierre')+'</p>':'')+'<form id="editor">'+editorFields(d)+(!row&&d.kind==='client'?initialLicenseFields():'')+
+  '<div class="dialog-body">'+(d.kind==='license'?'<p class="sub">'+esc(accountRole(d))+' · '+esc(channelSummary(d))+' (canal de origen) · Pagador: '+esc(payerDisplay(d))+' · Responsable: '+esc(commercialOwner(d).commercialOwnerName||'Por asignar')+'.</p>':['client','opportunity'].includes(d.kind)?'<p class="editor-intro">'+(d.kind==='client'?'Cuenta · contactos, seguimiento y compras':'Oportunidad · próximos pasos, valor y cierre')+'</p>':'')+'<form id="editor">'+editorFields(d)+saleCloseFields(d)+(!row&&d.kind==='client'?initialLicenseFields():'')+
   (d.sourceUrl?'<p class="sub"><a target="_blank" rel="noopener" href="'+esc(d.sourceUrl)+'">Abrir archivo de origen ↗</a></p>':'')+
   '<p id="form-error" class="error" role="alert"></p><div class="dialog-foot">'+(row?button('history','Ver historial','data-id="'+esc(d.id)+'"'):'')+
   (row&&['client','opportunity','license'].includes(d.kind)?button('activity','Actualizar','data-id="'+esc(d.id)+'"'):'')+
   (row&&d.kind==='license'?licensePeriodButton(d):'')+'<button type="submit" class="primary">Guardar</button></div></form>'+importOriginDetails(d)+(row&&d.kind==='client'?'<details class="editor-section"><summary>Compras y licencias</summary>'+accountPurchases(d)+'</details>':'')+(row?'<details class="editor-section editor-activity"><summary>Actividad y comunicaciones</summary>'+activityTimeline(d)+'</details>':'')+'<div id="history"></div></div>';
-  syncMunicipalityVisibility();syncConditionalRequired();syncPotential();syncOperationValue();
+  syncMunicipalityVisibility();syncConditionalRequired();syncPotential();syncOperationValue();syncSaleClose();
   if(!$('modal').open)$('modal').showModal();
   $('modal').scrollTop=0;
 }
@@ -411,6 +434,7 @@ async function showRecordHistory(id){
 document.addEventListener('submit',async e=>{
   if(e.target.id!=='editor')return;
   e.preventDefault();
+  if(editor.salePayload){await persistClosedSale(editor);return;}
   if(editor.creationPayload){await persistAccountLicense(editor);return;}
   const {row,data}=editor, form=new FormData(e.target);
   const d={...data};
@@ -486,6 +510,12 @@ document.addEventListener('submit',async e=>{
       editor.creationPayload={p_account_id:d.id,p_license_id:editor.initialLicenseId,p_project_id:projectIds[d.project],p_account_data:d,p_license_data:{startDate:start,endDate:end,amount,department:d.department||'',currency:String(form.get('initialCurrency')||'EUR')},p_reason:String(form.get('reason')||'')};
       await persistAccountLicense(editor);return;
     }
+    if(d.kind==='opportunity'&&d.stage==='Cierre ganado'&&!data.closedAccountId&&e.target.elements.closeLicenseMode){
+      if(d.type==='Renovación')throw Error('Gestiona la renovación desde su licencia existente.');
+      const license=get(form.get('closeLicense'));
+      editor.salePayload={p_request_id:crypto.randomUUID(),p_id:d.id,p_version:row?.version??-1,p_project:projectIds[d.project],p_data:d,p_account:form.get('closeAccount')||d.accountId||null,p_account_name:String(form.get('closeAccountName')||d.name),p_license_mode:form.get('closeLicenseMode'),p_license:license?.data.id||null,p_license_version:license?.version??-1,p_license_data:{startDate:form.get('closeStart')||'',endDate:form.get('closeEnd')||'',users:form.get('closeUsers')||'',department:form.get('closeDepartment')||d.department||''}};
+      await persistClosedSale(editor);return;
+    }
     await save(d,row?.version??-1,String(form.get('reason')??''));
     $('modal').close();await load();toast('Versión guardada');
   }catch(err){if(err.status===409)await load();$('form-error').textContent=err.message;submit.disabled=false;}
@@ -502,7 +532,10 @@ document.addEventListener('input',e=>{
 });
 document.addEventListener('change',e=>{
   const el=e.target;
-  if(el.name==='project'&&el.closest('#editor')){syncPotential();syncOperationValue();}
+  if(el.closest('#editor')&&['stage','closeLicenseMode','closeAccount'].includes(el.name))syncSaleClose();
+  if(el.closest('#editor')&&el.name==='closeLicense'){const l=get(el.value)?.data;if(l){for(const [key,value] of [['closeStart',l.startDate],['closeEnd',l.endDate],['closeUsers',l.users],['closeDepartment',l.department]])el.form.elements[key].value=value||'';}}
+  if(el.closest('#editor')&&el.name==='accountId'&&el.form.elements.closeAccount){el.form.elements.closeAccount.value=el.value;syncSaleClose();}
+  if(el.name==='project'&&el.closest('#editor')){const area=$('sale-close');if(area)area.outerHTML=saleCloseFields({...editor.data,project:el.value,accountId:'',stage:el.closest('form').elements.stage.value});syncPotential();syncOperationValue();syncSaleClose();}
   if(el.closest('#editor')&&['forecastBasis','stage','quoteStatus','forecastCategory'].includes(el.name))syncOperationValue();
   if(['paymentStatus','renewalPaymentStatus','payerType','licenseStatus'].includes(el.name)&&el.closest('#editor'))syncConditionalRequired();
   if(el.id==='municipality-search'){if(el.value.trim())selectMunicipality(el.value);else{for(const k of ['municipalityCode','municipality','province','autonomousCommunity'])if(el.form.elements[k])el.form.elements[k].value='';$('municipality-notice').textContent='';$('municipality-location').textContent='Sin municipio asignado';updateMunicipalAccountName();}}
@@ -579,7 +612,8 @@ document.addEventListener('click',async e=>{
     list.insertAdjacentHTML('beforeend',contactEditorRow({}));
   }
   if(action==='remove-contact')el.closest('.contact-edit-row').remove();
-  if(action==='add-purchase'&&row){showEditor(null,'opportunity');editor.data={...editor.data,project:row.data.project,accountId:id,department:row.data.department||'',channelType:channelDetails(row.data).channelType,channelPartner:channelDetails(row.data).channelPartner,stage:'Cierre ganado',paymentStatus:'Por confirmar'};const d=editor.data;document.getElementById('editor').innerHTML=editorFields(d)+'<p id="form-error" class="error" role="alert"></p><div class="dialog-foot"><button type="submit" class="primary">Guardar compra</button></div>';document.querySelector('.dialog-head h2').textContent='Añadir compra · '+row.data.name;syncMunicipalityVisibility();syncConditionalRequired();syncPotential();syncOperationValue();}
+  if(action==='new-account-opportunity'&&row){showExpansion(row);const f=$('editor');f.elements.department.value=row.data.department||'';f.elements.type.value='Por cualificar';f.elements.name.value=row.data.name;document.querySelector('.dialog-head h2').textContent='Nueva oportunidad · '+row.data.name;}
+  if(action==='add-purchase'&&row){showEditor(null,'opportunity');editor.data={...editor.data,project:row.data.project,accountId:id,department:row.data.department||'',channelType:channelDetails(row.data).channelType,channelPartner:channelDetails(row.data).channelPartner,stage:'Cierre ganado',paymentStatus:'Por confirmar'};const d=editor.data;document.getElementById('editor').innerHTML=editorFields(d)+saleCloseFields(d)+'<p id="form-error" class="error" role="alert"></p><div class="dialog-foot"><button type="submit" class="primary">Guardar compra</button></div>';document.querySelector('.dialog-head h2').textContent='Añadir compra · '+row.data.name;syncMunicipalityVisibility();syncConditionalRequired();syncPotential();syncOperationValue();syncSaleClose();}
   if(action==='municipal-name')updateMunicipalAccountName(true);
   if(action==='expansion'&&row)showExpansion(row);
   if(action==='operation-copy-potential'){const f=$('editor');if(f.elements.potentialUsers.value){f.elements.operationUsers.value=f.elements.potentialUsers.value;editor.useOperationEstimate=true;editor.operationManual=false;syncOperationValue();}}
@@ -593,7 +627,7 @@ document.addEventListener('click',async e=>{
   if(action==='open'&&row)showEditor(row);
   if(action==='activity'&&row)showActivity(row);
   if(action==='renew-license'&&row)showRenewal(row);
-  if(action==='close'){if(editor?.creationPayload&&$('editor')&&!editor.creationComplete){if(editor.saving)return;if(!confirm('La solicitud puede haberse guardado. Comprueba la cuenta antes de volver a crearla. ¿Cerrar?'))return;}$('modal').close();}
+  if(action==='close'){if((editor?.creationPayload||editor?.salePayload)&&$('editor')&&!editor.creationComplete){if(editor.saving)return;if(!confirm('La solicitud puede haberse guardado. Comprueba la cuenta antes de volver a crearla. ¿Cerrar?'))return;}$('modal').close();}
   if(action==='history')await showRecordHistory(id);
   if(action==='done'&&row){
     el.disabled=true;
@@ -1149,7 +1183,7 @@ document.addEventListener('toggle',event=>{
 },true);
 
 
-$('modal').addEventListener('cancel',event=>{if(editor?.creationPayload&&$('editor')&&!editor.creationComplete){event.preventDefault();if(!editor.saving&&confirm('Comprueba la cuenta y sus licencias antes de crearla otra vez. ¿Cerrar?'))$('modal').close();}});
+$('modal').addEventListener('cancel',event=>{if((editor?.creationPayload||editor?.salePayload)&&$('editor')&&!editor.creationComplete){event.preventDefault();if(!editor.saving&&confirm('Comprueba la cuenta y sus licencias antes de crearla otra vez. ¿Cerrar?'))$('modal').close();}});
 
 
 // One commercial operation per source record/period; payments use their own date.
@@ -1160,7 +1194,7 @@ function commercialLedger(){
     if(d.kind==='opportunity')list.push({id:d.id,account:d.accountId||'',project:d.project,name:d.name,department:d.department||'',amount:d.amount,currency:d.currency||'EUR',status:d.stage==='Cierre ganado'?'Confirmado':['Cierre perdido','En pausa'].includes(d.stage)||d.quoteStatus==='Rechazado'?'Excluido':d.amountOrigin?.startsWith('Estimado')?'Estimado':'Presupuestado',date:d.closeDate||'',payment:d.paymentStatus||'Por confirmar',paidDate:d.paymentDate||'',invoice:d.invoiceReference||'',payer:d.payer||''});
     if(d.kind==='license'){
       // A period produced by renewal is already represented by the previous record's renewal.
-      if(!d.previousLicenseId)list.push({id:d.id,account:d.clientId,project:d.project,name:d.name+' · Periodo contratado',department:d.department||'',amount:d.amount,currency:d.currency||'EUR',status:d.saleDate?'Confirmado':'Por confirmar',date:d.saleDate||'',payment:d.paymentStatus||'Por confirmar',paidDate:d.paymentDate||'',invoice:d.invoiceReference||'',payer:d.payer||''});
+      if(!d.previousLicenseId&&!d.sourceOpportunityId)list.push({id:d.id,account:d.clientId,project:d.project,name:d.name+' · Periodo contratado',department:d.department||'',amount:d.amount,currency:d.currency||'EUR',status:d.saleDate?'Confirmado':'Por confirmar',date:d.saleDate||'',payment:d.paymentStatus||'Por confirmar',paidDate:d.paymentDate||'',invoice:d.invoiceReference||'',payer:d.payer||''});
       if(value(d.renewalAmount)||d.renewalCloseDate||d.quoteReference)list.push({id:d.id,account:d.clientId,project:d.project,name:d.name+' · Renovación',department:d.department||'',amount:d.renewalAmount,currency:d.currency||'EUR',status:renewalStatus(d)==='Renovado'?'Confirmado':renewalStatus(d)==='Finalizada'||d.quoteStatus==='Rechazado'?'Excluido':'Presupuestado',date:d.renewalCloseDate||'',payment:d.renewalPaymentStatus||'Por confirmar',paidDate:d.renewalPaymentDate||'',invoice:d.renewalInvoiceReference||'',payer:d.renewalPayer||''});
     }
   }
@@ -1185,7 +1219,7 @@ function purchaseTable(list){
 }
 function accountPurchases(d){
  const data=commercialLedger().filter(x=>x.account===d.id);
- return '<section class="editor-section"><h3>Compras y licencias</h3><p class="sub">Histórico completo. Abre una operación para actualizar sus datos. Los importes se muestran por moneda.</p>'+button('add-purchase','＋ Añadir compra','data-id="'+esc(d.id)+'"')+' '+button('expansion','＋ Ampliación','data-id="'+esc(d.id)+'"')+purchaseTable(data)+'</section>';
+ return '<section class="editor-section"><h3>Compras y licencias</h3><p class="sub">Histórico completo. Abre una operación para actualizar sus datos. Los importes se muestran por moneda.</p>'+button('add-purchase','＋ Añadir compra','data-id="'+esc(d.id)+'"')+' '+button('new-account-opportunity','＋ Nueva oportunidad','data-id="'+esc(d.id)+'"')+' '+button('expansion','＋ Ampliación','data-id="'+esc(d.id)+'"')+purchaseTable(data)+'<h4>Licencias vinculadas</h4>'+entries('license').filter(r=>r.data.clientId===d.id).map(r=>'<div class="record">'+openBtn(r.data,r.data.name,renewalStatus(r.data)+' · '+short(r.data.endDate))+'</div>').join('')+'</section>';
 }
 function sales(){
  const all=commercialLedger(),years=[...new Set([today().slice(0,4),...all.flatMap(d=>[d.date,d.paidDate]).filter(Boolean).map(d=>d.slice(0,4))])].sort().reverse();
@@ -1250,9 +1284,9 @@ function selectMunicipality(input){
 }
 function showExpansion(row){
  showEditor(null,'opportunity');const a=row.data;
- editor.data={...editor.data,project:a.project,accountId:a.id,name:'Ampliación · '+a.name,type:'Ampliación',stage:'Prospección',department:'Todo el Ayuntamiento',marketSector:classification(a).marketSector,entityType:classification(a).entityType,country:a.country||'',...publicLocation(a),...channelDetails(a)};
- $('editor').innerHTML=editorFields(editor.data)+'<p class="sub">Se vincula a la misma cuenta. La licencia y compras anteriores conservan su alcance. Al ganar la ampliación, actualiza la licencia con motivo de cambio o añade una licencia adicional según el contrato.</p><p id="form-error" class="error" role="alert"></p><div class="dialog-foot"><button type="submit" class="primary">Guardar ampliación</button></div>';
- document.querySelector('.dialog-head h2').textContent='Ampliación · '+a.name;syncMunicipalityVisibility();syncPotential();syncOperationValue();
+ editor.data={...editor.data,project:a.project,accountId:a.id,name:'Ampliación · '+a.name,contacts:readContacts(a),municipalityNotApplicable:a.municipalityNotApplicable===true,type:'Ampliación',stage:'Prospección',department:'Todo el Ayuntamiento',marketSector:classification(a).marketSector,entityType:classification(a).entityType,country:a.country||'',...publicLocation(a),...channelDetails(a)};
+ $('editor').innerHTML=editorFields(editor.data)+saleCloseFields(editor.data)+'<p class="sub">Se vincula a la misma cuenta. La licencia y compras anteriores conservan su alcance. Al ganar la ampliación, actualiza la licencia con motivo de cambio o añade una licencia adicional según el contrato.</p><p id="form-error" class="error" role="alert"></p><div class="dialog-foot"><button type="submit" class="primary">Guardar ampliación</button></div>';
+ document.querySelector('.dialog-head h2').textContent='Ampliación · '+a.name;syncMunicipalityVisibility();syncPotential();syncOperationValue();syncSaleClose();
 }
 
 function updateMunicipalAccountName(force=false){
