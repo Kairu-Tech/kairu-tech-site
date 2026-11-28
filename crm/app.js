@@ -282,7 +282,7 @@ function formField([key,label,typ='text',required=false],data){
     const type=number?'number':['date','email','tel'].includes(typ)?typ:'text';
     control='<input'+name+' type="'+type+'" value="'+esc(v)+'"'+(number?' min="0" step="0.01"':'')+(typ==='prob'?' max="100"':'')+(typ==='quarter'?' pattern="[0-9]{4}-T[1-4]" placeholder="2026-T4"':'')+'>';
   }
-  return '<label'+(typ==='textarea'?' class="wide"':'')+'>'+esc(label)+control+'</label>';
+  return '<label'+(typ==='textarea'?' class="wide"':'')+'>'+esc(label)+control+'</label>'+(key==='name'&&['client','opportunity'].includes(data.kind)?'<div class="wide" id="municipality-name-suggestion"></div>':'');
 }
 const fieldsFor=d=>d.kind==='client'?clientFields:d.kind==='license'?licenseFields:d.kind==='opportunity'?fields:d.kind==='goal'?goalFields:reviewFields;
 function editorFields(d){
@@ -303,7 +303,7 @@ function editorFields(d){
     ['Contexto comercial',['organisation','type','sector','country','region','territory','need','proposal','risk','relevantDate']],
     ['Notas y comunicaciones',['meetings','demos','emails','objections','source','notes']]
   ];
-  const required=all.filter(f=>f[3]||f[0]==='channelPartner');
+  const required=all.filter(f=>f[3]||['channelPartner','country'].includes(f[0]));
   const used=new Set([...essential,...required.map(f=>f[0])]);
   let html='<section class="editor-section"><h3>Datos obligatorios</h3><div id="required-fields" class="fields">'+required.map(f=>formField(f,d)).join('')+'</div></section><h3>Seguimiento y datos opcionales</h3><div class="fields">'+all.filter(f=>essential.includes(f[0])&&!required.includes(f)).map(f=>formField(f,d)).join('')+'</div>';
   if(d.kind==='license')html+=licenseClassification(d);
@@ -405,6 +405,7 @@ document.addEventListener('submit',async e=>{
   try {
     if(['client','opportunity'].includes(d.kind)){
       d.municipalityNotApplicable=form.has('municipalityNotApplicable');
+      if(d.country==='España'&&!d.municipalityNotApplicable&&!d.municipalityCode)throw Error('Selecciona el municipio o marca No corresponde si la cuenta no es municipal.');
       const typed=e.target.elements.municipalitySearch?.value.trim();
       if(typed&&!municipalityMatch(typed))throw Error('Selecciona un municipio de las sugerencias o deja el buscador vacío.');
       if(typed&&municipalityMatch(typed)?.[0]!==d.municipalityCode)throw Error('Selecciona el municipio para completar su ubicación.');
@@ -473,7 +474,7 @@ document.addEventListener('change',e=>{
   if(el.id==='municipality-search'){if(el.value.trim())selectMunicipality(el.value);else{for(const k of ['municipalityCode','municipality','province','autonomousCommunity'])if(el.form.elements[k])el.form.elements[k].value='';$('municipality-notice').textContent='';$('municipality-location').textContent='Sin municipio asignado';updateMunicipalAccountName();}}
   if(el.closest('#editor')&&['marketSector','country'].includes(el.name))syncMunicipalityVisibility();
   if(el.closest('#editor')&&el.name==='entityType')updateMunicipalAccountName();
-  if(el.id==='municipality-not-applicable'){if(el.checked){for(const k of ['municipalityCode','municipality','province','autonomousCommunity','municipalitySearch'])el.form.elements[k].value='';$('municipality-notice').textContent='';$('municipality-location').textContent='Sin municipio asignado';} $('municipality-search-area').hidden=el.checked;updateMunicipalAccountName();}
+  if(el.id==='municipality-not-applicable'){if(el.checked){for(const k of ['municipalityCode','municipality','province','autonomousCommunity','municipalitySearch'])el.form.elements[k].value='';$('municipality-notice').textContent='';$('municipality-location').textContent='Sin municipio asignado';} $('municipality-search-area').hidden=el.checked;syncMunicipalityVisibility();}
   if(el.closest('#editor')&&el.name==='accountId'){const a=get(el.value)?.data;const f=el.form;if(a&&f.elements.department&&!f.elements.department.value)f.elements.department.value=a.department||'';}
   if(el.closest('#editor')&&el.name==='clientId'){const a=get(el.value)?.data;if(a&&el.form.elements.department&&!el.form.elements.department.value)el.form.elements.department.value=a.department||'';}
   if(el.id==='sales-period'){salesPeriod=el.value;render();}
@@ -544,7 +545,7 @@ document.addEventListener('click',async e=>{
     list.insertAdjacentHTML('beforeend',contactEditorRow({}));
   }
   if(action==='remove-contact')el.closest('.contact-edit-row').remove();
-  if(action==='add-purchase'&&row){showEditor(null,'opportunity');editor.data={...editor.data,project:row.data.project,accountId:id,department:row.data.department||'',channelType:channelDetails(row.data).channelType,channelPartner:channelDetails(row.data).channelPartner,stage:'Cierre ganado',paymentStatus:'Por confirmar'};const d=editor.data;document.getElementById('editor').innerHTML=editorFields(d)+'<p id="form-error" class="error" role="alert"></p><div class="dialog-foot"><button type="submit" class="primary">Guardar compra</button></div>';document.querySelector('.dialog-head h2').textContent='Añadir compra · '+row.data.name;}
+  if(action==='add-purchase'&&row){showEditor(null,'opportunity');editor.data={...editor.data,project:row.data.project,accountId:id,department:row.data.department||'',channelType:channelDetails(row.data).channelType,channelPartner:channelDetails(row.data).channelPartner,stage:'Cierre ganado',paymentStatus:'Por confirmar'};const d=editor.data;document.getElementById('editor').innerHTML=editorFields(d)+'<p id="form-error" class="error" role="alert"></p><div class="dialog-foot"><button type="submit" class="primary">Guardar compra</button></div>';document.querySelector('.dialog-head h2').textContent='Añadir compra · '+row.data.name;syncMunicipalityVisibility();syncConditionalRequired();}
   if(action==='municipal-name')updateMunicipalAccountName(true);
   if(action==='expansion'&&row)showExpansion(row);
   if(action==='new-client')showEditor(null,'client');
@@ -1174,7 +1175,7 @@ function municipalAccountName(m){return 'Ayuntamiento de '+m[1];}
 function publicLocation(d){const a=get(d.kind==='license'?d.clientId:d.accountId)?.data||d;return Object.fromEntries(['municipalityCode','municipality','province','autonomousCommunity'].map(k=>[k,d[k]||a[k]||'']));}
 function municipalityEditor(d){
  const m=municipalityByCode(d.municipalityCode),na=d.municipalityNotApplicable===true;
- return '<div class="wide" id="municipality-selector"><label class="initial-license-check"><input type="checkbox" name="municipalityNotApplicable" id="municipality-not-applicable"'+(na?' checked':'')+'> No corresponde · organismo autonómico o estatal</label><div id="municipality-search-area"'+(na?' hidden':'')+'><label>Buscar municipio<input id="municipality-search" name="municipalitySearch" list="municipality-options" value="'+esc(m?municipalityLabel(m):'')+'" placeholder="Escribe, por ejemplo, Jumi" autocomplete="off"><datalist id="municipality-options"></datalist></label><p class="sub" id="municipality-location">'+esc(m?m.slice(1).join(' · '):'Selecciona un resultado para completar la ubicación.')+'</p></div><input type="hidden" name="municipalityCode" value="'+esc(d.municipalityCode||'')+'"><div id="municipality-notice" role="status"></div>'+(['client','opportunity'].includes(d.kind)?'<div id="municipality-name-suggestion"></div>':'')+'</div>';
+ return '<div class="wide" id="municipality-selector"><label class="initial-license-check"><input type="checkbox" name="municipalityNotApplicable" id="municipality-not-applicable"'+(na?' checked':'')+'> No corresponde · no es una cuenta municipal</label><div id="municipality-search-area"'+(na?' hidden':'')+'><label>Buscar municipio<input id="municipality-search" name="municipalitySearch" list="municipality-options" value="'+esc(m?municipalityLabel(m):'')+'" placeholder="Escribe, por ejemplo, Jumi" autocomplete="off"><datalist id="municipality-options"></datalist></label><p class="sub" id="municipality-location">'+esc(m?m.slice(1).join(' · '):'Selecciona un resultado para completar la ubicación.')+'</p></div><input type="hidden" name="municipalityCode" value="'+esc(d.municipalityCode||'')+'"><div id="municipality-notice" role="status"></div>'+'</div>';
 }
 
 function municipalitySuggestions(input){
@@ -1183,13 +1184,21 @@ function municipalitySuggestions(input){
  if($('municipality-options'))$('municipality-options').innerHTML=matched.map(m=>'<option value="'+esc(municipalityLabel(m))+'"></option>').join('');
 }
 function syncMunicipalityVisibility(){
- const f=$('editor'),el=$('municipality-selector');if(!f||!el)return;
- const eligible=f.elements.marketSector?.value==='Público'&&f.elements.country?.value==='España';
- el.hidden=!eligible;
- const section=el.closest('details');if(section)section.hidden=!eligible&&!f.elements.municipalityCode.value;
- if(eligible){el.closest('details').open=true;municipalitySuggestions(f.elements.municipalitySearch.value);}
+ const f=$('editor'),el=$('municipality-selector'),top=$('required-fields');if(!f||!el||!top)return;
+ const eligible=f.elements.country?.value==='España';
+ if(!el._homeSection)el._homeSection=el.closest('details');
+ if(el._homeSection)el._homeSection.hidden=true;
+ // Geography and organisation are visible at the start as soon as Spain is chosen.
+ for(const key of ['marketSector','entityType']){const input=f.elements[key];if(!input)continue;const label=input.closest('label');if(!label)continue;
+  let marker=f.querySelector('[data-location-home="'+key+'"]');if(!marker){marker=document.createElement('span');marker.dataset.locationHome=key;marker.hidden=true;label.before(marker);}
+  if(eligible)top.append(label);else marker.after(label);
+ }
+ top.append(el);el.hidden=!eligible;
+ f.elements.municipalitySearch.required=eligible&&!f.elements.municipalityNotApplicable.checked;
+ if(eligible)municipalitySuggestions(f.elements.municipalitySearch.value);
  updateMunicipalAccountName();
 }
+
 function selectMunicipality(input){
  const f=$('editor'),m=municipalityMatch(input);if(!f||!m)return;
  f.elements.municipalityCode.value=m[0];f.elements.municipalitySearch.value=municipalityLabel(m);
@@ -1209,11 +1218,11 @@ function showExpansion(row){
 function updateMunicipalAccountName(force=false){
  const f=$('editor');if(!f||!['client','opportunity'].includes(editor?.data.kind))return;
  const official=entityTypes.find(v=>normalizeMunicipality(v)===normalizeMunicipality(f.elements.entityType?.value));if(official)f.elements.entityType.value=official;
- const m=municipalityByCode(f.elements.municipalityCode?.value),eligible=normalizeMunicipality(f.elements.entityType?.value)==='ayuntamiento'&&f.elements.marketSector?.value==='Público'&&f.elements.country?.value==='España'&&!f.elements.municipalityNotApplicable?.checked;
+ const m=municipalityByCode(f.elements.municipalityCode?.value),eligible=normalizeMunicipality(f.elements.entityType?.value)==='ayuntamiento'&&f.elements.country?.value==='España'&&!f.elements.municipalityNotApplicable?.checked;
  const suggestion=eligible&&m?municipalAccountName(m):'';
  if(suggestion&&(force||!editor.row&&(!f.elements.name.value||f.elements.name.value===editor.autoMunicipalName))){f.elements.name.value=suggestion;editor.autoMunicipalName=suggestion;}
  else if(!suggestion&&!editor.row&&editor.autoMunicipalName&&f.elements.name.value===editor.autoMunicipalName){f.elements.name.value='';editor.autoMunicipalName='';}
- const box=$('municipality-name-suggestion');if(box)box.innerHTML=suggestion?'<p class="sub">Nombre sugerido: '+esc(suggestion)+'</p>'+button('municipal-name','Usar nombre sugerido'):'';
+ const box=$('municipality-name-suggestion');if(box){const hint=suggestion?'Nombre sugerido: '+suggestion:f.elements.country?.value!=='España'?'Para sugerir el nombre, elige España, Ayuntamiento y municipio.':normalizeMunicipality(f.elements.entityType?.value)!=='ayuntamiento'?'Elige Ayuntamiento en Tipo de organismo para sugerir el nombre municipal.':f.elements.municipalityNotApplicable?.checked?'Sin municipio: escribe el nombre del organismo.':'Selecciona un municipio para generar el nombre de la cuenta.';box.innerHTML='<p class="sub" role="status">'+esc(hint)+'</p>'+button('municipal-name','Usar nombre sugerido',suggestion?'':'disabled');}
 }
 
 function prepareMunicipalName(){
