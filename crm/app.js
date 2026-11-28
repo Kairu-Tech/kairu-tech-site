@@ -7,14 +7,15 @@ const stages=['Prospección','Contacto inicial','Cualificación','Reunión / dem
 const channelTypes=['Venta directa','Partner / distribuidor'];
 const accountRoles=['Cliente final','Partner / distribuidor','Proveedor','Por clasificar'];
 const marketSectors=['Público','Privado','Mixto','Por clasificar'];
-const entityTypes=['Policía local','Policía nacional','Guardia Civil','Bomberos','Protección Civil','Emergencias','Agentes medioambientales','Ayuntamiento','Diputación','Comunidad autónoma','Cabildo / Consell','Administración pública','Transporte público','Sanidad','Universidad / educación','Empresa de uniformidad','Industria','Seguridad privada','Asociación','Otro'];
+const entityTypes=['Ayuntamiento','Diputación','Comunidad autónoma','Cabildo / Consell','Ministerio / Administración del Estado','Administración pública','Empresa pública','Empresa privada','Universidad / centro educativo','Centro sanitario','Asociación','Otro'];
+const legacyCollectives=['Policía local','Policía nacional','Guardia Civil','Bomberos','Protección Civil','Emergencias','Agentes medioambientales','Transporte público','Sanidad','Universidad / educación','Empresa de uniformidad','Industria','Seguridad privada'];
 function classification(d){
   const source=d.kind==='license'?(get(d.clientId)?.data||{}):d;
   const legacy=String(source.sector||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
   const marketSector=marketSectors.includes(source.marketSector)?source.marketSector:['publico','sector publico'].includes(legacy)?'Público':['privado','sector privado'].includes(legacy)?'Privado':'Por clasificar';
   return {marketSector,entityType:source.entityType||'',sector:source.sector||d.sector||''};
 }
-function knownEntityTypes(){return [...new Set([...entityTypes,...rows.filter(r=>['client','opportunity'].includes(r.data.kind)).map(r=>r.data.entityType).filter(Boolean)])].sort((a,b)=>a.localeCompare(b,'es'));}
+function knownEntityTypes(includeLegacy=true){return [...new Set([...entityTypes,...rows.filter(r=>['client','opportunity'].includes(r.data.kind)).map(r=>r.data.entityType).filter(v=>v&&(includeLegacy||!legacyCollectives.includes(v)))])].sort((a,b)=>a.localeCompare(b,'es'));}
 
 function accountRole(d){
   if(d.kind==='license')return accountRole(get(d.clientId)?.data||{});
@@ -58,18 +59,18 @@ const quarterFor=d=>d?d.slice(0,4)+'-T'+Math.ceil(Number(d.slice(5,7))/3):'';
 const value=x=>x!==''&&x!=null;
 const active=d=>!['Cierre ganado','Cierre perdido','En pausa'].includes(d.stage);
 const hasAction=d=>!['Cierre perdido','En pausa'].includes(d.stage)&&d.next;
-const filterFields=[['project','Proyecto'],['accountRole','Tipo de cuenta'],['country','País'],['region','Región'],['marketSector','Sector público / privado'],['entityType','Entidad / colectivo'],['department','Departamento / alcance'],['municipality','Municipio'],['province','Provincia'],['sector','Actividad'],['priority','Prioridad'],['stage','Estado comercial'],['type','Tipo'],['commercialMonth','Mes cierre / renovación'],['channelType','Canal comercial'],['channelPartner','Partner / distribuidor'],['commercialOwnerName','Responsable comercial']];
+const filterFields=[['project','Proyecto'],['accountRole','Tipo de cuenta'],['country','País'],['region','Región'],['marketSector','Sector público / privado'],['entityType','Tipo de organismo'],['department','Departamento / colectivo'],['municipality','Municipio'],['province','Provincia'],['sector','Actividad'],['priority','Prioridad'],['stage','Estado comercial'],['type','Tipo'],['commercialMonth','Mes cierre / renovación'],['channelType','Canal comercial'],['channelPartner','Partner / distribuidor'],['commercialOwnerName','Responsable comercial']];
 const navItems=[['home','▦','Esta semana'],['pipeline','☷','Pipeline'],['clients','▤','Cuentas y licencias'],['sales','€','Ventas y cobros'],['forecast','◴','Forecast trimestral'],['reviews','◷','Revisión semanal']];
 const subsets={
   Zentynel:[['','Todas'],['spain','España'],['portugal','Portugal'],['latam','Latinoamérica']],
   Flowity:[['','Todas'],['dip','Diputaciones'],['road','Carreteras']]
 };
-const departmentOptions=['Policía Local','Bomberos','Protección Civil','Servicios municipales','Todo el Ayuntamiento'];
+const departmentOptions=['Policía Local','Policía Nacional','Guardia Civil','Bomberos','Protección Civil','Emergencias','Agentes medioambientales','Servicios municipales','Todo el Ayuntamiento'];
 const locationFields=[['municipalityCode','Municipio de España','municipality'],['municipality','Municipio'],['province','Provincia'],['autonomousCommunity','Comunidad autónoma']];
 const paymentFields=[['paymentStatus','Estado de cobro',['Por confirmar','Pendiente de pago','Pagado']],['paymentDate','Fecha de cobro','date'],['invoiceReference','Referencia de factura'],['payer','Pagador']];
 const fields=[
   ['name','Cuenta / oportunidad','text',true],['project','Proyecto',projects,true],['accountRole','Tipo de cuenta',accountRoles],...channelFields,['stage','Estado comercial',stages,true],...ownerFields,...responseFields,
-  ['accountId','Cuenta vinculada','client'],...paymentFields,['organisation','Organismo, empresa, proveedor o partner'],['type','Tipo de oportunidad',types],['marketSector','Sector público / privado',marketSectors],['entityType','Tipo de entidad / colectivo','entity'],['department','Departamento / alcance','department'],...locationFields,['sector','Actividad / sector específico'],
+  ['accountId','Cuenta vinculada','client'],...paymentFields,['organisation','Organismo, empresa, proveedor o partner'],['type','Tipo de oportunidad',types],['marketSector','Sector público / privado',marketSectors],['entityType','Tipo de organismo','entity'],['department','Departamento / colectivo','department'],...locationFields,['sector','Actividad / sector específico'],
   ['country','País','country'],['region','Región','region'],['territory','Comunidad / territorio'],
   ['priority','Prioridad',priorities],['risk','Riesgo'],['contacts','Contactos','contacts'],
   ['source','Fuente','textarea'],['need','Necesidad detectada','textarea'],['proposal','Propuesta de valor','textarea'],
@@ -213,7 +214,7 @@ function resultTable(){
   const showProject=view!=='project';
   const dateCell=d=>d.nextDate?new Intl.DateTimeFormat('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',timeZone:'Europe/Madrid'}).format(new Date(d.nextDate+'T12:00Z')):'—';
   const origin=d=>{const channel=channelDetails(d);return channel.channelType==='Venta directa'?'Venta directa':channel.channelPartner||channel.channelType;};
-  return count+'<div class="scroll"><table class="crm-list"><thead><tr><th>Cuenta</th>'+(showProject?'<th>Proyecto</th>':'')+'<th>Tipo</th><th>Colectividad</th><th>Departamento</th><th>Origen</th><th>Estado</th><th>Prioridad</th><th>Importe</th><th>Cobro</th><th>Próxima acción</th><th>Fecha</th></tr></thead><tbody>'+data.map(d=>'<tr><td>'+openBtn(d,d.name)+'</td>'+(showProject?'<td>'+esc(d.project)+'</td>':'')+'<td>'+esc(accountRole(d))+'</td><td>'+esc(classification(d).entityType||'Por clasificar')+'</td><td>'+esc(d.department||'—')+'</td><td>'+esc(origin(d))+'</td><td>'+tag(d.kind==='license'?renewalStatus(get(d.id).data):d.stage||'Prospección',d.stage==='Cierre ganado'?'green':'neutral')+'</td><td>'+priority(d)+'</td><td class="nobr">'+(value(d.amount)?esc(money(Number(d.amount),d.currency)):'—')+'</td><td>'+esc(d.stage==='Cierre ganado'?(d.kind==='license'?get(d.id)?.data.renewalPaymentStatus:d.paymentStatus)||'Por confirmar':'—')+'</td><td>'+esc(d.next||'—')+'</td><td class="nobr">'+esc(dateCell(d))+'</td></tr>').join('')+'</tbody></table></div>';
+  return count+'<div class="scroll"><table class="crm-list"><thead><tr><th>Cuenta</th>'+(showProject?'<th>Proyecto</th>':'')+'<th>Tipo</th><th>Tipo de organismo</th><th>Departamento / colectivo</th><th>Origen</th><th>Estado</th><th>Prioridad</th><th>Importe</th><th>Cobro</th><th>Próxima acción</th><th>Fecha</th></tr></thead><tbody>'+data.map(d=>'<tr><td>'+openBtn(d,d.name)+'</td>'+(showProject?'<td>'+esc(d.project)+'</td>':'')+'<td>'+esc(accountRole(d))+'</td><td>'+esc(classification(d).entityType||'Por clasificar')+'</td><td>'+esc(d.department||'—')+'</td><td>'+esc(origin(d))+'</td><td>'+tag(d.kind==='license'?renewalStatus(get(d.id).data):d.stage||'Prospección',d.stage==='Cierre ganado'?'green':'neutral')+'</td><td>'+priority(d)+'</td><td class="nobr">'+(value(d.amount)?esc(money(Number(d.amount),d.currency)):'—')+'</td><td>'+esc(d.stage==='Cierre ganado'?(d.kind==='license'?get(d.id)?.data.renewalPaymentStatus:d.paymentStatus)||'Por confirmar':'—')+'</td><td>'+esc(d.next||'—')+'</td><td class="nobr">'+esc(dateCell(d))+'</td></tr>').join('')+'</tbody></table></div>';
 }
 const goalFields=[['name','Objetivo','text',true],['project','Proyecto',projects,true],['quarter','Trimestre (AAAA-T1 a AAAA-T4)','quarter',true],['currency','Moneda',['EUR','USD','GBP','MXN','CLP','BRL','COP','PEN'],true],['conservative','Conservador','amount'],['base','Base','amount'],['upside','Optimista','amount'],['linked','Sustituir por una oportunidad','link'],['notes','Notas y supuestos','textarea']];
 const reviewFields=[['name','Título','text',true],['reviewDate','Fecha de revisión','date',true],['project','Proyecto',projects],['reviewNext','Próxima revisión','date'],['notes','Decisiones, cambios de prioridad y próximos pasos','textarea',true]];
@@ -261,7 +262,7 @@ function reviews(){
 }
 function formField([key,label,typ='text',required=false],data){
   if(typ==='municipality')return municipalityEditor(data);
-  if(['municipality','province','autonomousCommunity'].includes(key))return '<label>'+esc(label)+'<input name="'+key+'" value="'+esc(data[key]||'')+'" readonly></label>';
+  if(['municipality','province','autonomousCommunity'].includes(key))return '<input type="hidden" name="'+key+'" value="'+esc(data[key]||'')+'">';
   if(typ==='department')return '<label>'+esc(label)+'<input name="department" value="'+esc(data.department||'')+'" list="department-options" placeholder="Ej. Policía Local"><datalist id="department-options">'+departmentOptions.map(v=>'<option value="'+esc(v)+'"></option>').join('')+'</datalist></label>';
   if(typ==='contacts')return contactsEditor(readContacts(data));
   if(key==='payerName')return '<label>Nombre de otra entidad<input name="payerName" value="'+esc(data.payerName||'')+'"'+(data.payerType==='Otra entidad'?'':' disabled')+'></label>';
@@ -270,7 +271,7 @@ function formField([key,label,typ='text',required=false],data){
     return '<label>Partner / distribuidor<input name="channelPartner" list="channel-partners" value="'+esc(direct?'':data.channelPartner||'')+'"'+(direct?' disabled':'')+'><datalist id="channel-partners">'+
       knownPartners().map(name=>'<option value="'+esc(name)+'"></option>').join('')+'</datalist></label>';
   }
-  if(typ==='entity')return '<label>'+esc(label)+'<input name="'+key+'" list="entity-types" value="'+esc(data[key]||'')+'" placeholder="Selecciona o escribe otro"><datalist id="entity-types">'+knownEntityTypes().map(name=>'<option value="'+esc(name)+'"></option>').join('')+'</datalist></label>';
+  if(typ==='entity')return '<label>'+esc(label)+'<input name="'+key+'" list="entity-types" value="'+esc(data[key]||'')+'" placeholder="Selecciona o escribe otro"><datalist id="entity-types">'+knownEntityTypes(false).map(name=>'<option value="'+esc(name)+'"></option>').join('')+'</datalist></label>';
   const v=key==='accountRole'?accountRole(data):key==='marketSector'?classification(data).marketSector:key==='channelType'?channelDetails(data).channelType:data[key]??'', name=' name="'+key+'"'+(required?' required':'');
   const list=typ==='client'?entries('client').map(r=>r.data).filter(d=>d.project===data.project||d.id===v).map(d=>[d.id,d.name]):Array.isArray(typ)?typ:typ==='country'?[...new Set([...countries,...opportunities().map(x=>x.country).filter(Boolean)])].sort((a,b)=>a.localeCompare(b,'es')):typ==='region'?[...new Set([...regions,...opportunities().map(x=>x.region).filter(Boolean)])]:typ==='link'?opportunities().filter(d=>(d.project===data.project||d.id===v)&&(quarterFor(d.closeDate)===data.quarter||d.id===v)).map(d=>[d.id,d.name]):null;
   let control;
@@ -319,7 +320,7 @@ document.addEventListener('invalid',e=>{
 },true);
 function licenseClassification(d){
   const client=get(d.clientId)?.data,c=classification(d);
-  return '<details id="license-classification" class="editor-section" open><summary>Clasificación de la cuenta titular</summary>'+(client?'<div class="fields"><div><strong>Sector público / privado</strong><p>'+esc(c.marketSector)+'</p></div><div><strong>Tipo de entidad / colectivo</strong><p>'+esc(c.entityType||'Por clasificar')+'</p></div></div><p class="sub">Se actualiza desde la ficha de '+esc(client.name)+'.</p>':'<p class="sub">Selecciona la cuenta titular para ver su clasificación.</p>')+'</details>';
+  return '<details id="license-classification" class="editor-section" open><summary>Clasificación de la cuenta titular</summary>'+(client?'<div class="fields"><div><strong>Sector público / privado</strong><p>'+esc(c.marketSector)+'</p></div><div><strong>Tipo de organismo</strong><p>'+esc(c.entityType||'Por clasificar')+'</p></div></div><p class="sub">Se actualiza desde la ficha de '+esc(client.name)+'.</p>':'<p class="sub">Selecciona la cuenta titular para ver su clasificación.</p>')+'</details>';
 }
 function importOriginDetails(d){
   const source=d.importOriginal;
@@ -402,6 +403,7 @@ document.addEventListener('submit',async e=>{
   const submit=e.target.querySelector('[type=submit]');submit.disabled=true;
   try {
     if(['client','opportunity'].includes(d.kind)){
+      d.municipalityNotApplicable=form.has('municipalityNotApplicable');
       const typed=e.target.elements.municipalitySearch?.value.trim();
       if(typed&&!municipalityMatch(typed))throw Error('Selecciona un municipio de las sugerencias o deja el buscador vacío.');
       if(typed&&municipalityMatch(typed)?.[0]!==d.municipalityCode)throw Error('Selecciona el municipio para completar su ubicación.');
@@ -458,15 +460,17 @@ document.addEventListener('submit',async e=>{
   }catch(err){if(err.status===409)await load();$('form-error').textContent=err.message;submit.disabled=false;}
 });
 document.addEventListener('input',e=>{
-  if(e.target.id==='municipality-search'){municipalitySuggestions(e.target.value);const f=e.target.form;if(f?.elements.municipalityCode)f.elements.municipalityCode.value='';}
+  if(e.target.id==='municipality-search'){municipalitySuggestions(e.target.value);const f=e.target.form;if(f?.elements.municipalityCode)f.elements.municipalityCode.value='';if($('municipality-location'))$('municipality-location').textContent='Selecciona un resultado para confirmar la ubicación.';updateMunicipalAccountName();}
 
   if(e.target.id==='customer-query'){customerQuery=e.target.value;$('customer-results').innerHTML=customerResults();}
   if(e.target.id==='query'){query=e.target.value;$('results').innerHTML=resultTable();}
 });
 document.addEventListener('change',e=>{
   const el=e.target;
-  if(el.id==='municipality-search'){if(el.value.trim())selectMunicipality(el.value);else{for(const k of ['municipalityCode','municipality','province','autonomousCommunity'])if(el.form.elements[k])el.form.elements[k].value='';$('municipality-notice').textContent='';}}
+  if(el.id==='municipality-search'){if(el.value.trim())selectMunicipality(el.value);else{for(const k of ['municipalityCode','municipality','province','autonomousCommunity'])if(el.form.elements[k])el.form.elements[k].value='';$('municipality-notice').textContent='';$('municipality-location').textContent='Sin municipio asignado';updateMunicipalAccountName();}}
   if(el.closest('#editor')&&['marketSector','country'].includes(el.name))syncMunicipalityVisibility();
+  if(el.closest('#editor')&&el.name==='entityType')updateMunicipalAccountName();
+  if(el.id==='municipality-not-applicable'){if(el.checked){for(const k of ['municipalityCode','municipality','province','autonomousCommunity','municipalitySearch'])el.form.elements[k].value='';$('municipality-notice').textContent='';$('municipality-location').textContent='Sin municipio asignado';} $('municipality-search-area').hidden=el.checked;updateMunicipalAccountName();}
   if(el.closest('#editor')&&el.name==='accountId'){const a=get(el.value)?.data;const f=el.form;if(a&&f.elements.department&&!f.elements.department.value)f.elements.department.value=a.department||'';}
   if(el.closest('#editor')&&el.name==='clientId'){const a=get(el.value)?.data;if(a&&el.form.elements.department&&!el.form.elements.department.value)el.form.elements.department.value=a.department||'';}
   if(el.id==='sales-period'){salesPeriod=el.value;render();}
@@ -538,7 +542,7 @@ document.addEventListener('click',async e=>{
   }
   if(action==='remove-contact')el.closest('.contact-edit-row').remove();
   if(action==='add-purchase'&&row){showEditor(null,'opportunity');editor.data={...editor.data,project:row.data.project,accountId:id,department:row.data.department||'',channelType:channelDetails(row.data).channelType,channelPartner:channelDetails(row.data).channelPartner,stage:'Cierre ganado',paymentStatus:'Por confirmar'};const d=editor.data;document.getElementById('editor').innerHTML=editorFields(d)+'<p id="form-error" class="error" role="alert"></p><div class="dialog-foot"><button type="submit" class="primary">Guardar compra</button></div>';document.querySelector('.dialog-head h2').textContent='Añadir compra · '+row.data.name;}
-  if(action==='municipal-name'){const f=$('editor');const m=municipalityByCode(f.elements.municipalityCode.value);if(m){f.elements.name.value=municipalAccountName(m);if(f.elements.entityType)f.elements.entityType.value='Ayuntamiento';}}
+  if(action==='municipal-name')updateMunicipalAccountName(true);
   if(action==='expansion'&&row)showExpansion(row);
   if(action==='new-client')showEditor(null,'client');
   if(action==='new-license')showEditor(null,'license');
@@ -582,7 +586,7 @@ function exportRecords(){
   const data=view==='clients'?customerData():(view==='pipeline'||view==='project')?filtered():opportunities();
   const columns=(view==='clients'?(clientTab==='licenses'?licenseFields:clientFields):fields).flatMap(([key,label])=>key==='contacts'?
     [['_contactName','Nombre del contacto'],['_contactEmail','Email'],['_contactPhone','Teléfono'],['_contactRole','Cargo']]:[[key,label]]);
-  if(view==='clients'&&clientTab==='licenses')columns.splice(2,0,['marketSector','Sector público / privado'],['entityType','Tipo de entidad / colectivo'],['department','Departamento / alcance'],['municipality','Municipio'],['province','Provincia'],['accountRole','Tipo de cuenta'],['channelType','Canal comercial'],['channelPartner','Partner / distribuidor']);
+  if(view==='clients'&&clientTab==='licenses')columns.splice(2,0,['marketSector','Sector público / privado'],['entityType','Tipo de organismo'],['department','Departamento / colectivo'],['municipality','Municipio'],['province','Provincia'],['accountRole','Tipo de cuenta'],['channelType','Canal comercial'],['channelPartner','Partner / distribuidor']);
   const csvCell=value=>'"'+String(value??'').replace(/^[=+@\t\r-]/,"'$&").replace(/"/g,'""')+'"';
   const csv=[columns.map(([,label])=>csvCell(label)).join(';'),...data.map(row=>columns.map(([key])=>csvCell(exportValue(row,key))).join(';'))].join('\r\n');
   const url=URL.createObjectURL(new Blob(['\ufeff',csv],{type:'text/csv;charset=utf-8'}));
@@ -594,7 +598,7 @@ function exportRecords(){
 const clientFields=[
   ['name','Cuenta / entidad','text',true],['project','Proyecto',projects,true],['accountRole','Tipo de cuenta',accountRoles],...channelFields,
   ['clientStatus','Situación',['Actual','En pausa','Baja']],...ownerFields,...responseFields,
-  ['marketSector','Sector público / privado',marketSectors],['entityType','Tipo de entidad / colectivo','entity'],['department','Departamento / alcance','department'],...locationFields,['sector','Actividad / sector específico'],['country','País','country'],['region','Región','region'],
+  ['marketSector','Sector público / privado',marketSectors],['entityType','Tipo de organismo','entity'],['department','Departamento / colectivo','department'],...locationFields,['sector','Actividad / sector específico'],['country','País','country'],['region','Región','region'],
   ['contacts','Contactos','contacts'],
   ['next','Próxima acción','textarea'],['nextDate','Fecha de seguimiento','date'],
   ['priority','Prioridad',priorities],['risk','Riesgo / datos por confirmar','textarea'],
@@ -602,7 +606,7 @@ const clientFields=[
 ];
 const licenseFields=[
   ['name','Licencia / contrato','text',true],['project','Proyecto',projects,true],
-  ['clientId','Cuenta titular de la licencia','client',true],['department','Departamento / alcance contratado','department'],
+  ['clientId','Cuenta titular de la licencia','client',true],['department','Departamento / colectivo contratado','department'],
   ['licenseStatus','Estado de renovación',['Por renovar','Renovado','Finalizada'],true],
   ['priority','Prioridad',priorities],
   ['startDate','Fecha de inicio','date'],['endDate','Fecha de vencimiento','date'],
@@ -654,7 +658,7 @@ function customerResults(){
   const licenses=clientTab==='licenses',showProject=!customerProject;
   const date=d=>d?new Intl.DateTimeFormat('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',timeZone:'Europe/Madrid'}).format(new Date(d+'T12:00Z')):'—';
   const origin=d=>{const channel=channelDetails(d);return channel.channelType==='Venta directa'?'Venta directa':channel.channelPartner||channel.channelType;};
-  const columns=licenses?'<th>Cuenta titular</th><th>Departamento</th><th>Origen</th><th>Estado</th><th>Vencimiento</th>':'<th>Tipo</th><th>Departamento</th><th>Municipio</th><th>Origen</th><th>Contacto</th><th>Email</th><th>Teléfono</th>';
+  const columns=licenses?'<th>Cuenta titular</th><th>Departamento / colectivo</th><th>Origen</th><th>Estado</th><th>Vencimiento</th>':'<th>Tipo</th><th>Departamento / colectivo</th><th>Municipio</th><th>Origen</th><th>Contacto</th><th>Email</th><th>Teléfono</th>';
   const body=data.map(d=>{
     let details;
     if(licenses){
@@ -678,7 +682,7 @@ function clients(){
     '<label>Proyecto<select id="customer-project">'+opts(projects,customerProject,'Todos')+'</select></label>'+
     '<label>Tipo de cuenta<select id="customer-role">'+opts(accountRoles,customerRole,'Todos')+'</select></label>'+
     '<label>Sector público / privado<select id="customer-market">'+opts(marketSectors,customerMarket,'Todos')+'</select></label>'+
-    '<label>Entidad / colectivo<select id="customer-entity">'+opts(knownEntityTypes(),customerEntity,'Todos')+'</select></label>'+
+    '<label>Tipo de organismo<select id="customer-entity">'+opts(knownEntityTypes(),customerEntity,'Todos')+'</select></label>'+
     '<label>Canal de origen<select id="customer-channel">'+opts(channelTypes,customerChannel,'Todos')+'</select></label>'+
     '<label>Partner / distribuidor<select id="customer-partner">'+opts(knownPartners(),customerPartner,'Todos')+'</select></label>'+
     (clientTab==='licenses'?'<label>Estado<select id="renewal-state-filter">'+opts([['all','Todos'],['Por renovar','Por renovar'],['Renovado','Renovado'],['Finalizada','Finalizada']],renewalStateFilter)+'</select></label><label>Vencimiento<select id="license-filter">'+opts([['all','Todos'],['past','Periodo vencido'],['30','Hasta 30 días'],['60','De 31 a 60 días'],['90','De 61 a 90 días'],['later','Más de 90 días'],['closed','Renovadas / finalizadas'],['unknown','Sin fecha']],licenseFilter)+'</select></label>':'')+
@@ -1001,7 +1005,7 @@ function showRenewal(row){
     ['payerType','Quién paga',['Por confirmar','Cliente','Partner / distribuidor','Otra entidad'],true],
     ['payerName','Nombre del pagador (si es otra entidad)'],
     ['users','Usuarios contratados'],
-    ['department','Departamento / alcance del nuevo periodo','department'],
+    ['department','Departamento / colectivo del nuevo periodo','department'],
     ['renewalTerms','Condiciones del nuevo periodo','textarea'],
     ['notes','Notas del nuevo periodo','textarea']
   ];
@@ -1133,7 +1137,7 @@ function salesTotals(list,period=salesPeriod){
  return total;
 }
 function purchaseTable(list){
- return list.length?'<div class="scroll"><table><thead><tr><th>Compra / concepto</th><th>Cuenta</th><th>Departamento</th><th>Venta / cierre previsto</th><th>Importe sin IVA</th><th>Estado comercial</th><th>Cobro</th><th>Fecha de cobro</th><th>Factura / pagador</th></tr></thead><tbody>'+list.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(d=>'<tr><td>'+openBtn({id:d.id},d.name)+'</td><td>'+esc(get(d.account)?.data.name||'Sin vincular')+'</td><td>'+esc(d.department||'—')+'</td><td>'+esc(d.date||'Por confirmar')+'</td><td>'+esc(value(d.amount)?money(Number(d.amount),d.currency):'Por confirmar')+'</td><td>'+tag(d.status)+'</td><td>'+esc(d.status==='Confirmado'?d.payment:'—')+'</td><td>'+esc(d.status==='Confirmado'&&d.payment==='Pagado'?d.paidDate||'Por confirmar':'—')+'</td><td>'+esc([d.invoice,d.payer].filter(Boolean).join(' · ')||'—')+'</td></tr>').join('')+'</tbody></table></div>':blank('Todavía no hay operaciones en esta selección.');
+ return list.length?'<div class="scroll"><table><thead><tr><th>Compra / concepto</th><th>Cuenta</th><th>Departamento / colectivo</th><th>Venta / cierre previsto</th><th>Importe sin IVA</th><th>Estado comercial</th><th>Cobro</th><th>Fecha de cobro</th><th>Factura / pagador</th></tr></thead><tbody>'+list.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(d=>'<tr><td>'+openBtn({id:d.id},d.name)+'</td><td>'+esc(get(d.account)?.data.name||'Sin vincular')+'</td><td>'+esc(d.department||'—')+'</td><td>'+esc(d.date||'Por confirmar')+'</td><td>'+esc(value(d.amount)?money(Number(d.amount),d.currency):'Por confirmar')+'</td><td>'+tag(d.status)+'</td><td>'+esc(d.status==='Confirmado'?d.payment:'—')+'</td><td>'+esc(d.status==='Confirmado'&&d.payment==='Pagado'?d.paidDate||'Por confirmar':'—')+'</td><td>'+esc([d.invoice,d.payer].filter(Boolean).join(' · ')||'—')+'</td></tr>').join('')+'</tbody></table></div>':blank('Todavía no hay operaciones en esta selección.');
 }
 function accountPurchases(d){
  const data=commercialLedger().filter(x=>x.account===d.id);
@@ -1157,7 +1161,7 @@ function sales(){
 
 function normalizeMunicipality(s){return String(s??'').normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase().trim();}
 function municipalityByCode(code){return (window.crmMunicipalities?.municipalities||[]).find(m=>m[0]===code);}
-function municipalityLabel(m){return m[1]+' · '+m[2]+' ('+m[0]+')';}
+function municipalityLabel(m){return m[1]+' — '+m[2];}
 function municipalityMatch(input){
  const list=window.crmMunicipalities?.municipalities||[],n=normalizeMunicipality(input);
  const exact=list.find(m=>municipalityLabel(m)===input||m[0]===input);if(exact)return exact;
@@ -1166,9 +1170,10 @@ function municipalityMatch(input){
 function municipalAccountName(m){return 'Ayuntamiento de '+m[1];}
 function publicLocation(d){const a=get(d.kind==='license'?d.clientId:d.accountId)?.data||d;return Object.fromEntries(['municipalityCode','municipality','province','autonomousCommunity'].map(k=>[k,d[k]||a[k]||'']));}
 function municipalityEditor(d){
- const m=municipalityByCode(d.municipalityCode);
- return '<div class="wide" id="municipality-selector"><label>Municipio de España<input id="municipality-search" name="municipalitySearch" list="municipality-options" value="'+esc(m?municipalityLabel(m):'')+'" placeholder="Escribe el municipio o su código INE" autocomplete="off"><input type="hidden" name="municipalityCode" value="'+esc(d.municipalityCode||'')+'"><datalist id="municipality-options"></datalist></label><p class="sub">Municipios del INE · 1 enero 2026. Seleccionar completa provincia y comunidad. El departamento se registra por separado. No es obligatorio para organismos no municipales.</p><div id="municipality-notice" role="status"></div>'+(d.kind==='client'?button('municipal-name','Usar nombre del Ayuntamiento'):'')+'</div>';
+ const m=municipalityByCode(d.municipalityCode),na=d.municipalityNotApplicable===true;
+ return '<div class="wide" id="municipality-selector"><label class="initial-license-check"><input type="checkbox" name="municipalityNotApplicable" id="municipality-not-applicable"'+(na?' checked':'')+'> No corresponde · organismo autonómico o estatal</label><div id="municipality-search-area"'+(na?' hidden':'')+'><label>Buscar municipio<input id="municipality-search" name="municipalitySearch" list="municipality-options" value="'+esc(m?municipalityLabel(m):'')+'" placeholder="Escribe, por ejemplo, Jumi" autocomplete="off"><datalist id="municipality-options"></datalist></label><p class="sub" id="municipality-location">'+esc(m?m.slice(1).join(' · '):'Selecciona un resultado para completar la ubicación.')+'</p></div><input type="hidden" name="municipalityCode" value="'+esc(d.municipalityCode||'')+'"><div id="municipality-notice" role="status"></div>'+(d.kind==='client'?'<div id="municipality-name-suggestion"></div>':'')+'</div>';
 }
+
 function municipalitySuggestions(input){
  const n=normalizeMunicipality(input),list=window.crmMunicipalities?.municipalities||[];
  const matched=n.length>=2?list.filter(m=>normalizeMunicipality(municipalityLabel(m)).includes(n)).slice(0,40):[];
@@ -1180,17 +1185,14 @@ function syncMunicipalityVisibility(){
  el.hidden=!eligible;
  const section=el.closest('details');if(section)section.hidden=!eligible&&!f.elements.municipalityCode.value;
  if(eligible){el.closest('details').open=true;municipalitySuggestions(f.elements.municipalitySearch.value);}
+ updateMunicipalAccountName();
 }
 function selectMunicipality(input){
  const f=$('editor'),m=municipalityMatch(input);if(!f||!m)return;
  f.elements.municipalityCode.value=m[0];f.elements.municipalitySearch.value=municipalityLabel(m);
  for(const [k,v] of [['municipality',m[1]],['province',m[2]],['autonomousCommunity',m[3]],['territory',m[3]],['region','España']])if(f.elements[k])f.elements[k].value=v;
- if(editor.data.kind==='client'&&!editor.row){if(f.elements.entityType&&!f.elements.entityType.value)f.elements.entityType.value='Ayuntamiento';if(f.elements.accountRole&&['','Por clasificar'].includes(f.elements.accountRole.value))f.elements.accountRole.value='Cliente final';}
- if(editor.data.kind==='client'&&!editor.row&&(!f.elements.name.value||f.elements.name.value===editor.autoMunicipalName)){
-  f.elements.name.value=municipalAccountName(m);editor.autoMunicipalName=f.elements.name.value;
-  if(f.elements.entityType)f.elements.entityType.value='Ayuntamiento';
-  if(f.elements.accountRole)f.elements.accountRole.value='Cliente final';
- }
+ updateMunicipalAccountName();
+ if($('municipality-location'))$('municipality-location').textContent=m.slice(1).join(' · ');
  const duplicate=entries('client').find(r=>r.data.id!==editor.data.id&&r.data.project===f.elements.project.value&&r.data.entityType==='Ayuntamiento'&&r.data.municipalityCode===m[0]);
  $('municipality-notice').innerHTML=duplicate?'<p>Ya existe una cuenta para este Ayuntamiento. Añade la ampliación en ella.</p>'+button('open','Abrir cuenta existente','data-id="'+esc(duplicate.data.id)+'"'):editor.row?'<p class="sub">El nombre actual se conserva. Puedes cambiarlo expresamente con el botón siguiente.</p>':'';
 }
@@ -1199,6 +1201,15 @@ function showExpansion(row){
  editor.data={...editor.data,project:a.project,accountId:a.id,name:'Ampliación · '+a.name,type:'Ampliación',stage:'Prospección',department:'Todo el Ayuntamiento',marketSector:classification(a).marketSector,entityType:classification(a).entityType,country:a.country||'',...publicLocation(a),...channelDetails(a)};
  $('editor').innerHTML=editorFields(editor.data)+'<p class="sub">Se vincula a la misma cuenta. La licencia y compras anteriores conservan su alcance. Al ganar la ampliación, actualiza la licencia con motivo de cambio o añade una licencia adicional según el contrato.</p><p id="form-error" class="error" role="alert"></p><div class="dialog-foot"><button type="submit" class="primary">Guardar ampliación</button></div>';
  document.querySelector('.dialog-head h2').textContent='Ampliación · '+a.name;syncMunicipalityVisibility();
+}
+
+function updateMunicipalAccountName(force=false){
+ const f=$('editor');if(!f||editor?.data.kind!=='client')return;
+ const m=municipalityByCode(f.elements.municipalityCode?.value),eligible=f.elements.entityType?.value==='Ayuntamiento'&&f.elements.marketSector?.value==='Público'&&f.elements.country?.value==='España'&&!f.elements.municipalityNotApplicable?.checked;
+ const suggestion=eligible&&m?municipalAccountName(m):'';
+ if(suggestion&&(force||!editor.row&&(!f.elements.name.value||f.elements.name.value===editor.autoMunicipalName))){f.elements.name.value=suggestion;editor.autoMunicipalName=suggestion;}
+ else if(!suggestion&&!editor.row&&editor.autoMunicipalName&&f.elements.name.value===editor.autoMunicipalName){f.elements.name.value='';editor.autoMunicipalName='';}
+ const box=$('municipality-name-suggestion');if(box)box.innerHTML=suggestion?'<p class="sub">Nombre sugerido: '+esc(suggestion)+'</p>'+button('municipal-name','Usar nombre sugerido'):'';
 }
 
 route();
