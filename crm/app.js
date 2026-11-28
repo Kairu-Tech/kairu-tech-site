@@ -266,7 +266,7 @@ function formField([key,label,typ='text',required=false],data){
   if(key==='payerName')return '<label>Nombre de otra entidad<input name="payerName" value="'+esc(data.payerName||'')+'"'+(data.payerType==='Otra entidad'?'':' disabled')+'></label>';
   if(typ==='partner'){
     const direct=data.channelType==='Venta directa';
-    return '<label>Partner / distribuidor<input name="channelPartner" list="channel-partners" value="'+esc(direct?'':data.channelPartner||'')+'"'+(direct?' disabled':' required')+'><datalist id="channel-partners">'+
+    return '<label'+(direct?' hidden':'')+'>Partner / distribuidor<input name="channelPartner" list="channel-partners" value="'+esc(direct?'':data.channelPartner||'')+'"'+(direct?' disabled':' required')+'><datalist id="channel-partners">'+
       knownPartners().map(name=>'<option value="'+esc(name)+'"></option>').join('')+'</datalist></label>';
   }
   if(typ==='entity')return '<label>'+esc(label)+'<input name="'+key+'" list="entity-types" value="'+esc(data[key]||'')+'" placeholder="Selecciona o escribe otro"><datalist id="entity-types">'+knownEntityTypes(false).map(name=>'<option value="'+esc(name)+'"></option>').join('')+'</datalist></label>';
@@ -283,8 +283,21 @@ function formField([key,label,typ='text',required=false],data){
   return '<label'+(typ==='textarea'?' class="wide"':'')+'>'+esc(label)+control+(key==='closeDate'?'<small class="sub">Opcional solo en Sin fecha de decisión.</small>':'')+(['forecastCategory','renewalForecastCategory'].includes(key)?'<small class="sub">En evaluación: hay interés. Cierre previsto: propuesta validada, fondos y decisión previstos. Venta confirmada: cierre ganado.</small>':'')+'</label>'+(key==='name'&&['client','opportunity'].includes(data.kind)?'<div class="wide" id="municipality-name-suggestion"></div>':'');
 }
 const fieldsFor=d=>d.kind==='client'?clientFields:d.kind==='license'?licenseFields:d.kind==='opportunity'?fields:d.kind==='goal'?goalFields:reviewFields;
+function accountEditorFields(d,all){
+  const used=new Set();
+  const render=keys=>all.filter(f=>keys.includes(f[0])).map(f=>{used.add(f[0]);return formField(f,d);}).join('');
+  const identity=['name','project','accountRole','channelType','channelPartner','country','marketSector','entityType','department','sector'];
+  let html='<div id="required-fields"><section class="editor-section editor-primary"><h3>Identificación</h3><div id="identity-fields" class="fields">'+render(identity)+'</div></section></div>';
+  html+='<section class="editor-section editor-primary"><h3>Contactos</h3><div class="fields">'+render(['contacts'])+'</div></section>';
+  html+='<section class="editor-section editor-primary"><h3>Seguimiento</h3><div class="fields">'+render(['clientStatus','priority','next','nextDate','responseStatus'])+'</div></section>';
+  html+='<details id="potential-area" class="editor-section"'+(d.project==='Zentynel'?'':' hidden')+'><summary>Potencial de la cuenta</summary><div class="fields">'+render(potentialFields.map(f=>f[0]))+'</div><p class="sub">Capacidad total de la cuenta. No se suma al forecast: crea una oportunidad concreta para prever una venta.</p><p id="potential-notice" role="status"></p>'+button('potential-recalculate','Recalcular con tarifa actual')+'</details>';
+  html+='<details class="editor-section"><summary>Municipio y ubicación</summary><div class="fields">'+render(['municipalityCode','municipality','province','autonomousCommunity','region'])+'</div></details>';
+  html+='<details class="editor-section"><summary>Notas de la cuenta</summary><div class="fields">'+all.filter(f=>!used.has(f[0])).map(f=>formField(f,d)).join('')+'<label class="wide">Motivo del cambio (opcional)<input name="reason" placeholder="Ej. Datos confirmados con el cliente"></label></div></details>';
+  return html;
+}
 function editorFields(d){
   const all=fieldsFor(d);
+  if(d.kind==='client')return accountEditorFields(d,all);
   if(!['license','opportunity','client'].includes(d.kind))return '<section class="editor-section"><h3>Datos obligatorios</h3><div id="required-fields" class="fields">'+all.filter(f=>f[3]).map(f=>formField(f,d)).join('')+'</div></section><div class="fields">'+all.filter(f=>!f[3]).map(f=>formField(f,d)).join('')+'</div>';
   const essential=d.kind==='license'
     ?['name','project','clientId','department','licenseStatus','priority','endDate','renewalAmount','currency','renewalCloseDate','next','nextDate']
@@ -372,7 +385,7 @@ function showEditor(row,kind='opportunity'){
   (d.sourceUrl?'<p class="sub"><a target="_blank" rel="noopener" href="'+esc(d.sourceUrl)+'">Abrir archivo de origen ↗</a></p>':'')+
   '<p id="form-error" class="error" role="alert"></p><div class="dialog-foot">'+(row?button('history','Ver historial','data-id="'+esc(d.id)+'"'):'')+
   (row&&['client','opportunity','license'].includes(d.kind)?button('activity','Actualizar','data-id="'+esc(d.id)+'"'):'')+
-  (row&&d.kind==='license'?licensePeriodButton(d):'')+'<button type="submit" class="primary">Guardar</button></div></form>'+importOriginDetails(d)+(row&&d.kind==='client'?accountPurchases(d):'')+(row?'<details class="editor-section editor-activity"><summary>Actividad y comunicaciones</summary>'+activityTimeline(d)+'</details>':'')+'<div id="history"></div></div>';
+  (row&&d.kind==='license'?licensePeriodButton(d):'')+'<button type="submit" class="primary">Guardar</button></div></form>'+importOriginDetails(d)+(row&&d.kind==='client'?'<details class="editor-section"><summary>Compras y licencias</summary>'+accountPurchases(d)+'</details>':'')+(row?'<details class="editor-section editor-activity"><summary>Actividad y comunicaciones</summary>'+activityTimeline(d)+'</details>':'')+'<div id="history"></div></div>';
   syncMunicipalityVisibility();syncConditionalRequired();syncPotential();syncOperationValue();
   if(!$('modal').open)$('modal').showModal();
   $('modal').scrollTop=0;
@@ -416,6 +429,7 @@ document.addEventListener('submit',async e=>{
   }
   const submit=e.target.querySelector('[type=submit]');submit.disabled=true;
   try {
+    if(d.kind==='client')applyPotential(d);
     if(d.kind==='opportunity'){applyPotential(d);applyOperationValue(d);validateOpportunityForecast(d);}
     if(['client','opportunity'].includes(d.kind)){
       d.municipalityNotApplicable=form.has('municipalityNotApplicable');
@@ -513,7 +527,7 @@ document.addEventListener('change',e=>{
   if(el.name==='channelType'&&el.closest('#editor')){
     const partner=el.closest('form').elements.channelPartner;
     if(partner){
-      partner.disabled=el.value==='Venta directa';partner.required=!partner.disabled;
+      partner.disabled=el.value==='Venta directa';partner.required=!partner.disabled;partner.closest('label').hidden=partner.disabled;
       if(partner.disabled)partner.value='';
     }
   }
@@ -628,7 +642,7 @@ const clientFields=[
   ['name','Cuenta / entidad','text',true],['project','Proyecto',projects,true],['accountRole','Tipo de cuenta',accountRoles],...channelFields,
   ['clientStatus','Situación',['Actual','En pausa','Baja']],...ownerFields,...responseFields,
   ['marketSector','Sector público / privado',marketSectors],['entityType','Tipo de organismo','entity'],['department','Departamento / colectivo','department'],...locationFields,['sector','Actividad / sector específico'],['country','País','country'],['region','Región','region'],
-  ['contacts','Contactos','contacts'],
+  ['contacts','Contactos','contacts'],...potentialFields,
   ['next','Próxima acción','textarea'],['nextDate','Fecha de seguimiento','date'],
   ['priority','Prioridad',priorities],['risk','Riesgo / datos por confirmar','textarea'],
   ['source','Fuente','textarea'],['notes','Notas de seguimiento','textarea']
