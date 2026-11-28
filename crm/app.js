@@ -69,7 +69,9 @@ const departmentOptions=['Policía Local','Policía Nacional','Guardia Civil','B
 const locationFields=[['municipalityCode','Municipio de España','municipality'],['municipality','Municipio'],['province','Provincia'],['autonomousCommunity','Comunidad autónoma']];
 const paymentFields=[['paymentStatus','Estado de cobro',['Por confirmar','Pendiente de pago','Pagado']],['paymentDate','Fecha de cobro','date'],['invoiceReference','Referencia de factura'],['payer','Pagador']];
 const potentialFields=[['potentialUsers','Usuarios potenciales','users'],['potentialAnnual','Potencial anual recurrente (€ sin IVA)','calculated'],['potentialFirstYear','Potencial del primer año (€ sin IVA)','calculated'],['potentialTariffVersion','Versión de tarifa aplicada','calculated'],['potentialBasis','Detalle del cálculo','calculatedText']];
-const forecastCategories=['Probable','Posible','Fuera de previsión','Confirmada'];
+const forecastLabels={'Probable':'Cierre previsto','Posible':'En evaluación','Fuera de previsión':'Sin fecha de decisión','Confirmada':'Venta confirmada'};
+const forecastCategories=Object.entries(forecastLabels);
+const forecastCategoryLabel=v=>forecastLabels[v]||v;
 const operationFields=[['operationUsers','Usuarios de la operación actual','users'],['operationAnnual','Estimación anual del alcance actual (€ sin IVA)','calculated'],['operationFirstYear','Estimación del primer año (€ sin IVA)','calculated'],['operationBasis','Cálculo de la operación actual','calculatedText'],['operationTariffVersion','Tarifa aplicada a la operación','calculated'],['forecastBasis','Importe estimado a prever',[['annual','Anual recurrente'],['firstYear','Primer año con onboarding']]]];
 const commercialValueFields=[['budgetAmount','Importe del presupuesto sin IVA','amount'],['confirmedAmount','Importe final acordado sin IVA','amount'],['amountOrigin','Origen del importe para forecast','calculated']];
 const fields=[
@@ -80,7 +82,7 @@ const fields=[
   ['source','Fuente','textarea'],['need','Necesidad detectada','textarea'],['proposal','Propuesta de valor','textarea'],
   ['meetings','Reuniones','textarea'],['demos','Demos','textarea'],['emails','Emails y comunicaciones','textarea'],
   ['objections','Objeciones','textarea'],...quoteFields,['amount','Valor de la oportunidad sin IVA','amount',true],['currency','Moneda',['EUR','USD','GBP','MXN','CLP','BRL','COP','PEN'],true],['forecastCategory','Previsión de cierre',forecastCategories,true],['probability','Probabilidad anterior (%)','historical'],
-  ['relevantDate','Fecha relevante','date'],['closeDate','Cierre previsto / efectivo','date',true],['nextDate','Fecha de la próxima acción','date'],
+  ['relevantDate','Fecha relevante','date'],['closeDate','Fecha de cierre prevista / efectiva','date',true],['nextDate','Fecha de la próxima acción','date'],
   ['next','Próximo paso','textarea'],['notes','Notas','textarea']
 ];
 let clientTab='clients',customerRole='',customerMarket='',customerEntity='',customerQuery='',customerProject='',licenseFilter='all',renewalStateFilter='all',customerChannel='',customerPartner='';
@@ -203,7 +205,7 @@ function filtered(){
 function pipeline(){
   const all=scoped(),scope=all.filter(d=>pipelineMatches(d)),title=view==='project'?project:'Pipeline comercial';
   const specialized=view==='project'&&subsets[project];
-  const filter=filterFields.filter(([k])=>view!=='project'||k!=='project').map(([k,l])=>'<label>'+l+'<select data-filter="'+k+'">'+opts([...new Set(scope.map(d=>d[k]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es')).map(v=>k==='commercialMonth'?[v,monthLabel(v)]:v),filters[k],'Todos')+'</select></label>').join('');
+  const filter=filterFields.filter(([k])=>view!=='project'||k!=='project').map(([k,l])=>'<label>'+l+'<select data-filter="'+k+'">'+opts([...new Set(scope.map(d=>d[k]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es')).map(v=>k==='commercialMonth'?[v,monthLabel(v)]:k==='forecastCategory'?[v,forecastCategoryLabel(v)]:v),filters[k],'Todos')+'</select></label>').join('');
   return head(title,view==='project'?'Oportunidades y seguimiento del proyecto.':'Prospección, cierre, renovación y seguimiento en una sola vista.')+
     (specialized?'<div class="chips">'+specialized.map(([k,l])=>button('subset',l,'data-key="'+k+'"',k===subset?'selected':'')).join('')+'</div>':'')+
     '<div class="chips">'+[['open','Abiertas'],['closed','Cerradas'],['paused','En pausa'],['all','Todas']].map(([bucket,label])=>button('pipeline-bucket',label+' ('+all.filter(d=>pipelineMatches(d,bucket)).length+')','data-key="'+bucket+'"',pipelineBucket===bucket?'selected':'')).join('')+'</div>'+
@@ -218,7 +220,7 @@ function resultTable(){
   const showProject=view!=='project';
   const dateCell=d=>d.nextDate?new Intl.DateTimeFormat('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',timeZone:'Europe/Madrid'}).format(new Date(d.nextDate+'T12:00Z')):'—';
   const origin=d=>{const channel=channelDetails(d);return channel.channelType==='Venta directa'?'Venta directa':channel.channelPartner||channel.channelType;};
-  return count+'<div class="scroll"><table class="crm-list"><thead><tr><th>Cuenta</th>'+(showProject?'<th>Proyecto</th>':'')+'<th>Tipo</th><th>Departamento / colectivo</th><th>Origen</th><th>Estado</th><th>Importe</th><th>Cobro</th><th>Próxima acción</th><th>Fecha</th></tr></thead><tbody>'+data.map(d=>'<tr><td><div class="pipeline-account">'+openBtn(d,d.name)+priority(d)+'</div></td>'+(showProject?'<td>'+esc(d.project)+'</td>':'')+'<td>'+esc(accountRole(d))+'</td><td>'+esc(d.department||'—')+'</td><td>'+esc(origin(d))+'</td><td>'+tag(d.kind==='license'?renewalStatus(get(d.id).data):d.stage||'Prospección',d.stage==='Cierre ganado'?'green':'neutral')+'<small class="amount-origin">'+esc(forecastCategoryFor(d))+'</small></td><td class="nobr">'+(value(d.amount)?esc(money(Number(d.amount),d.currency))+(d.amountOrigin?'<small class="amount-origin">'+esc(d.amountOrigin)+'</small>':''):d.project==='Zentynel'&&value(d.potentialAnnual)?'<span class="potential-amount">Potencial '+esc(money(Number(d.potentialAnnual),'EUR'))+'/año</span>':'—')+'</td><td>'+esc(d.stage==='Cierre ganado'?(d.kind==='license'?get(d.id)?.data.renewalPaymentStatus:d.paymentStatus)||'Por confirmar':'—')+'</td><td>'+esc(d.next||'—')+'</td><td class="nobr">'+esc(dateCell(d))+'</td></tr>').join('')+'</tbody></table></div>';
+  return count+'<div class="scroll"><table class="crm-list"><thead><tr><th>Cuenta</th>'+(showProject?'<th>Proyecto</th>':'')+'<th>Tipo</th><th>Departamento / colectivo</th><th>Origen</th><th>Estado</th><th>Importe</th><th>Cobro</th><th>Próxima acción</th><th>Fecha</th></tr></thead><tbody>'+data.map(d=>'<tr><td><div class="pipeline-account">'+openBtn(d,d.name)+priority(d)+'</div></td>'+(showProject?'<td>'+esc(d.project)+'</td>':'')+'<td>'+esc(accountRole(d))+'</td><td>'+esc(d.department||'—')+'</td><td>'+esc(origin(d))+'</td><td>'+tag(d.kind==='license'?renewalStatus(get(d.id).data):d.stage||'Prospección',d.stage==='Cierre ganado'?'green':'neutral')+'<small class="amount-origin">'+esc(forecastCategoryLabel(forecastCategoryFor(d)))+'</small></td><td class="nobr">'+(value(d.amount)?esc(money(Number(d.amount),d.currency))+(d.amountOrigin?'<small class="amount-origin">'+esc(d.amountOrigin)+'</small>':''):d.project==='Zentynel'&&value(d.potentialAnnual)?'<span class="potential-amount">Potencial '+esc(money(Number(d.potentialAnnual),'EUR'))+'/año</span>':'—')+'</td><td>'+esc(d.stage==='Cierre ganado'?(d.kind==='license'?get(d.id)?.data.renewalPaymentStatus:d.paymentStatus)||'Por confirmar':'—')+'</td><td>'+esc(d.next||'—')+'</td><td class="nobr">'+esc(dateCell(d))+'</td></tr>').join('')+'</tbody></table></div>';
 }
 const goalFields=[['name','Objetivo','text',true],['project','Proyecto',projects,true],['quarter','Trimestre (AAAA-T1 a AAAA-T4)','quarter',true],['currency','Moneda',['EUR','USD','GBP','MXN','CLP','BRL','COP','PEN'],true],['conservative','Conservador','amount'],['base','Base','amount'],['upside','Optimista','amount'],['linked','Sustituir por una oportunidad','link'],['notes','Notas y supuestos','textarea']];
 const reviewFields=[['name','Título','text',true],['reviewDate','Fecha de revisión','date',true],['project','Proyecto',projects],['reviewNext','Próxima revisión','date'],['notes','Decisiones, cambios de prioridad y próximos pasos','textarea',true]];
@@ -230,12 +232,12 @@ function forecast(){
  const totals=new Map();for(const d of ready){const c=d.currency||'EUR',a=Number(d.amount),cat=forecastCategoryFor(d),sum=totals.get(c)||[0,0,0];if(cat==='Confirmada')sum[0]+=a;if(['Confirmada','Probable'].includes(cat))sum[1]+=a;sum[2]+=a;totals.set(c,sum);}
  const format=i=>[...totals].sort().map(([c,a])=>money(a[i],c)).join(' · ')||'—';
  const year=Number(fQuarter.slice(0,4)),periods=[...new Set([year-1,year,year+1,Number(today().slice(0,4)),...all.map(d=>Number(d.closeDate?.slice(0,4))).filter(Boolean)])].sort((a,b)=>a-b).flatMap(y=>[1,2,3,4].map(q=>y+'-T'+q));
- const record=d=>'<div class="record">'+openBtn(d,d.name,d.project+' · '+(d.amountOrigin||'Importe de la ficha')+' · '+(value(d.amount)?money(Number(d.amount),d.currency):'Sin importe')+' · '+short(d.closeDate))+tag(forecastCategoryFor(d))+'</div>';
+ const record=d=>'<div class="record">'+openBtn(d,d.name,d.project+' · '+(d.amountOrigin||'Importe de la ficha')+' · '+(value(d.amount)?money(Number(d.amount),d.currency):'Sin importe')+' · '+short(d.closeDate))+tag(forecastCategoryLabel(forecastCategoryFor(d)))+'</div>';
  const goals=entries('goal').map(r=>r.data).filter(d=>d.quarter===fQuarter&&(!fProject||d.project===fProject));
  return head('Previsión trimestral','Importes completos, sin porcentajes. Los escenarios son acumulados y no se suman entre sí.')+
  '<div class="forecast-controls"><label>Trimestre<select id="quarter">'+opts(periods,fQuarter)+'</select></label><label>Proyecto<select id="forecast-project">'+opts(projects,fProject,'Todos')+'</select></label><label>Canal<select id="forecast-channel">'+opts(channelTypes,fChannel,'Todos')+'</select></label><label>Partner / distribuidor<select id="forecast-partner">'+opts(knownPartners(),fPartner,'Todos')+'</select></label></div>'+
- '<div class="grid metrics forecast-metrics">'+metric('Confirmado',format(0),'Ventas aceptadas formalmente')+metric('Previsión de trabajo',format(1),'Confirmado + probable')+metric('Si sale todo lo previsto',format(2),'Confirmado + probable + posible')+'</div>'+
- '<p class="sub">Una estimación por usuarios puede ser Posible o Probable sin presupuesto enviado. El potencial futuro no se añade mientras no sea una operación concreta.</p>'+
+ '<div class="grid metrics forecast-metrics">'+metric('Ya vendido',format(0),'Ventas aceptadas formalmente')+metric('Vendido + cierres previstos',format(1),'Incluye los cierres que esperas conseguir')+metric('Si se cierra lo que está en evaluación',format(2),'Vendido + cierres previstos + en evaluación')+'</div>'+
+ '<p class="sub">Una estimación por usuarios puede estar En evaluación o en Cierre previsto sin presupuesto enviado. El potencial futuro no se añade mientras no sea una operación concreta.</p>'+
  '<section class="card">'+cardHead('Operaciones del trimestre',ready.length+' incluidas en los escenarios.')+(candidates.length?candidates.map(record).join(''):blank('Sin operaciones para este trimestre.'))+'</section>'+
  '<details class="card"'+(pending.length?' open':'')+'><summary>Datos pendientes o previsión por clasificar · '+pending.length+'</summary><p class="sub">No se han convertido los porcentajes anteriores en categorías. Revisa valor, cierre y previsión antes de incluir cada operación.</p>'+pending.map(record).join('')+'</details>'+
  (goals.length?'<details class="card"><summary>Objetivos anteriores · no incluidos en estos escenarios</summary>'+goals.map(d=>'<div class="record">'+openBtn(d,d.name,d.project)+'</div>').join('')+'</details>':'');
@@ -276,7 +278,7 @@ function formField([key,label,typ='text',required=false],data){
     const type=number?'number':['date','email','tel'].includes(typ)?typ:'text';
     control='<input'+name+' type="'+type+'" value="'+esc(v)+'"'+(number?' min="0" step="0.01"':'')+(typ==='prob'?' max="100"':'')+(typ==='quarter'?' pattern="[0-9]{4}-T[1-4]" placeholder="2026-T4"':'')+'>';
   }
-  return '<label'+(typ==='textarea'?' class="wide"':'')+'>'+esc(label)+control+(['forecastCategory','renewalForecastCategory'].includes(key)?'<small class="sub">Posible: interés y opción de cerrar. Probable: propuesta validada, fondos y decisión previstos. Confirmada: cierre ganado.</small>':'')+'</label>'+(key==='name'&&['client','opportunity'].includes(data.kind)?'<div class="wide" id="municipality-name-suggestion"></div>':'');
+  return '<label'+(typ==='textarea'?' class="wide"':'')+'>'+esc(label)+control+(key==='closeDate'?'<small class="sub">Opcional solo en Sin fecha de decisión.</small>':'')+(['forecastCategory','renewalForecastCategory'].includes(key)?'<small class="sub">En evaluación: hay interés. Cierre previsto: propuesta validada, fondos y decisión previstos. Venta confirmada: cierre ganado.</small>':'')+'</label>'+(key==='name'&&['client','opportunity'].includes(data.kind)?'<div class="wide" id="municipality-name-suggestion"></div>':'');
 }
 const fieldsFor=d=>d.kind==='client'?clientFields:d.kind==='license'?licenseFields:d.kind==='opportunity'?fields:d.kind==='goal'?goalFields:reviewFields;
 function editorFields(d){
@@ -308,7 +310,7 @@ function editorFields(d){
     const selected=all.filter(f=>keys.includes(f[0])&&!used.has(f[0]));
     selected.forEach(f=>used.add(f[0]));
     if(selected.length&&selected.every(f=>f[2]==='historical')){html+=selected.map(f=>formField(f,d)).join('');continue;}
-    if(selected.length)html+='<details class="editor-section"'+(title==='Alcance actual — Zentynel'?' id="operation-area"'+(d.project==='Zentynel'?' open':' hidden'):'')+(title==='Potencial Zentynel'?' id="potential-area"'+(d.project==='Zentynel'?' open':' hidden'):'')+(title==='Clasificación'?' open':'')+'><summary>'+esc(title)+'</summary><div class="fields">'+selected.map(f=>formField(f,d)).join('')+'</div>'+(title==='Alcance actual — Zentynel'?'<p class="sub">Solo los usuarios que intentas contratar ahora. Elige Posible o Probable y una fecha de cierre para incluir su valor completo en los escenarios.</p><p id="operation-value-notice" role="status"></p>'+button('operation-copy-potential','Usar usuarios del potencial para esta operación')+' '+button('operation-estimate','Usar estimación por usuarios'):'')+(title==='Potencial Zentynel'?'<p class="sub">Paquete completo del tramo · EUR · sin IVA. El primer año incluye 400 € de onboarding. No incluye soporte adicional. Este potencial no se suma por separado: usa sus usuarios en Alcance actual y clasifica la operación como Posible o Probable.</p><p id="potential-notice" role="status"></p>'+button('potential-recalculate','Recalcular con tarifa actual'):'')+'</details>';
+    if(selected.length)html+='<details class="editor-section"'+(title==='Alcance actual — Zentynel'?' id="operation-area"'+(d.project==='Zentynel'?' open':' hidden'):'')+(title==='Potencial Zentynel'?' id="potential-area"'+(d.project==='Zentynel'?' open':' hidden'):'')+(title==='Clasificación'?' open':'')+'><summary>'+esc(title)+'</summary><div class="fields">'+selected.map(f=>formField(f,d)).join('')+'</div>'+(title==='Alcance actual — Zentynel'?'<p class="sub">Solo los usuarios que intentas contratar ahora. Elige En evaluación o Cierre previsto y una fecha de cierre para incluir su valor completo en los escenarios.</p><p id="operation-value-notice" role="status"></p>'+button('operation-copy-potential','Usar usuarios del potencial para esta operación')+' '+button('operation-estimate','Usar estimación por usuarios'):'')+(title==='Potencial Zentynel'?'<p class="sub">Paquete completo del tramo · EUR · sin IVA. El primer año incluye 400 € de onboarding. No incluye soporte adicional. Este potencial no se suma por separado: usa sus usuarios en Alcance actual y clasifica la operación como En evaluación o Cierre previsto.</p><p id="potential-notice" role="status"></p>'+button('potential-recalculate','Recalcular con tarifa actual'):'')+'</details>';
   }
   const rest=all.filter(f=>!used.has(f[0]));
   if(rest.length)html+='<details class="editor-section"><summary>Otros detalles</summary><div class="fields">'+rest.map(f=>formField(f,d)).join('')+'</div></details>';
@@ -372,7 +374,7 @@ async function showRecordHistory(id){
     if(!$('modal').open||$('history')!==target)return;
     target.innerHTML='<h3>Historial de versiones</h3>'+versions.map((r,i)=>{
       const d=r.data;
-      const items=fieldsFor(d).filter(([k])=>value(d[k])).map(([k,l,type])=>'<dt>'+esc(l)+'</dt><dd>'+esc(type==='contacts'?contactSummary(readContacts(d)):k==='linked'?(get(d[k])?.data.name||d[k]):d[k])+'</dd>').join('');
+      const items=fieldsFor(d).filter(([k])=>value(d[k])).map(([k,l,type])=>'<dt>'+esc(l)+'</dt><dd>'+esc(type==='contacts'?contactSummary(readContacts(d)):k==='linked'?(get(d[k])?.data.name||d[k]):['forecastCategory','renewalForecastCategory'].includes(k)?forecastCategoryLabel(d[k]):d[k])+'</dd>').join('');
       const originalData=d.raw?'<details><summary>Fila de origen completa</summary><dl>'+Object.entries(d.raw).filter(([,v])=>value(v)).map(([k,v])=>'<dt>'+esc(k)+'</dt><dd>'+esc(Array.isArray(v)?v.join(' · '):v)+'</dd>').join('')+'</dl></details>':'';
       return '<details class="version"><summary>'+esc((r.version===0?'Versión original':'Versión '+r.version)+' · '+dateLong.format(new Date(r.timestamp))+' · '+r.reason)+'</summary><dl>'+items+'</dl>'+originalData+
         (i?button('restore','Restaurar como nueva versión','data-id="'+esc(id)+'" data-version="'+r.version+'"'):'')+'</details>';
@@ -431,7 +433,7 @@ document.addEventListener('submit',async e=>{
       }
     }
     if(d.kind==='license'){
-      if(d.licenseStatus==='Renovado')d.renewalForecastCategory='Confirmada';else if(d.licenseStatus==='Finalizada')d.renewalForecastCategory='Fuera de previsión';else if(value(d.renewalAmount)&&!['Probable','Posible','Fuera de previsión'].includes(d.renewalForecastCategory))throw Error('Clasifica la previsión de la renovación: Probable, Posible o Fuera de previsión.');
+      if(d.licenseStatus==='Renovado')d.renewalForecastCategory='Confirmada';else if(d.licenseStatus==='Finalizada')d.renewalForecastCategory='Fuera de previsión';else if(value(d.renewalAmount)&&!['Probable','Posible','Fuera de previsión'].includes(d.renewalForecastCategory))throw Error('Clasifica la renovación: Cierre previsto, En evaluación o Sin fecha de decisión.');
       if(d.payerType!=='Otra entidad')d.payerName='';
       if(d.payerType==='Otra entidad'&&!d.payerName)throw Error('Indica la entidad que paga la licencia.');
       if(d.licenseStatus==='Renovado'){
@@ -474,7 +476,7 @@ document.addEventListener('input',e=>{
 document.addEventListener('change',e=>{
   const el=e.target;
   if(el.name==='project'&&el.closest('#editor')){syncPotential();syncOperationValue();}
-  if(el.closest('#editor')&&['forecastBasis','stage','quoteStatus'].includes(el.name))syncOperationValue();
+  if(el.closest('#editor')&&['forecastBasis','stage','quoteStatus','forecastCategory'].includes(el.name))syncOperationValue();
   if(['paymentStatus','renewalPaymentStatus','payerType','licenseStatus'].includes(el.name)&&el.closest('#editor'))syncConditionalRequired();
   if(el.id==='municipality-search'){if(el.value.trim())selectMunicipality(el.value);else{for(const k of ['municipalityCode','municipality','province','autonomousCommunity'])if(el.form.elements[k])el.form.elements[k].value='';$('municipality-notice').textContent='';$('municipality-location').textContent='Sin municipio asignado';updateMunicipalAccountName();}}
   if(el.closest('#editor')&&['marketSector','country'].includes(el.name))syncMunicipalityVisibility();
@@ -830,6 +832,7 @@ function contactsEditor(contacts){
 }
 
 function exportValue(row,key){
+  if(['forecastCategory','renewalForecastCategory'].includes(key))return forecastCategoryLabel(row[key]);
   if(['municipality','province','autonomousCommunity'].includes(key))return publicLocation(row)[key];
   if(['marketSector','entityType'].includes(key))return classification(row)[key];
   if(key==='accountRole')return accountRole(row);
@@ -1313,7 +1316,7 @@ function syncOperationValue(){
  area.hidden=f.elements.project.value!=='Zentynel';
  const users=f.elements.operationUsers,top=$('required-fields');if(users&&top){const label=users.closest('label');if(!users._optionalHome){users._optionalHome=document.createElement('span');users._optionalHome.hidden=true;label.before(users._optionalHome);}if(!area.hidden)top.insertBefore(label,f.elements.amount.closest('label'));else users._optionalHome.after(label);users.required=!area.hidden&&(editor.operationOrigin||editor.data.amountOrigin)==='Estimado por usuarios';}
  if(f.elements.amount){f.elements.amount.required=true;f.elements.amount.min='0.01';}
- if(f.elements.forecastCategory){if(f.elements.stage.value==='Cierre ganado')f.elements.forecastCategory.value='Confirmada';else if(['Cierre perdido','En pausa'].includes(f.elements.stage.value))f.elements.forecastCategory.value='Fuera de previsión';else if(f.elements.forecastCategory.value==='Confirmada')f.elements.forecastCategory.value='';}
+ if(f.elements.forecastCategory){if(f.elements.stage.value==='Cierre ganado')f.elements.forecastCategory.value='Confirmada';else if(['Cierre perdido','En pausa'].includes(f.elements.stage.value))f.elements.forecastCategory.value='Fuera de previsión';else if(f.elements.forecastCategory.value==='Confirmada')f.elements.forecastCategory.value='';if(f.elements.closeDate)f.elements.closeDate.required=f.elements.forecastCategory.value!=='Fuera de previsión';}
  if(!f.elements.forecastBasis.value)f.elements.forecastBasis.value=editor.row?'annual':'firstYear';
  const set=(k,v)=>{if(f.elements[k])f.elements[k].value=v??'';};
  try{
@@ -1349,9 +1352,9 @@ function applyOperationValue(d){
 function validateOpportunityForecast(d){
  if(!value(d.amount)||!Number.isFinite(Number(d.amount))||Number(d.amount)<=0)throw Error('Indica un valor de la oportunidad mayor que cero, calculado por usuarios o introducido manualmente.');
  if(!['EUR','USD','GBP','MXN','CLP','BRL','COP','PEN'].includes(d.currency))throw Error('Selecciona la moneda de la oportunidad.');
- if(!d.closeDate||!/^\d{4}-\d{2}-\d{2}$/.test(d.closeDate)||Number.isNaN(Date.parse(d.closeDate+'T12:00:00Z'))||new Date(d.closeDate+'T12:00:00Z').toISOString().slice(0,10)!==d.closeDate)throw Error('Indica una fecha prevista o efectiva de cierre válida.');
  if(d.stage==='Cierre ganado')d.forecastCategory='Confirmada';else if(['Cierre perdido','En pausa'].includes(d.stage))d.forecastCategory='Fuera de previsión';
- if(!['Confirmada','Probable','Posible','Fuera de previsión'].includes(d.forecastCategory)||d.stage!=='Cierre ganado'&&d.forecastCategory==='Confirmada')throw Error('Selecciona una previsión: Probable, Posible o Fuera de previsión. Confirmada requiere Cierre ganado.');
+ if((!d.closeDate&&d.forecastCategory!=='Fuera de previsión')||(d.closeDate&&(!/^\d{4}-\d{2}-\d{2}$/.test(d.closeDate)||Number.isNaN(Date.parse(d.closeDate+'T12:00:00Z'))||new Date(d.closeDate+'T12:00:00Z').toISOString().slice(0,10)!==d.closeDate)))throw Error('Indica una fecha de cierre válida; solo es opcional en Sin fecha de decisión.');
+ if(!['Confirmada','Probable','Posible','Fuera de previsión'].includes(d.forecastCategory)||d.stage!=='Cierre ganado'&&d.forecastCategory==='Confirmada')throw Error('Selecciona Cierre previsto, En evaluación o Sin fecha de decisión. Venta confirmada requiere Cierre ganado.');
  d.amount=String(Number(d.amount));
 }
 
