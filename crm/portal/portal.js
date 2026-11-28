@@ -7,7 +7,7 @@
  const kinds={opportunity:'Oportunidad',client:'Cliente',license:'Licencia'};
  const dateNow=new Date(),localToday=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Madrid'}).format(dateNow);
  let selectedQuarter=localToday.slice(0,4)+'-T'+Math.ceil(Number(localToday.slice(5,7))/3),selectedCurrency='EUR';
- let context=null,admin=null,projectAdmin=null,dashboards=[],forecasts=[],forecastError='',records=[],filter='',busy=false,generation=0;
+ let context=null,admin=null,projectAdmin=null,dashboards=[],forecasts=[],potentials=[],forecastError='',records=[],filter='',busy=false,generation=0;
  const expanded=new Set();
  const rpc=(name,args={})=>crmConnection.request('rpc/'+name,{method:'POST',body:JSON.stringify(args)});
  function display(key,value){
@@ -46,9 +46,10 @@
     ['Estimado',sources.estimated,estimateHint],['Presupuestado',sources.budgeted,'Presupuestos registrados · importes completos'],['Venta confirmada',sources.confirmed,'Ventas ganadas · al 100 %']
    ].map(([title,amount,hint])=>'<article><span>'+esc(title)+'</span><strong>'+esc(money(amount,currency))+'</strong><small>'+esc(hint)+'</small></article>').join('')+'</div><p class="sub">Un único importe activo por operación. Las tres aportaciones suman lo vendido y los cierres previstos. En evaluación: '+esc(money(numbers.possible||0,currency))+' adicionales solo en el último escenario. Renovaciones ya incluidas: '+esc(money(numbers.renewals,currency))+'.</p></section>';
  }
+ function potentialPanel(panel){const p=potentials.find(v=>v.project===panel.project);return p&&Number(p.users)>0?'<details class="portal-fold"><summary>Potencial de las cuentas · fuera del forecast</summary><div class="renewal-summary"><div><span>Usuarios potenciales</span><strong>'+esc(p.users)+'</strong></div><div><span>Potencial anual total · EUR</span><strong>'+esc(money(p.annual,'EUR'))+'</strong></div><div><span>Potencial primer año · EUR</span><strong>'+esc(money(p.firstYear,'EUR'))+'</strong></div></div><p class="sub">Capacidad total, no ingreso adicional ni previsión del trimestre. No se suma a los escenarios. '+esc(p.unpriced)+' cuentas sin tarifa calculable. La cuenta tiene preferencia sobre sus oportunidades; no se suman varias estimaciones de una misma cuenta.</p></details>':'';}
  function dashboard(panel,financial=panel.financial,preview=false){
   const key=panel.project+(preview?'-preview':'');
-  return '<section class="portal-dashboard"><div class="portal-project-heading"><h2>'+esc(projects[panel.project]||panel.project)+'</h2><span class="sub">'+esc(new Date(panel.asOf).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Madrid'}))+'</span></div>'+(financial?financialPanel(panel,preview):'')+'<div class="portal-kpis">'+metric('Oportunidades abiertas',panel.opportunities)+metric('Acciones pendientes',panel.actionsWeek)+metric('Cuentas',panel.clients)+metric('Por renovar',panel.renewals)+'</div><div class="portal-details"><details class="portal-fold" data-portal-detail="'+esc(key+'-stages')+'"'+(expanded.has(key+'-stages')?' open':'')+'><summary><span>Pipeline por estado</span><small>'+esc(panel.stages?.length||0)+' estados</small></summary>'+(panel.stages?.length?'<div class="scroll"><table><thead><tr><th>Estado</th><th>Oportunidades</th></tr></thead><tbody>'+panel.stages.map(r=>'<tr><td>'+esc(r.stage)+'</td><td>'+esc(r.count)+'</td></tr>').join('')+'</tbody></table></div>':'<p>Sin oportunidades registradas.</p>')+'</details><details class="portal-fold" data-portal-detail="'+esc(key+'-renewals')+'"'+(expanded.has(key+'-renewals')?' open':'')+'><summary><span>Renovaciones y seguimiento</span><small class="'+(panel.expiredUnconfirmed?'warm-badge':'')+'">'+esc(panel.expiredUnconfirmed)+' vencidas por confirmar</small></summary><div class="renewal-summary">'+[['Renovadas',panel.renewed],['Finalizadas',panel.ended],['Vencen en 90 días',panel.due90],['Acciones vencidas',panel.overdueActions]].map(([label,count])=>'<div><span>'+label+'</span><strong>'+esc(count)+'</strong></div>').join('')+'</div><p class="sub">Los vencimientos no se consideran pérdidas automáticamente. Se cuentan periodos de licencia.</p></details></div></section>';
+  return '<section class="portal-dashboard"><div class="portal-project-heading"><h2>'+esc(projects[panel.project]||panel.project)+'</h2><span class="sub">'+esc(new Date(panel.asOf).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Madrid'}))+'</span></div>'+(financial?financialPanel(panel,preview)+potentialPanel(panel):'')+'<div class="portal-kpis">'+metric('Oportunidades abiertas',panel.opportunities)+metric('Acciones pendientes',panel.actionsWeek)+metric('Cuentas',panel.clients)+metric('Por renovar',panel.renewals)+'</div><div class="portal-details"><details class="portal-fold" data-portal-detail="'+esc(key+'-stages')+'"'+(expanded.has(key+'-stages')?' open':'')+'><summary><span>Pipeline por estado</span><small>'+esc(panel.stages?.length||0)+' estados</small></summary>'+(panel.stages?.length?'<div class="scroll"><table><thead><tr><th>Estado</th><th>Oportunidades</th></tr></thead><tbody>'+panel.stages.map(r=>'<tr><td>'+esc(r.stage)+'</td><td>'+esc(r.count)+'</td></tr>').join('')+'</tbody></table></div>':'<p>Sin oportunidades registradas.</p>')+'</details><details class="portal-fold" data-portal-detail="'+esc(key+'-renewals')+'"'+(expanded.has(key+'-renewals')?' open':'')+'><summary><span>Renovaciones y seguimiento</span><small class="'+(panel.expiredUnconfirmed?'warm-badge':'')+'">'+esc(panel.expiredUnconfirmed)+' vencidas por confirmar</small></summary><div class="renewal-summary">'+[['Renovadas',panel.renewed],['Finalizadas',panel.ended],['Vencen en 90 días',panel.due90],['Acciones vencidas',panel.overdueActions]].map(([label,count])=>'<div><span>'+label+'</span><strong>'+esc(count)+'</strong></div>').join('')+'</div><p class="sub">Los vencimientos no se consideran pérdidas automáticamente. Se cuentan periodos de licencia.</p></details></div></section>';
  }
  function quarterOptions(){
   const year=Number(localToday.slice(0,4)),options=[];
@@ -93,14 +94,15 @@
   try{
    const nextContext=await rpc('crm_portal_context');
    const managing=nextContext.owner&&new URLSearchParams(location.search).has('manage');
-   const [data,summary,access,forecastResult]=await Promise.all([
+   const [data,summary,access,forecastResult,potentialResult]=await Promise.all([
     rpc(managing?'crm_portal_admin':'crm_portal_read'),rpc('crm_portal_dashboard'),
     managing?rpc('crm_portal_project_admin'):Promise.resolve(null),
-    rpc('crm_portal_forecast',{p_quarter:requestedQuarter}).then(data=>({data,error:''})).catch(error=>({data:[],error:error.message}))
+    rpc('crm_portal_forecast',{p_quarter:requestedQuarter}).then(data=>({data,error:''})).catch(error=>({data:[],error:error.message})),
+    rpc('crm_portal_potential').catch(()=>[])
    ]);
    if(ticket!==generation||!crmConnection.isSignedIn())return;
    if(requestedQuarter!==selectedQuarter)return;
-   context=nextContext;dashboards=summary;projectAdmin=access;forecasts=forecastResult.data;forecastError=forecastResult.error;
+   context=nextContext;potentials=Array.isArray(potentialResult)?potentialResult:[];dashboards=summary;projectAdmin=access;forecasts=forecastResult.data;forecastError=forecastResult.error;
    $('portal-nav').innerHTML='<a href="./">Resumen</a>'+(context.owner?'<a href="?manage=1">Gestionar accesos</a><a href="../">Mi CRM</a>':'');
    if(managing){admin=data;renderAdmin();}else{records=data;renderClient();}
   }catch(error){
@@ -110,7 +112,7 @@
   }finally{busy=false;if(ticket===generation&&requestedQuarter!==selectedQuarter&&crmConnection.isSignedIn())load();}
  }
  addEventListener('crm-ready',()=>load(true));
- addEventListener('crm-locked',()=>{generation++;records=[];dashboards=[];forecasts=[];forecastError='';expanded.clear();projectAdmin=null;admin=null;context=null;$('page').textContent='';$('portal-nav').textContent='';});
+ addEventListener('crm-locked',()=>{generation++;records=[];dashboards=[];forecasts=[];potentials=[];forecastError='';expanded.clear();projectAdmin=null;admin=null;context=null;$('page').textContent='';$('portal-nav').textContent='';});
  $('portal-refresh').addEventListener('click',()=>load(true));
  $('portal-logout').addEventListener('click',()=>crmConnection.logout());
  document.addEventListener('change',e=>{
