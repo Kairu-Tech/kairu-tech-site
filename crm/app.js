@@ -87,6 +87,7 @@ const fields=[
 ];
 let clientTab='clients',customerRole='',customerMarket='',customerEntity='',customerQuery='',customerProject='',licenseFilter='all',renewalStateFilter='all',customerChannel='',customerPartner='';
 let pipelineBucket='open';
+let quickState=null,quickLinkVersion=null;
 const pipelineMatches=(d,bucket=pipelineBucket)=>bucket==='all'||(bucket==='closed'?['Cierre ganado','Cierre perdido'].includes(d.stage):bucket==='paused'?d.stage==='En pausa':active(d));
 let rows=[],error='',view='home',project='',subset='',filters={},query='',layout='list',fQuarter=quarterFor(today()),fProject='',fChannel='',fPartner='',editor=null,toastTimer;
 const entries=kind=>rows.filter(x=>x.data.kind===kind);
@@ -151,16 +152,17 @@ async function load() {
 }
 function toast(s){$('toast').textContent=s;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,3500);}
 function route(){
-  const [next,p]=location.hash.slice(1).split('/');
-  view=navItems.some(x=>x[0]===next)||next==='project'?next:'home';
+  const [next,p,v]=location.hash.slice(1).split('/');
+  if(next==='quick'){quickLinkVersion=/^\d+$/.test(v||'')?Number(v):null;quickState=null;}
+  view=navItems.some(x=>x[0]===next)||['project','quick'].includes(next)?next:'home';
   project=projects.find((_,i)=>colors[i]===p)||'';
   filters={};query='';subset='';pipelineBucket='open';render();
 }
 function jump(v,p=''){location.hash=v+(p?'/'+colors[projects.indexOf(p)]:'');}
 function render(){
   $('nav').innerHTML='<div class="nav-label">Seguimiento</div>'+navItems.map(([v,i,l])=>button('nav','<span class="nav-icon" aria-hidden="true">'+i+'</span>'+l,'data-view="'+v+'"',view===v?'active':'')).join('')+'<a class="portal-admin-link" href="./portal/?manage=1">Accesos de clientes</a><div class="nav-label">Proyectos</div>'+projects.map(p=>button('project',dot(p)+p,'data-project="'+p+'"',view==='project'&&project===p?'active':'')).join('');
-  $('breadcrumb').textContent=view==='project'?project:(navItems.find(x=>x[0]===view)?.[2]||'Seguimiento comercial');
-  $('page').innerHTML=error?'<div class="card"><p class="error">'+esc(error)+'</p>'+button('reload','Volver a cargar')+'</div>':({home,pipeline,project:pipeline,forecast,reviews,clients,sales}[view]||home)();
+  $('breadcrumb').textContent=view==='quick'?'Actualización rápida':view==='project'?project:(navItems.find(x=>x[0]===view)?.[2]||'Seguimiento comercial');
+  $('page').innerHTML=error?'<div class="card"><p class="error">'+esc(error)+'</p>'+button('reload','Volver a cargar')+'</div>':({home,pipeline,project:pipeline,forecast,reviews,clients,sales,quick:quickFollowup}[view]||home)();
 }
 function dashboardSection(key,title,count,content,description=''){
   const opened=expandedDashboardSections.has(key)?' open':'';
@@ -558,6 +560,8 @@ document.addEventListener('click',async e=>{
   if(action==='operation-copy-potential'){const f=$('editor');if(f.elements.potentialUsers.value){f.elements.operationUsers.value=f.elements.potentialUsers.value;editor.useOperationEstimate=true;editor.operationManual=false;syncOperationValue();}}
   if(action==='operation-estimate'){editor.useOperationEstimate=true;editor.operationManual=false;syncOperationValue();}
   if(action==='potential-recalculate')syncPotential(true);
+  if(action==='quick-open'){location.hash='quick/'+id+'/'+(row?.version??0);}
+  if(action==='quick-full'&&row&&!quickState?.saving)showEditor(row);
   if(action==='new-client')showEditor(null,'client');
   if(action==='new-license')showEditor(null,'license');
   if(action==='goal'||action==='review')showEditor(null,action);
@@ -587,12 +591,12 @@ document.addEventListener('click',async e=>{
 addEventListener('hashchange',route);
 addEventListener('crm-ready',()=>load());
 addEventListener('crm-locked',()=>{
-  rows=[];editor=null;operation=null;error='';
+  rows=[];editor=null;operation=null;quickState=null;error='';
   $('page').textContent='Inicia sesión para consultar el CRM.';
   $('modal-content').textContent='';
 });
 setInterval(()=>{
-  if(crmConnection.isSignedIn()&&!document.hidden&&!$('modal').open&&!document.activeElement?.matches('input,select,textarea'))load();
+  if(view!=='quick'&&crmConnection.isSignedIn()&&!document.hidden&&!$('modal').open&&!document.activeElement?.matches('input,select,textarea'))load();
 },60000);
 
 
@@ -938,7 +942,7 @@ function todayContactsPanel(){
       '<td>'+tag(reason,d.nextDate&&d.nextDate<today()?'warm':'neutral')+'</td>'+
       '<td>'+esc(commercialOwner(d).commercialOwnerName||'Por asignar')+'</td>'+
       '<td>'+esc(d.next||'Solicitar respuesta')+'<div class="meta">'+esc(d.nextDate?dateLong.format(new Date(d.nextDate+'T12:00Z')):'Sin fecha')+'</div></td>'+
-      '<td>'+button('activity','＋ Actividad','data-id="'+esc(d.id)+'"')+'</td></tr>';
+      '<td>'+button('quick-open','Actualizar','data-id="'+esc(d.id)+'"')+' '+button('activity','＋ Actividad','data-id="'+esc(d.id)+'"')+'</td></tr>';
   }).join('');
   return dashboardSection('contact-list','A quién contactar',data.length,controls+
     (data.length?'<div class="scroll"><table><thead><tr><th>Cuenta y contacto</th><th>Motivo</th><th>Responsable</th><th>Próximo paso</th><th></th></tr></thead><tbody>'+body+'</tbody></table></div>':blank('No hay seguimientos en este periodo.')));
@@ -1364,5 +1368,27 @@ function forecastCategoryFor(d){
  const cat=d.kind==='license'?d.renewalForecastCategory:d.forecastCategory;
  return ['Probable','Posible','Fuera de previsión'].includes(cat)?cat:'Por clasificar';
 }
+
+function quickFollowup(){
+ const id=location.hash.split('/')[1]||'';
+ if(!/^[0-9a-f-]{36}$/i.test(id))return head('Seguimiento no disponible','El enlace no identifica una ficha válida.');
+ const row=get(id);if(!row)return head('Actualización rápida','Inicia sesión y espera a que se cargue la ficha. Si no está disponible, comprueba tus permisos.')+button('reload','Actualizar');
+ if(!['client','license','opportunity'].includes(row.data.kind))return blank('Esta ficha no tiene seguimiento comercial.');
+ if(!quickState||quickState.id!==id||(!quickState.payload&&quickState.version!==row.version))quickState={id,version:row.version,requestId:crypto.randomUUID(),row};
+ const d=row.data,client=d.kind==='license'?get(d.clientId)?.data:d;
+ if(quickState.saved)return '<section class="card quick-followup"><h1>Seguimiento guardado</h1><p>La misma ficha se ha actualizado y el cambio está en su historial.</p>'+button('quick-full','Ver ficha completa','data-id="'+esc(id)+'"')+' '+button('nav','Volver a Esta semana','data-view="home"')+'</section>';
+ return '<section class="card quick-followup"><p class="sub">KairuTech · Sesión privada</p><h1>Actualización rápida</h1><h2>'+esc(client?.name||d.name)+'</h2><p>'+esc([d.department,d.project].filter(Boolean).join(' · '))+'</p><p class="quick-task">Tarea actual: '+esc(d.next||'Revisar seguimiento de '+d.name)+'</p>'+(quickLinkVersion!==null&&quickLinkVersion!==row.version?'<p class="sub">La ficha ha cambiado desde el correo. Revisa la tarea actual antes de guardar.</p>':'')+
+ '<form id="quick-form"><label>Resultado de la tarea<select name="status">'+opts(['Completada','Pendiente','Sin respuesta'],'Completada')+'</select></label><label>Qué ha pasado<textarea name="notes" rows="3" placeholder="Añade una nota breve (opcional)"></textarea></label><label>Próxima acción<input name="next" placeholder="Si no queda otra acción, déjalo vacío"></label><label>Fecha del próximo seguimiento<input type="date" name="nextDate"></label><p id="quick-error" class="error" role="alert"></p><button type="submit" class="primary">Guardar en el CRM</button></form><div class="quick-links">'+button('quick-full','Ver ficha completa','data-id="'+esc(id)+'"')+' '+button('nav','Volver a Esta semana','data-view="home"')+'</div></section>';
+}
+document.addEventListener('change',e=>{if(e.target.name==='status'&&e.target.closest('#quick-form')&&quickState){const f=e.target.form,d=quickState.row.data;if(e.target.value!=='Completada'&&!f.elements.next.value){f.elements.next.value=d.next||'Revisar seguimiento';f.elements.nextDate.value=d.nextDate||today();}}});
+document.addEventListener('submit',async e=>{
+ if(e.target.id!=='quick-form')return;e.preventDefault();const state=quickState,form=e.target;if(!state||state.saving)return;
+ if(!state.payload){const values=new FormData(form),next=String(values.get('next')||'').trim(),date=String(values.get('nextDate')||'');if(Boolean(next)!==Boolean(date)){ $('quick-error').textContent='Completa juntos próxima acción y fecha.';return; }if(values.get('status')!=='Completada'&&!next){$('quick-error').textContent='Indica el seguimiento pendiente y su fecha.';return;}
+ state.payload={p_parent_id:state.id,p_expected_version:state.version,p_request_id:state.requestId,p_payload:{status:String(values.get('status')),notes:String(values.get('notes')||'').trim(),next,nextDate:date}};}
+ state.saving=true;form.querySelectorAll('input,select,textarea,button').forEach(el=>el.disabled=true);$('quick-error').textContent='';
+ try{await crmConnection.request('rpc/crm_quick_followup',{method:'POST',body:JSON.stringify(state.payload)});state.saved=true;if(quickState===state&&view==='quick')await load();}
+ catch(err){if(quickState!==state||!$('quick-error'))return;$('quick-error').textContent=err.code==='PGRST202'?'Activa la consulta 15 en Supabase.':err.message+' Si la respuesta se perdió, reintenta desde esta ventana. Si la ficha cambió, vuelve a abrir el seguimiento.';const submit=form.querySelector('[type=submit]');submit.disabled=false;submit.textContent='Reintentar el mismo guardado';}
+ finally{state.saving=false;}
+});
 
 route();
