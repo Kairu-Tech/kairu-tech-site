@@ -360,7 +360,7 @@ function showEditor(row,kind='opportunity'){
   '<div class="dialog-body">'+(d.kind==='license'?'<p class="sub">'+esc(accountRole(d))+' · '+esc(channelSummary(d))+' (canal de origen) · Pagador: '+esc(payerDisplay(d))+' · Responsable: '+esc(commercialOwner(d).commercialOwnerName||'Por asignar')+'.</p>':['client','opportunity'].includes(d.kind)?'<p class="sub">El tipo de cuenta indica quién es la entidad. El canal indica cómo llega la oportunidad: por ejemplo, cliente final a través del partner SATARA SEGURIDAD.</p>':'')+'<form id="editor">'+editorFields(d)+(!row&&d.kind==='client'?initialLicenseFields():'')+
   (d.sourceUrl?'<p class="sub"><a target="_blank" rel="noopener" href="'+esc(d.sourceUrl)+'">Abrir archivo de origen ↗</a></p>':'')+
   '<p id="form-error" class="error" role="alert"></p><div class="dialog-foot">'+(row?button('history','Ver historial','data-id="'+esc(d.id)+'"'):'')+
-  (row&&['client','opportunity','license'].includes(d.kind)?button('activity','＋ Actividad','data-id="'+esc(d.id)+'"'):'')+
+  (row&&['client','opportunity','license'].includes(d.kind)?button('activity','Actualizar','data-id="'+esc(d.id)+'"'):'')+
   (row&&d.kind==='license'?licensePeriodButton(d):'')+'<button type="submit" class="primary">Guardar</button></div></form>'+importOriginDetails(d)+(row&&d.kind==='client'?accountPurchases(d):'')+(row?activityTimeline(d):'')+'<div id="history"></div></div>';
   syncMunicipalityVisibility();syncConditionalRequired();syncPotential();syncOperationValue();
   if(!$('modal').open)$('modal').showModal();
@@ -942,7 +942,7 @@ function todayContactsPanel(){
       '<td>'+tag(reason,d.nextDate&&d.nextDate<today()?'warm':'neutral')+'</td>'+
       '<td>'+esc(commercialOwner(d).commercialOwnerName||'Por asignar')+'</td>'+
       '<td>'+esc(d.next||'Solicitar respuesta')+'<div class="meta">'+esc(d.nextDate?dateLong.format(new Date(d.nextDate+'T12:00Z')):'Sin fecha')+'</div></td>'+
-      '<td>'+button('quick-open','Actualizar','data-id="'+esc(d.id)+'"')+' '+button('activity','＋ Actividad','data-id="'+esc(d.id)+'"')+'</td></tr>';
+      '<td>'+button('activity','Actualizar','data-id="'+esc(d.id)+'"')+'</td></tr>';
   }).join('');
   return dashboardSection('contact-list','A quién contactar',data.length,controls+
     (data.length?'<div class="scroll"><table><thead><tr><th>Cuenta y contacto</th><th>Motivo</th><th>Responsable</th><th>Próximo paso</th><th></th></tr></thead><tbody>'+body+'</tbody></table></div>':blank('No hay seguimientos en este periodo.')));
@@ -1004,10 +1004,10 @@ function showActivity(row){
     ['next','Próximo paso','textarea'],
     ['nextDate','Fecha del siguiente seguimiento','date']
   ];
-  showOperation('Registrar actividad · '+d.name,'<form id="activity-form"><div class="fields">'+
+  showOperation('Actualizar seguimiento · '+d.name,'<form id="activity-form"><div class="fields">'+
     inputs.map(field=>formField(field,{type:'Llamada',date:today(),next:d.next||'',nextDate:d.nextDate||'',responseStatus:d.responseStatus||''})).join('')+
     '</div><p id="operation-error" class="error" role="alert"></p><div class="dialog-foot">'+
-    '<button type="submit" class="primary">Guardar actividad y seguimiento</button></div></form>');
+    '<button type="submit" class="primary">Guardar actualización</button></div></form>');
 }
 
 function showRenewal(row){
