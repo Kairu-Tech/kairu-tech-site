@@ -306,13 +306,24 @@ function editorFields(d){
   ];
   const required=all.filter(f=>f[3]||['channelPartner','country'].includes(f[0])||d.kind==='license'&&f[0]==='renewalForecastCategory');
   const used=new Set([...essential,...required.map(f=>f[0])]);
-  let html='<section class="editor-section"><h3>Datos obligatorios</h3><div id="required-fields" class="fields">'+required.map(f=>formField(f,d)).join('')+'</div></section><h3>Seguimiento y datos opcionales</h3><div class="fields">'+all.filter(f=>essential.includes(f[0])&&!required.includes(f)).map(f=>formField(f,d)).join('')+'</div>';
+  const simple=['client','opportunity'].includes(d.kind);
+  const valueKeys=['amount','currency','forecastCategory','closeDate'];
+  const identity=required.filter(f=>!simple||!valueKeys.includes(f[0]));
+  const economics=required.filter(f=>simple&&valueKeys.includes(f[0]));
+  const optional=all.filter(f=>essential.includes(f[0])&&!required.includes(f));
+  const block=(title,items,id='')=>items.length?'<section class="editor-section editor-primary"><h3>'+esc(title)+'</h3><div'+(id?' id="'+id+'"':'')+' class="fields">'+items.map(f=>formField(f,d)).join('')+'</div></section>':'';
+  let html=(simple?'<div id="required-fields">':'')+block(simple?'Identificación':'Datos obligatorios',identity,simple?'identity-fields':'required-fields');
+  if(simple){
+    html+=block('Seguimiento',optional.filter(f=>['stage','clientStatus','priority','next','nextDate'].includes(f[0])));
+    html+=block('Valor y previsión',economics)+'</div>';
+    html+=block('Cuenta y contacto',optional.filter(f=>!['stage','clientStatus','priority','next','nextDate'].includes(f[0])));
+  }else html+=block('Seguimiento y datos opcionales',optional);
   if(d.kind==='license')html+=licenseClassification(d);
   for(const [title,keys] of groups){
     const selected=all.filter(f=>keys.includes(f[0])&&!used.has(f[0]));
     selected.forEach(f=>used.add(f[0]));
     if(selected.length&&selected.every(f=>f[2]==='historical')){html+=selected.map(f=>formField(f,d)).join('');continue;}
-    if(selected.length)html+='<details class="editor-section"'+(title==='Alcance actual — Zentynel'?' id="operation-area"'+(d.project==='Zentynel'?' open':' hidden'):'')+(title==='Potencial Zentynel'?' id="potential-area"'+(d.project==='Zentynel'?' open':' hidden'):'')+(title==='Clasificación'?' open':'')+'><summary>'+esc(title)+'</summary><div class="fields">'+selected.map(f=>formField(f,d)).join('')+'</div>'+(title==='Alcance actual — Zentynel'?'<p class="sub">Solo los usuarios que intentas contratar ahora. Elige En evaluación o Cierre previsto y una fecha de cierre para incluir su valor completo en los escenarios.</p><p id="operation-value-notice" role="status"></p>'+button('operation-copy-potential','Usar usuarios del potencial para esta operación')+' '+button('operation-estimate','Usar estimación por usuarios'):'')+(title==='Potencial Zentynel'?'<p class="sub">Paquete completo del tramo · EUR · sin IVA. El primer año incluye 400 € de onboarding. No incluye soporte adicional. Este potencial no se suma por separado: usa sus usuarios en Alcance actual y clasifica la operación como En evaluación o Cierre previsto.</p><p id="potential-notice" role="status"></p>'+button('potential-recalculate','Recalcular con tarifa actual'):'')+'</details>';
+    if(selected.length)html+='<details class="editor-section"'+(title==='Alcance actual — Zentynel'?' id="operation-area"'+(d.project==='Zentynel'?' open':' hidden'):'')+(title==='Potencial Zentynel'?' id="potential-area"'+(d.project==='Zentynel'?'':' hidden'):'')+(!simple&&title==='Clasificación'?' open':'')+'><summary>'+esc(title)+'</summary><div class="fields">'+selected.map(f=>formField(f,d)).join('')+'</div>'+(title==='Alcance actual — Zentynel'?'<p class="sub">Solo los usuarios que intentas contratar ahora. Elige En evaluación o Cierre previsto y una fecha de cierre para incluir su valor completo en los escenarios.</p><p id="operation-value-notice" role="status"></p>'+button('operation-copy-potential','Usar usuarios del potencial para esta operación')+' '+button('operation-estimate','Usar estimación por usuarios'):'')+(title==='Potencial Zentynel'?'<p class="sub">Paquete completo del tramo · EUR · sin IVA. El primer año incluye 400 € de onboarding. No incluye soporte adicional. Este potencial no se suma por separado: usa sus usuarios en Alcance actual y clasifica la operación como En evaluación o Cierre previsto.</p><p id="potential-notice" role="status"></p>'+button('potential-recalculate','Recalcular con tarifa actual'):'')+'</details>';
   }
   const rest=all.filter(f=>!used.has(f[0]));
   if(rest.length)html+='<details class="editor-section"><summary>Otros detalles</summary><div class="fields">'+rest.map(f=>formField(f,d)).join('')+'</div></details>';
@@ -356,12 +367,12 @@ function showEditor(row,kind='opportunity'){
   const d=row?.data||{licenseStatus:'Por renovar',id:crypto.randomUUID(),kind,project:view==='project'?project:kind==='goal'?fProject:'',stage:'Prospección',priority:'Por revisar',accountRole:'Por clasificar',currency:'EUR',quarter:fQuarter,reviewDate:today()};
   editor={row,data:d,...(!row&&kind==='client'?{initialLicenseId:crypto.randomUUID()}: {})};
   const title=row?d.name:kind==='client'?'Nueva cuenta':kind==='license'?'Nueva licencia':kind==='goal'?'Nuevo objetivo':kind==='review'?'Registrar revisión semanal':'Nueva oportunidad';
-  $('modal-content').innerHTML='<header class="dialog-head"><h2>'+esc(title)+'</h2>'+button('close','✕','aria-label="Cerrar ficha"')+'</header>'+
-  '<div class="dialog-body">'+(d.kind==='license'?'<p class="sub">'+esc(accountRole(d))+' · '+esc(channelSummary(d))+' (canal de origen) · Pagador: '+esc(payerDisplay(d))+' · Responsable: '+esc(commercialOwner(d).commercialOwnerName||'Por asignar')+'.</p>':['client','opportunity'].includes(d.kind)?'<p class="sub">El tipo de cuenta indica quién es la entidad. El canal indica cómo llega la oportunidad: por ejemplo, cliente final a través del partner SATARA SEGURIDAD.</p>':'')+'<form id="editor">'+editorFields(d)+(!row&&d.kind==='client'?initialLicenseFields():'')+
+  $('modal-content').innerHTML='<header class="dialog-head"><div><span class="record-kind">'+esc(d.kind==='client'?'Cuenta':d.kind==='opportunity'?'Oportunidad':d.kind==='license'?'Licencia':'Ficha')+'</span><h2>'+esc(title)+'</h2></div>'+button('close','✕','aria-label="Cerrar ficha"')+'</header>'+
+  '<div class="dialog-body">'+(d.kind==='license'?'<p class="sub">'+esc(accountRole(d))+' · '+esc(channelSummary(d))+' (canal de origen) · Pagador: '+esc(payerDisplay(d))+' · Responsable: '+esc(commercialOwner(d).commercialOwnerName||'Por asignar')+'.</p>':['client','opportunity'].includes(d.kind)?'<p class="editor-intro">'+(d.kind==='client'?'Cuenta · contactos, seguimiento y compras':'Oportunidad · próximos pasos, valor y cierre')+'</p>':'')+'<form id="editor">'+editorFields(d)+(!row&&d.kind==='client'?initialLicenseFields():'')+
   (d.sourceUrl?'<p class="sub"><a target="_blank" rel="noopener" href="'+esc(d.sourceUrl)+'">Abrir archivo de origen ↗</a></p>':'')+
   '<p id="form-error" class="error" role="alert"></p><div class="dialog-foot">'+(row?button('history','Ver historial','data-id="'+esc(d.id)+'"'):'')+
   (row&&['client','opportunity','license'].includes(d.kind)?button('activity','Actualizar','data-id="'+esc(d.id)+'"'):'')+
-  (row&&d.kind==='license'?licensePeriodButton(d):'')+'<button type="submit" class="primary">Guardar</button></div></form>'+importOriginDetails(d)+(row&&d.kind==='client'?accountPurchases(d):'')+(row?activityTimeline(d):'')+'<div id="history"></div></div>';
+  (row&&d.kind==='license'?licensePeriodButton(d):'')+'<button type="submit" class="primary">Guardar</button></div></form>'+importOriginDetails(d)+(row&&d.kind==='client'?accountPurchases(d):'')+(row?'<details class="editor-section editor-activity"><summary>Actividad y comunicaciones</summary>'+activityTimeline(d)+'</details>':'')+'<div id="history"></div></div>';
   syncMunicipalityVisibility();syncConditionalRequired();syncPotential();syncOperationValue();
   if(!$('modal').open)$('modal').showModal();
   $('modal').scrollTop=0;
@@ -1199,7 +1210,7 @@ function municipalitySuggestions(input){
  if($('municipality-options'))$('municipality-options').innerHTML=matched.map(m=>'<option value="'+esc(municipalityLabel(m))+'"></option>').join('');
 }
 function syncMunicipalityVisibility(){
- const f=$('editor'),el=$('municipality-selector'),top=$('required-fields');if(!f||!el||!top)return;
+ const f=$('editor'),el=$('municipality-selector'),top=$('identity-fields')||$('required-fields');if(!f||!el||!top)return;
  const eligible=f.elements.country?.value==='España';
  if(!el._homeSection)el._homeSection=el.closest('details');
  if(el._homeSection)el._homeSection.hidden=true;
@@ -1318,7 +1329,7 @@ function currentOperationQuote(users){let q=editor.operationDraft||editor.data.o
 function syncOperationValue(){
  const f=$('editor'),area=$('operation-area');if(!f||editor?.data.kind!=='opportunity'||!area)return;
  area.hidden=f.elements.project.value!=='Zentynel';
- const users=f.elements.operationUsers,top=$('required-fields');if(users&&top){const label=users.closest('label');if(!users._optionalHome){users._optionalHome=document.createElement('span');users._optionalHome.hidden=true;label.before(users._optionalHome);}if(!area.hidden)top.insertBefore(label,f.elements.amount.closest('label'));else users._optionalHome.after(label);users.required=!area.hidden&&(editor.operationOrigin||editor.data.amountOrigin)==='Estimado por usuarios';}
+ const users=f.elements.operationUsers,top=$('required-fields');if(users&&top){const label=users.closest('label');if(!users._optionalHome){users._optionalHome=document.createElement('span');users._optionalHome.hidden=true;label.before(users._optionalHome);}if(!area.hidden)f.elements.amount.closest('label').parentElement.insertBefore(label,f.elements.amount.closest('label'));else users._optionalHome.after(label);users.required=!area.hidden&&(editor.operationOrigin||editor.data.amountOrigin)==='Estimado por usuarios';}
  if(f.elements.amount){f.elements.amount.required=true;f.elements.amount.min='0.01';}
  if(f.elements.forecastCategory){if(f.elements.stage.value==='Cierre ganado')f.elements.forecastCategory.value='Confirmada';else if(['Cierre perdido','En pausa'].includes(f.elements.stage.value))f.elements.forecastCategory.value='Fuera de previsión';else if(f.elements.forecastCategory.value==='Confirmada')f.elements.forecastCategory.value='';if(f.elements.closeDate)f.elements.closeDate.required=f.elements.forecastCategory.value!=='Fuera de previsión';}
  if(!f.elements.forecastBasis.value)f.elements.forecastBasis.value=editor.row?'annual':'firstYear';
